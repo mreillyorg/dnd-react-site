@@ -302,5 +302,5 @@ The Combat Tracker supports all standard D&D 5e hit point mechanics: damage, hea
 2. THE Combat_Tracker_System SHALL restrict modification of Monster Combatant HP, resistances, immunities, and vulnerabilities to the DM of the Encounter.
 3. THE Combat_Tracker_System SHALL allow Players to modify the HP, conditions, Temp_HP, and death saves of their own Player_Character Combatants.
 4. IF an unauthenticated user attempts to access or modify Encounter data, THEN THE Combat_Tracker_System SHALL reject the request and return an authorization error.
-5. WHERE a subscription plan restricts the number of active Sessions or Encounters, THE Combat_Tracker_System SHALL enforce that limit and display an upgrade prompt when the limit is reached.
+5. THE Combat_Tracker_System SHALL NOT restrict the number of active Sessions or Encounters a user can create.
 6. THE Combat_Tracker_System SHALL restrict creation, editing, and deletion of stored Stat_Blocks to the DM account that owns them.

@@ -178,7 +178,7 @@ This document specifies the requirements for Reference Lookups in a web-based Du
 6. THE Reference_System SHALL allow users to download all Quick_Reference_Card files as a zip archive
 7. THE Quick_Reference_Card SHALL include page numbers and references to full rules in the Player's Handbook
 8. THE Reference_System SHALL provide both letter and A4 paper size options for Quick_Reference_Card downloads
-9. THE Quick_Reference_Card SHALL be accessible to all subscription tiers
+9. THE Quick_Reference_Card SHALL be accessible to all users
 
 
 ### Requirement 9: Bookmarks and Recent History
@@ -233,20 +233,7 @@ This document specifies the requirements for Reference Lookups in a web-based Du
 9. THE Character_System SHALL provide Contextual_Reference_Link from character sheets to class and race references
 
 
-### Requirement 12: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to control reference content access based on subscription tiers, so that premium reference features incentivize upgrades.
-
-#### Acceptance Criteria
-
-1. FOR Free_Tier users, THE Reference_System SHALL provide access to basic references: rules, conditions, and a limited spell list (cantrips and 1st-level spells only)
-2. FOR Adventurer_Tier users, THE Reference_System SHALL provide full access to all spell, monster, and item references
-3. FOR Hero_Tier users, THE Reference_System SHALL provide all Adventurer_Tier access plus Quick_Reference_Card downloads and bookmarking
-4. FOR Legend_Tier users, THE Reference_System SHALL provide all Hero_Tier access plus advanced search features (bulk bookmark export, reference analytics)
-5. WHEN a Free_Tier user attempts to view a restricted reference, THE Reference_System SHALL display an upgrade prompt with a preview of the content
-6. THE Reference_System SHALL display tier badges on reference pages indicating which tier is required for full access
-7. THE pricing comparison page SHALL include reference feature availability by tier
-8. THE Reference_System SHALL allow all tiers to search and view search results, but restrict access to full content based on tier
 
 
 ### Requirement 13: Mobile and Offline Access

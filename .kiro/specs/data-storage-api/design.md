@@ -1,592 +1,1072 @@
-# Design Document: Data Storage & APIs
+# Design Document - Data Storage & API
 
 ## Overview
 
-This document describes the technical design for the Data Storage & APIs layer of the D&D companion site. This layer is the foundation that all other features depend on: it owns database schema management, data access, and the public API surface through which the React frontend reads and writes application data.
-
-The design centres on three collaborating pieces:
-
-1. **GraphQL API** — a single `/graphql` endpoint (Apollo Server 4 + Express) that is the exclusive data interface for the frontend.
-2. **Prisma ORM** — owns the schema (`schema.prisma`), generates the fully typed `PrismaClient`, and manages versioned migrations.
-3. **Operation_Queue** — a serialised in-process FIFO queue that prevents SQLite write-contention under concurrent GraphQL load; bypassed transparently when MySQL is the active provider.
-
-The default database is **SQLite in Rollback Journal Mode** — zero infrastructure, runs locally with a single `DATABASE_URL` env var. The schema and queue are authored so that switching to MySQL requires only a `DATABASE_URL` change and a one-line provider update in `schema.prisma`.
-
----
+This design implements a GraphQL API layer backed by Prisma ORM with SQLite as the default database provider. The system uses a serialized write queue to handle SQLite's single-writer constraint and is architected to support MySQL as a future provider without code changes.
 
 ## Architecture
 
-### High-Level Request Flow
-
-```mermaid
-graph TD
-    FE[React Frontend<br/>Apollo Client] -->|HTTP POST /graphql| GQL[Apollo Server 4<br/>Express Middleware]
-    FE -->|HTTP GET /health| HEALTH[Health Endpoint]
-
-    GQL --> AUTH[Auth Middleware<br/>context builder]
-    AUTH --> RES[GraphQL Resolvers]
-
-    RES -->|Read_Operation| PC[PrismaClient]
-    RES -->|Write_Operation| OQ[Operation_Queue]
-    OQ -->|serialised writes| PC
-    OQ -.->|bypassed for MySQL| PC
-
-    PC --> DB[(SQLite / MySQL)]
-
-    HEALTH --> PC
-```
-
-### Server Process Boundary
-
-The backend runs as a separate Node.js process from the Vite dev server. In development both run concurrently; in production the compiled backend serves the bundled React app as static files as well as the GraphQL endpoint.
-
-```mermaid
-graph LR
-    subgraph Node.js Process
-        EX[Express App]
-        EX --> GQL_MW[Apollo expressMiddleware<br/>POST /graphql]
-        EX --> HEALTH_MW[GET /health]
-        EX --> STATIC[Static / index.html<br/>production only]
-        GQL_MW --> RESOLVERS
-        RESOLVERS --> OQ[Operation_Queue]
-        OQ --> PRISMA[PrismaClient]
-    end
-    PRISMA --> FS[(SQLite file)]
-```
-
-### Startup Sequence
-
-```mermaid
-sequenceDiagram
-    participant P as Process
-    participant CFG as Config Loader
-    participant MIG as Prisma Migrate
-    participant Q as Operation_Queue
-    participant SRV as Express Server
-
-    P->>CFG: load & validate env vars
-    CFG-->>P: fail fast if DATABASE_URL missing
-    P->>MIG: prisma migrate deploy
-    MIG-->>P: success / halt on failure
-    P->>Q: initialise queue (read DB_QUEUE_MAX_DEPTH)
-    P->>SRV: app.listen()
-    SRV-->>P: accepting requests
-```
-
----
-
-## Components and Interfaces
-
-### 1. Express Application (`server/app.ts`)
-
-Bootstraps the HTTP server, mounts Apollo middleware and the health endpoint. Handles graceful shutdown — drains the Operation_Queue before closing the PrismaClient connection.
-
-```typescript
-// Responsibilities:
-// - load config, fail fast on missing DATABASE_URL
-// - run prisma migrate deploy
-// - apply SQLite PRAGMAs via $executeRawUnsafe on each connection open
-// - create PrismaClient singleton
-// - create OperationQueue singleton
-// - build Apollo Server + expressMiddleware
-// - mount /graphql and /health routes
-// - register SIGTERM / SIGINT shutdown handler
-```
-
-### 2. Prisma Client Singleton (`server/db/prisma.ts`)
-
-A single `PrismaClient` instance shared across the process. On SQLite, a `$connect` event hook runs `PRAGMA foreign_keys = ON` and `PRAGMA synchronous = FULL` immediately after the connection is established.
-
-```typescript
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient({
-  log: ['error', 'warn'],
-});
-
-// Apply required SQLite PRAGMAs on every connection.
-// This is a no-op when the active provider is MySQL
-// because MySQL ignores PRAGMA statements.
-if (process.env.DATABASE_URL?.startsWith('file:')) {
-  prisma.$connect().then(() =>
-    prisma.$executeRawUnsafe('PRAGMA foreign_keys = ON')
-      .then(() => prisma.$executeRawUnsafe('PRAGMA synchronous = FULL'))
-  );
-}
-
-export default prisma;
-```
-
-> **Design note**: Prisma does not currently expose a `beforeQuery` connection hook for SQLite that runs automatically per connection. The approach above runs the PRAGMAs once after `$connect()`. For a single-connection SQLite setup (which is the norm for a serialised write queue), this is sufficient. If a multi-connection pool is ever used, the PRAGMAs must be applied in the Prisma `datasource` `url` query parameters (`?pragma_foreign_keys=ON`) or via a connection-init hook in a custom driver adapter.
-
-### 3. Operation Queue (`server/db/operationQueue.ts`)
-
-A lightweight in-process FIFO queue that wraps any `() => Promise<T>` write callback and ensures it executes only after all previously submitted callbacks have resolved or rejected.
-
-**Interface:**
-
-```typescript
-interface OperationQueue {
-  /** Enqueue a write callback. Resolves/rejects with the callback's result. */
-  enqueue<T>(operation: () => Promise<T>): Promise<T>;
-
-  /** Wait for all queued operations to complete (used during graceful shutdown). */
-  drain(): Promise<void>;
-
-  /** Current number of pending operations (for observability). */
-  readonly pendingCount: number;
-}
-```
-
-**Behaviour contract:**
-- Maximum depth is configured via `DB_QUEUE_MAX_DEPTH` (default: `100`).
-- When depth is exceeded, `enqueue()` rejects immediately with a `QueueFullError` (structured error with `code: 'QUEUE_FULL'`).
-- Each operation is timed: queue wait time and execution duration are emitted at `debug` log level.
-- A warning log is emitted if wait time exceeds `DB_QUEUE_WARN_MS` (default: `500 ms`).
-- When `DATABASE_URL` is a MySQL connection string (does not start with `file:`), the queue module exports a **passthrough** implementation where `enqueue(fn)` simply calls `fn()` directly.
-
-**Implementation sketch:**
-
-```typescript
-class SerialOperationQueue implements OperationQueue {
-  private tail: Promise<void> = Promise.resolve();
-  private _pendingCount = 0;
-
-  enqueue<T>(operation: () => Promise<T>): Promise<T> {
-    if (this._pendingCount >= maxDepth) {
-      return Promise.reject(new QueueFullError());
-    }
-    this._pendingCount++;
-    const result = this.tail.then(async () => {
-      const waitMs = Date.now() - enqueuedAt;
-      // log wait time, warn if > DB_QUEUE_WARN_MS
-      const start = Date.now();
-      try {
-        return await operation();
-      } finally {
-        // log execution duration
-        this._pendingCount--;
-      }
-    });
-    this.tail = result.then(() => {}, () => {});
-    return result;
-  }
-
-  drain(): Promise<void> { return this.tail; }
-}
-```
-
-### 4. GraphQL Schema (`server/graphql/schema/`)
-
-Type definitions (SDL) live in `.graphql` files, one per domain module. Resolvers are co-located in a `resolvers/` directory. The final schema is assembled with `makeExecutableSchema` from `@graphql-tools/schema`.
+### High-Level Components
 
 ```
-server/
-  graphql/
-    schema/
-      index.ts          # assembles typeDefs + resolvers
-      user.graphql
-      character.graphql
-      campaign.graphql
-      session.graphql
-      encounter.graphql
-      combatant.graphql
-      statBlock.graphql
-      item.graphql
-    resolvers/
-      user.resolver.ts
-      character.resolver.ts
-      ...
-    context.ts          # builds GraphQL context (auth, prisma, queue)
+┌─────────────────────────────────────────────────────────────┐
+│                     GraphQL API Layer                        │
+│  (Apollo Server / GraphQL Yoga / Pothos GraphQL)            │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   GraphQL Resolvers                          │
+│  (Query/Mutation/Subscription handlers)                     │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Business Logic Layer                        │
+│  (Services for each feature domain)                         │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Write Queue Layer                         │
+│  (Serializes writes for SQLite, bypass for MySQL)          │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Prisma Client                             │
+│  (Type-safe database access)                                │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Database Provider                           │
+│  SQLite (default) | MySQL (future)                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**GraphQL context type:**
+## Technology Stack
 
-```typescript
-interface GraphQLContext {
-  prisma: PrismaClient;
-  queue: OperationQueue;
-  currentUser: AuthUser | null; // null = unauthenticated
-}
-```
+### GraphQL Server
+**Choice: GraphQL Yoga**
+- Lightweight and modern
+- Built-in support for subscriptions
+- Easy integration with Prisma
+- TypeScript-first design
+- Better DX than Apollo Server for our use case
 
-### 5. Data-Access Service Layer (`server/services/`)
+**Alternative considered:** Apollo Server (more features, heavier)
 
-Resolvers do not call PrismaClient or the queue directly. Instead they call service functions. Service functions own:
-- transaction boundaries (`prisma.$transaction()`)
-- routing writes through the queue
-- mapping Prisma errors to domain errors
+### Schema Definition
+**Choice: Pothos GraphQL (Code-First)**
+- Type-safe schema generation from TypeScript
+- Integrates seamlessly with Prisma
+- Better refactoring support than SDL-first
+- Plugin ecosystem (validation, authorization, etc.)
 
-```typescript
-// Example: characterService.ts
-export async function createCharacter(
-  input: CreateCharacterInput,
-  ctx: GraphQLContext
-): Promise<Character> {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.$transaction(async (tx) => {
-      // multi-model write — character + default inventory
-      const character = await tx.character.create({ data: input });
-      await tx.inventory.create({ data: { characterId: character.id } });
-      return character;
-    })
-  );
-}
-```
+**Alternative considered:** SDL-first with GraphQL Code Generator
 
-### 6. Error Handling (`server/errors/`)
+### Database Layer
+**Prisma Client** (already chosen in requirements)
 
-A dedicated error-mapping module converts Prisma errors to structured `GraphQLError` instances with `extensions.code`.
+## Database Schema Design
 
-```typescript
-// PrismaClientKnownRequestError code → domain code mapping
-const PRISMA_ERROR_MAP: Record<string, string> = {
-  P2000: 'VALIDATION_ERROR',
-  P2001: 'NOT_FOUND',
-  P2002: 'CONFLICT',          // unique constraint
-  P2003: 'FOREIGN_KEY_VIOLATION',
-  P2025: 'NOT_FOUND',
-};
-```
-
-`PrismaClientUnknownRequestError` and `PrismaClientRustPanicError` are caught, logged with full detail internally, and surfaced as `INTERNAL_SERVER_ERROR` with no Prisma-specific content in the response.
-
-### 7. Health Endpoint (`GET /health`)
-
-Returns `200 OK` when the database is reachable, `503 Service Unavailable` otherwise.
-
-```typescript
-// Response shape
-interface HealthResponse {
-  status: 'ok' | 'degraded';
-  database: 'connected' | 'unreachable';
-  timestamp: string; // ISO 8601
-}
-```
-
-The health check executes `prisma.$queryRaw\`SELECT 1\`` with a short timeout. It does not go through the Operation_Queue.
-
----
-
-## Data Models
-
-### Prisma Schema Structure
-
-The `schema.prisma` file uses environment variables for both provider and connection URL so that no code change is required to switch providers:
+### Core Tables
 
 ```prisma
+// schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = env("DATABASE_PROVIDER")   // "sqlite" or "mysql"
+  provider = "sqlite" // or "mysql"
   url      = env("DATABASE_URL")
 }
-```
 
-`DATABASE_PROVIDER` defaults to `"sqlite"` in `.env` and `.env.example`. When `DATABASE_URL` is a MySQL connection string, `DATABASE_PROVIDER` is set to `"mysql"` in the corresponding env file.
-
-### Domain Models (Initial Schema)
-
-These represent the initial set of domain entities required by the requirements. Each model is designed to be compatible with both SQLite and MySQL Prisma providers (no SQLite-only or MySQL-only field types are used).
-
-```prisma
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
-  passwordHash String
-  displayName  String
-  theme        String      @default("dark")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  characters   Character[]
-  campaigns    Campaign[]  @relation("CampaignOwner")
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Theme preference
+  themeMode     ThemeMode @default(SYSTEM)
+  
+  // Relations
+  characters    Character[]
+  campaigns     Campaign[]
+  sessions      Session[]
+  
+  @@index([email])
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+  SYSTEM
 }
 
 model Character {
-  id         String    @id @default(cuid())
-  name       String
-  classType  String
-  level      Int       @default(1)
-  maxHp      Int
-  currentHp  Int
-  userId     String
-  user       User      @relation(fields: [userId], references: [id])
-  combatants Combatant[]
-  inventory  Inventory?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  level         Int       @default(1)
+  class         String
+  race          String
+  
+  // Core stats
+  strength      Int       @default(10)
+  dexterity     Int       @default(10)
+  constitution  Int       @default(10)
+  intelligence  Int       @default(10)
+  wisdom        Int       @default(10)
+  charisma      Int       @default(10)
+  
+  maxHp         Int
+  currentHp     Int
+  tempHp        Int       @default(0)
+  armorClass    Int
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  campaignId    String?
+  campaign      Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  itemAssignments ItemAssignment[]
+  
+  @@index([userId])
+  @@index([campaignId])
 }
 
 model Campaign {
-  id        String     @id @default(cuid())
-  name      String
-  ownerId   String
-  owner     User       @relation("CampaignOwner", fields: [ownerId], references: [id])
-  sessions  Session[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  setting       String?
+  status        CampaignStatus @default(PLANNING)
+  
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  characters    Character[]
+  sessions      Session[]
+  npcs          NPC[]
+  locations     Location[]
+  quests        Quest[]
+  timelineEntries TimelineEntry[]
+  
+  @@index([ownerId])
 }
 
-model Session {
-  id         String      @id @default(cuid())
-  campaignId String
-  campaign   Campaign    @relation(fields: [campaignId], references: [id])
-  name       String
-  date       DateTime
-  notes      String?
-  encounters Encounter[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+enum CampaignStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
 }
 
-model Encounter {
-  id         String      @id @default(cuid())
-  sessionId  String
-  session    Session     @relation(fields: [sessionId], references: [id])
-  name       String
-  round      Int         @default(1)
-  active     Boolean     @default(false)
-  combatants Combatant[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+// Combat & Initiative
+model CombatEncounter {
+  id            String    @id @default(cuid())
+  name          String?
+  isActive      Boolean   @default(true)
+  currentRound  Int       @default(1)
+  currentTurn   Int       @default(0)
+  
+  sessionId     String?
+  session       Session?  @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  combatants    Combatant[]
+  
+  @@index([sessionId])
 }
 
 model Combatant {
-  id          String    @id @default(cuid())
-  encounterId String
-  encounter   Encounter @relation(fields: [encounterId], references: [id])
-  name        String
-  initiative  Int       @default(0)
-  maxHp       Int
-  currentHp   Int
-  type        String    // "player" | "monster" | "npc"
-  characterId String?
-  character   Character? @relation(fields: [characterId], references: [id])
-  statBlockId String?
-  statBlock   StatBlock? @relation(fields: [statBlockId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  initiative    Int
+  maxHp         Int
+  currentHp     Int
+  tempHp        Int       @default(0)
+  armorClass    Int
+  
+  combatantType CombatantType
+  
+  // Link to character (for PCs)
+  characterId   String?
+  
+  // Link to monster stat block (for NPCs/monsters)
+  monsterId     String?
+  monster       Monster?  @relation(fields: [monsterId], references: [id])
+  
+  encounterId   String
+  encounter     CombatEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([encounterId])
 }
 
-model StatBlock {
-  id           String      @id @default(cuid())
-  name         String
-  size         String
-  type         String
-  alignment    String
-  armorClass   Int
-  hitPoints    Int
-  speed        String
-  strength     Int
-  dexterity    Int
-  constitution Int
-  intelligence Int
-  wisdom       Int
-  charisma     Int
-  cr           String
-  source       String?     // e.g., "D&D Beyond"
-  sourcePath   String?     // e.g., "/monsters/goblin" for D&D Beyond linking
-  combatants   Combatant[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+enum CombatantType {
+  PLAYER
+  MONSTER
+  NPC
 }
 
-model Inventory {
-  id          String      @id @default(cuid())
-  characterId String      @unique
-  character   Character   @relation(fields: [characterId], references: [id])
-  items       ItemSlot[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+// Sessions
+model Session {
+  id            String    @id @default(cuid())
+  sessionNumber Int
+  title         String?
+  realWorldDate DateTime
+  inGameDate    String?
+  duration      Float?
+  
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  dmId          String
+  dm            User      @relation(fields: [dmId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  notes         SessionNote[]
+  encounters    CombatEncounter[]
+  
+  @@index([campaignId])
+  @@index([dmId])
 }
 
+model SessionNote {
+  id            String    @id @default(cuid())
+  title         String?
+  content       String    // Rich text
+  isSummary     Boolean   @default(false)
+  
+  sessionId     String
+  session       Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([sessionId])
+}
+
+// NPCs
+model NPC {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  race          String?
+  class         String?
+  level         Int?
+  role          String?   // quest_giver, villain, merchant, ally
+  
+  locationId    String?
+  location      Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([campaignId])
+  @@index([locationId])
+}
+
+// Locations
+model Location {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  region        String?
+  
+  parentId      String?
+  parent        Location? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Location[] @relation("LocationHierarchy")
+  
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  npcs          NPC[]
+  
+  @@index([campaignId])
+  @@index([parentId])
+}
+
+// Quests
+model Quest {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  status        QuestStatus @default(NOT_STARTED)
+  rewards       String?
+  
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([campaignId])
+}
+
+enum QuestStatus {
+  NOT_STARTED
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+// Timeline
+model TimelineEntry {
+  id            String    @id @default(cuid())
+  title         String?
+  description   String
+  inGameDate    String
+  
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([campaignId])
+}
+
+// Monsters
+model Monster {
+  id            String    @id @default(cuid())
+  name          String
+  size          String
+  type          String
+  alignment     String?
+  armorClass    Int
+  hitPoints     Int
+  hitDice       String
+  speed         String
+  
+  // Ability scores
+  strength      Int
+  dexterity     Int
+  constitution  Int
+  intelligence  Int
+  wisdom        Int
+  charisma      Int
+  
+  challengeRating Float
+  source        MonsterSource @default(HOMEBREW)
+  
+  // JSON fields for complex data
+  abilities     String    // JSON
+  actions       String    // JSON
+  reactions     String?   // JSON
+  legendaryActions String? // JSON
+  
+  dndbeyondLink String?
+  
+  createdById   String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  combatants    Combatant[]
+  
+  @@index([type])
+  @@index([challengeRating])
+}
+
+enum MonsterSource {
+  SRD
+  HOMEBREW
+  THIRD_PARTY
+}
+
+// Items
 model Item {
-  id          String     @id @default(cuid())
-  name        String
-  rarity      String
-  description String
-  type        String     // "magic" | "consumable" | "equipment"
-  slots       ItemSlot[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  itemType      ItemType
+  rarity        ItemRarity
+  attunementRequired Boolean @default(false)
+  weight        Float?
+  value         Int?      // In gold pieces
+  
+  source        ItemSource @default(HOMEBREW)
+  
+  createdById   String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  assignments   ItemAssignment[]
+  
+  @@index([itemType])
+  @@index([rarity])
 }
 
-model ItemSlot {
-  id          String    @id @default(cuid())
-  inventoryId String
-  inventory   Inventory @relation(fields: [inventoryId], references: [id])
-  itemId      String
-  item        Item      @relation(fields: [itemId], references: [id])
-  quantity    Int       @default(1)
-  equipped    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+enum ItemType {
+  WEAPON
+  ARMOR
+  WONDROUS_ITEM
+  POTION
+  SCROLL
+  RING
+  ROD
+  STAFF
+  WAND
+  OTHER
+}
+
+enum ItemRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  VERY_RARE
+  LEGENDARY
+  ARTIFACT
+}
+
+enum ItemSource {
+  SRD
+  HOMEBREW
+  THIRD_PARTY
+}
+
+model ItemAssignment {
+  id            String    @id @default(cuid())
+  quantity      Int       @default(1)
+  equipped      Boolean   @default(false)
+  attuned       Boolean   @default(false)
+  identified    Boolean   @default(true)
+  
+  itemId        String
+  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  characterId   String
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([characterId])
+  @@index([itemId])
 }
 ```
 
-### Provider Compatibility Notes
+## Write Queue Implementation
 
-| Concern | SQLite | MySQL | Mitigation |
-|---|---|---|---|
-| `cuid()` IDs | ✅ | ✅ | Standard Prisma default |
-| `DateTime` storage | Numeric | DATETIME | Prisma handles mapping |
-| `String` as enum | ✅ | ✅ | No native enum used (String field) |
-| Foreign keys | Opt-in (PRAGMA) | Default on | PRAGMA applied at connect |
-| JSON fields | Not used initially | Native | Avoided in initial schema |
-| Decimal precision | Limited | Full | Using `Int`/`String` where precision matters |
+### SQLite Write Queue
 
----
+```typescript
+// src/lib/db/writeQueue.ts
 
-## Correctness Properties
+import { PrismaClient } from '@prisma/client';
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+type WriteOperation<T = any> = {
+  id: string;
+  operation: () => Promise<T>;
+  resolve: (value: T) => void;
+  reject: (error: Error) => void;
+};
 
-The property-based testing library for this project is **[fast-check](https://fast-check.dev/)**, which integrates directly with Vitest.
+class WriteQueue {
+  private queue: WriteOperation[] = [];
+  private processing = false;
+  private readonly enabled: boolean;
 
-### Property 1: All GraphQL errors contain an extensions.code field
+  constructor(enabled: boolean) {
+    this.enabled = enabled;
+  }
 
-*For any* error condition that occurs during a GraphQL resolver execution (Prisma known error, unknown error, validation error, or authentication error), the GraphQL response body should always contain an `extensions.code` field on every error object, and should never contain Prisma-internal details such as error model names, raw SQL, or Prisma error codes.
+  async enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    // Bypass queue for MySQL
+    if (!this.enabled) {
+      return operation();
+    }
 
-**Validates: Requirements 1.6, 7.1, 7.3**
+    return new Promise<T>((resolve, reject) => {
+      const op: WriteOperation<T> = {
+        id: crypto.randomUUID(),
+        operation,
+        resolve,
+        reject,
+      };
 
-### Property 2: Protected resolvers reject unauthenticated requests
+      this.queue.push(op);
+      this.processQueue();
+    });
+  }
 
-*For any* query or mutation that accesses user-specific or campaign-specific data, submitting the request without a valid authentication token should always result in a GraphQL error with `extensions.code === 'UNAUTHENTICATED'`, regardless of the query structure or variables.
+  private async processQueue(): Promise<void> {
+    if (this.processing || this.queue.length === 0) {
+      return;
+    }
 
-**Validates: Requirements 1.7**
+    this.processing = true;
 
-### Property 3: Operation_Queue serialises writes in FIFO order under SQLite
+    while (this.queue.length > 0) {
+      const op = this.queue.shift()!;
 
-*For any* sequence of concurrent write operations submitted to the Operation_Queue when using the SQLite provider, the operations should execute serially (never overlapping) and complete in first-in-first-out order, such that no two write callbacks are active simultaneously.
+      try {
+        const result = await op.operation();
+        op.resolve(result);
+      } catch (error) {
+        op.reject(error as Error);
+      }
+    }
 
-**Validates: Requirements 4.1**
+    this.processing = false;
+  }
+}
 
-### Property 4: Operation_Queue rejects operations when at capacity
+// Singleton instance
+export const writeQueue = new WriteQueue(
+  process.env.DATABASE_PROVIDER === 'sqlite'
+);
+```
 
-*For any* write operation submitted to the Operation_Queue when the current pending count equals `DB_QUEUE_MAX_DEPTH`, the `enqueue()` call should immediately reject with a structured `QueueFullError` (containing `code: 'QUEUE_FULL'`) rather than silently dropping the operation or blocking indefinitely.
+### Prisma Client Setup
 
-**Validates: Requirements 4.3, 4.4**
+```typescript
+// src/lib/db/prisma.ts
 
-### Property 5: Transaction atomicity — partial failures produce no partial writes
+import { PrismaClient } from '@prisma/client';
 
-*For any* multi-model write operation executed inside `prisma.$transaction()`, if any single operation within the transaction throws an error, querying the database afterward should show that none of the operations from that transaction were persisted — the database state before and after a failed transaction should be identical.
+const prismaClientSingleton = () => {
+  const prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
 
-**Validates: Requirements 2.8, 6.1, 6.2, 6.3**
+  // SQLite-specific configuration
+  if (process.env.DATABASE_PROVIDER === 'sqlite') {
+    prisma.$executeRawUnsafe('PRAGMA foreign_keys = ON');
+    prisma.$executeRawUnsafe('PRAGMA synchronous = FULL');
+  }
 
-### Property 6: Graceful shutdown drains all queued writes
+  return prisma;
+};
 
-*For any* set of write operations enqueued in the Operation_Queue at the time a graceful shutdown signal is received, all previously enqueued operations should resolve or reject before the PrismaClient connection is closed — no queued operation should be abandoned mid-execution.
+declare global {
+  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
+}
 
-**Validates: Requirements 4.7**
+export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
----
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prismaGlobal = prisma;
+}
 
-## Error Handling
+// Run migrations on startup
+export async function initializeDatabase() {
+  try {
+    await prisma.$executeRawUnsafe('SELECT 1');
+    console.log('Database connection established');
+    
+    // Run pending migrations
+    if (process.env.NODE_ENV === 'production') {
+      const { execSync } = require('child_process');
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    }
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    throw error;
+  }
+}
+```
 
-### Error Classification and Mapping
+## GraphQL Schema Design
 
-All errors are caught at the service layer before reaching resolvers. The error pipeline is:
+### Type Definitions (Pothos)
+
+```typescript
+// src/graphql/schema.ts
+
+import SchemaBuilder from '@pothos/core';
+import PrismaPlugin from '@pothos/plugin-prisma';
+import type PrismaTypes from '@pothos/plugin-prisma/generated';
+import { prisma } from '../lib/db/prisma';
+
+export const builder = new SchemaBuilder<{
+  PrismaTypes: PrismaTypes;
+  Context: {
+    prisma: typeof prisma;
+    userId?: string;
+  };
+}>({
+  plugins: [PrismaPlugin],
+  prisma: {
+    client: prisma,
+  },
+});
+
+// Root types
+builder.queryType({});
+builder.mutationType({});
+
+export const schema = builder.toSchema();
+```
+
+### Example Types
+
+```typescript
+// src/graphql/types/User.ts
+
+import { builder } from '../schema';
+
+builder.prismaObject('User', {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    email: t.exposeString('email'),
+    name: t.exposeString('name', { nullable: true }),
+    themeMode: t.expose('themeMode', { type: ThemeModeEnum }),
+    createdAt: t.expose('createdAt', { type: 'DateTime' }),
+    characters: t.relation('characters'),
+    campaigns: t.relation('campaigns'),
+  }),
+});
+
+const ThemeModeEnum = builder.enumType('ThemeMode', {
+  values: ['LIGHT', 'DARK', 'SYSTEM'] as const,
+});
+
+// Queries
+builder.queryField('me', (t) =>
+  t.prismaField({
+    type: 'User',
+    nullable: true,
+    resolve: async (query, _root, _args, ctx) => {
+      if (!ctx.userId) return null;
+      return ctx.prisma.user.findUnique({
+        ...query,
+        where: { id: ctx.userId },
+      });
+    },
+  })
+);
+
+// Mutations
+builder.mutationField('updateThemeMode', (t) =>
+  t.prismaField({
+    type: 'User',
+    args: {
+      mode: t.arg({ type: ThemeModeEnum, required: true }),
+    },
+    resolve: async (query, _root, args, ctx) => {
+      if (!ctx.userId) throw new Error('Not authenticated');
+      
+      return ctx.prisma.user.update({
+        ...query,
+        where: { id: ctx.userId },
+        data: { themeMode: args.mode },
+      });
+    },
+  })
+);
+```
+
+## GraphQL Server Setup
+
+```typescript
+// src/graphql/server.ts
+
+import { createYoga } from 'graphql-yoga';
+import { schema } from './schema';
+import { prisma } from '../lib/db/prisma';
+
+export const yoga = createYoga({
+  schema,
+  context: async ({ request }) => {
+    // Extract user from JWT/session
+    const userId = await getUserIdFromRequest(request);
+    
+    return {
+      prisma,
+      userId,
+    };
+  },
+  graphiql: process.env.NODE_ENV === 'development',
+});
+
+async function getUserIdFromRequest(request: Request): Promise<string | undefined> {
+  // TODO: Implement JWT/session parsing
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) return undefined;
+  
+  // Parse JWT and extract userId
+  // ...
+  
+  return undefined;
+}
+```
+
+## File Structure
 
 ```
-PrismaError
-  → mapPrismaError()         // converts to AppError with domain code
-  → GraphQL formatError()    // formats AppError as GraphQL error extension
-  → client response          // { errors: [{ message, extensions: { code } }] }
+src/
+├── lib/
+│   └── db/
+│       ├── prisma.ts           # Prisma client setup
+│       └── writeQueue.ts       # Write queue for SQLite
+├── graphql/
+│   ├── schema.ts               # Schema builder setup
+│   ├── server.ts               # GraphQL Yoga server
+│   └── types/
+│       ├── User.ts
+│       ├── Character.ts
+│       ├── Campaign.ts
+│       ├── Combat.ts
+│       ├── Item.ts
+│       └── Monster.ts
+├── services/                   # Business logic
+│   ├── userService.ts
+│   ├── characterService.ts
+│   ├── campaignService.ts
+│   └── ...
+└── main.tsx                    # Entry point
+
+prisma/
+├── schema.prisma
+└── migrations/
 ```
 
-**Prisma known error codes → domain codes:**
+## Environment Variables
 
-| Prisma Code | Domain Code | HTTP analogue |
-|---|---|---|
-| P2001, P2025 | `NOT_FOUND` | 404 |
-| P2002 | `CONFLICT` | 409 |
-| P2003 | `FOREIGN_KEY_VIOLATION` | 409 |
-| P2000, P2007 | `VALIDATION_ERROR` | 400 |
-| P1001 | `DATABASE_UNAVAILABLE` | 503 |
+```bash
+# .env
+DATABASE_URL="file:./dev.db"
+DATABASE_PROVIDER="sqlite"  # or "mysql"
+NODE_ENV="development"
+JWT_SECRET="your-secret-key"
+```
 
-**Unknown/panic errors** are logged at `error` level with full stack trace, operation name, and entity ID. The client receives only `{ code: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error occurred.' }`.
+## Migration Strategy
 
-### Queue Error Handling
+### Initial Setup
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
 
-| Condition | Error Code | Logged? |
-|---|---|---|
-| Queue at capacity | `QUEUE_FULL` | Warning |
-| Operation throws | passes through to caller | Yes (via service layer) |
-| Shutdown drain timeout | `DRAIN_TIMEOUT` | Error |
-
-### Startup Error Handling
-
-| Condition | Behaviour |
-|---|---|
-| `DATABASE_URL` not set | Process exits with code 1, clear message |
-| `prisma migrate deploy` fails | Logs migration name + error, process exits with code 1 |
-| Database unreachable at start | Health check fails; process continues but logs error |
-
----
+### Provider Switching
+To switch from SQLite to MySQL:
+1. Update `DATABASE_URL` in `.env`
+2. Update `provider` in `schema.prisma` to `"mysql"`
+3. Run `npx prisma migrate deploy`
+4. Restart application (write queue will automatically disable)
 
 ## Testing Strategy
 
-### Dual Testing Approach
-
-Unit tests cover specific examples, edge cases, and error conditions. Property-based tests validate universal invariants using **fast-check** integrated with Vitest.
-
 ### Unit Tests
 
-Unit tests are co-located with source files (e.g., `operationQueue.test.ts` next to `operationQueue.ts`). They focus on:
+**Test Framework:** Vitest
+**Test Location:** Co-located with source files
 
-- **OperationQueue**: serialisation order, queue-full rejection, drain behaviour, passthrough mode for MySQL.
-- **Error mapping**: every Prisma error code maps to the expected domain code; unknown errors return `INTERNAL_SERVER_ERROR`.
-- **Config loader**: fail-fast on missing `DATABASE_URL`; correct defaults for optional env vars.
-- **Startup hooks**: `prisma migrate deploy` is called before the server accepts requests; failure halts startup.
-- **Resolvers**: each resolver calls the correct service function and propagates errors correctly (using mocked service layer).
-
-SQLite in-memory mode (`DATABASE_URL=file::memory:?cache=shared`) is used for all integration-touching unit tests. Migrations are applied via `prisma migrate deploy` at test suite startup via a global setup file.
-
-### Property-Based Tests (fast-check + Vitest)
-
-Each property listed in the Correctness Properties section maps to exactly one property-based test. Minimum 100 iterations per test (fast-check default).
-
-**Tag format used in each test:**
+#### Prisma Service Tests
 
 ```typescript
-// Feature: data-storage-api, Property N: <property text>
+// src/lib/db/prisma.test.ts
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { prisma } from './prisma';
+
+describe('Prisma Client', () => {
+  beforeEach(async () => {
+    // Clear test database
+    await prisma.user.deleteMany();
+  });
+
+  afterEach(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should connect to database', async () => {
+    const result = await prisma.$queryRaw`SELECT 1 as value`;
+    expect(result).toBeDefined();
+  });
+
+  it('should create a user', async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: 'test@example.com',
+        passwordHash: 'hashedpassword',
+        name: 'Test User',
+      },
+    });
+
+    expect(user.id).toBeDefined();
+    expect(user.email).toBe('test@example.com');
+  });
+
+  it('should enforce unique email constraint', async () => {
+    await prisma.user.create({
+      data: {
+        email: 'test@example.com',
+        passwordHash: 'hashedpassword',
+      },
+    });
+
+    await expect(
+      prisma.user.create({
+        data: {
+          email: 'test@example.com',
+          passwordHash: 'hashedpassword',
+        },
+      })
+    ).rejects.toThrow();
+  });
+});
 ```
 
-**Property 1 — Error extensions.code:**
-Generate arbitrary Prisma error instances (varying error codes, messages). Feed them through `mapPrismaError()` and `formatError()`. Assert every resulting GraphQL error object has a non-empty `extensions.code` string with no Prisma-internal content.
+#### Write Queue Tests
 
-**Property 2 — Auth rejection:**
-Generate arbitrary GraphQL operation strings and variable maps. Execute them against the Apollo schema with no auth context. Assert the response always contains at least one error with `extensions.code === 'UNAUTHENTICATED'`.
+```typescript
+// src/lib/db/writeQueue.test.ts
 
-**Property 3 — Queue serialisation order:**
-Generate an arbitrary array of N async operations (2–20). Submit all concurrently to the OperationQueue. Record execution start/end timestamps. Assert no two operations overlap (start₂ ≥ end₁) and order matches submission order.
+import { describe, it, expect, vi } from 'vitest';
+import { writeQueue } from './writeQueue';
 
-**Property 4 — Queue-full rejection:**
-Generate an arbitrary `DB_QUEUE_MAX_DEPTH` (1–50). Fill the queue to capacity with never-resolving stubs. Submit one more operation. Assert immediate rejection with `code === 'QUEUE_FULL'`.
+describe('Write Queue', () => {
+  it('should execute operations in order', async () => {
+    const results: number[] = [];
 
-**Property 5 — Transaction atomicity:**
-Generate arbitrary pairs of valid + intentionally-failing Prisma operations. Execute them in a `$transaction()`. Assert that after the failed transaction, a subsequent read of all affected tables returns the same count as before the transaction.
+    const promises = [
+      writeQueue.enqueue(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        results.push(1);
+        return 1;
+      }),
+      writeQueue.enqueue(async () => {
+        results.push(2);
+        return 2;
+      }),
+      writeQueue.enqueue(async () => {
+        results.push(3);
+        return 3;
+      }),
+    ];
 
-**Property 6 — Graceful drain:**
-Generate an arbitrary batch of N write operations. Start draining, trigger shutdown signal. Assert all N operations complete (resolve or reject) before the PrismaClient `$disconnect()` call is made.
+    await Promise.all(promises);
+
+    expect(results).toEqual([1, 2, 3]);
+  });
+
+  it('should handle errors without breaking the queue', async () => {
+    const successOp = vi.fn().mockResolvedValue('success');
+    const errorOp = vi.fn().mockRejectedValue(new Error('test error'));
+
+    await writeQueue.enqueue(successOp);
+
+    await expect(writeQueue.enqueue(errorOp)).rejects.toThrow('test error');
+
+    await writeQueue.enqueue(successOp);
+
+    expect(successOp).toHaveBeenCalledTimes(2);
+  });
+});
+```
 
 ### Integration Tests
 
-The `/health` endpoint and the end-to-end GraphQL request path are tested as integration tests using a real in-memory SQLite database:
+#### GraphQL API Tests
 
-- `GET /health` returns `200 { status: 'ok', database: 'connected' }` when the DB is reachable.
-- `GET /health` returns `503 { status: 'degraded', database: 'unreachable' }` when the DB is not reachable.
-- A full GraphQL query round-trip (create character → query character) persists and returns correct data.
+```typescript
+// src/graphql/__tests__/integration.test.ts
 
-### Test Environment Configuration
+import { describe, it, expect, beforeEach } from 'vitest';
+import { yoga } from '../server';
+import { prisma } from '../../lib/db/prisma';
 
+describe('GraphQL API Integration', () => {
+  beforeEach(async () => {
+    await prisma.user.deleteMany();
+  });
+
+  it('should execute a simple query', async () => {
+    const response = await yoga.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          query {
+            __typename
+          }
+        `,
+      }),
+    });
+
+    const result = await response.json();
+    expect(result.data.__typename).toBe('Query');
+  });
+
+  it('should handle mutations', async () => {
+    const response = await yoga.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          mutation Register($email: String!, $password: String!) {
+            register(email: $email, password: $password) {
+              token
+              user {
+                email
+              }
+            }
+          }
+        `,
+        variables: {
+          email: 'test@example.com',
+          password: 'TestPassword123',
+        },
+      }),
+    });
+
+    const result = await response.json();
+    expect(result.data.register.user.email).toBe('test@example.com');
+    expect(result.data.register.token).toBeDefined();
+  });
+
+  it('should require authentication for protected queries', async () => {
+    const response = await yoga.fetch('http://localhost/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          query {
+            me {
+              email
+            }
+          }
+        `,
+      }),
+    });
+
+    const result = await response.json();
+    expect(result.data.me).toBeNull();
+  });
+});
 ```
-DATABASE_URL=file::memory:?cache=shared
-NODE_ENV=test
-DB_QUEUE_MAX_DEPTH=10
-DB_QUEUE_WARN_MS=100
+
+### Test Database Setup
+
+```typescript
+// src/test/setup.ts
+
+import { PrismaClient } from '@prisma/client';
+import { beforeAll, afterAll } from 'vitest';
+
+const testPrisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: 'file:./test.db',
+    },
+  },
+});
+
+beforeAll(async () => {
+  // Run migrations on test database
+  const { execSync } = require('child_process');
+  execSync('DATABASE_URL="file:./test.db" npx prisma migrate deploy', {
+    stdio: 'inherit',
+  });
+});
+
+afterAll(async () => {
+  await testPrisma.$disconnect();
+});
 ```
 
-Migrations are applied in a global Vitest setup file. The PrismaClient is reset between test suites using `prisma.$transaction([prisma.itemSlot.deleteMany(), ... ])` to clear all tables in dependency order.
+### Test Configuration
+
+```typescript
+// vitest.config.ts
+
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/test/**'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
+  },
+});
+```
+
+### Required Test Coverage
+
+All implementations MUST include:
+
+1. **Unit tests** for:
+   - Database operations (CRUD)
+   - Business logic services
+   - Write queue operations
+   - Data validation
+
+2. **Integration tests** for:
+   - GraphQL queries and mutations
+   - Authentication flow
+   - Database transactions
+   - Error handling
+
+3. **Minimum coverage**: 80% across lines, functions, branches, and statements
+
+4. **Test commands**:
+   ```bash
+   # Run tests
+   npm run test
+
+   # Run tests with coverage
+   npm run test:coverage
+
+   # Run tests in watch mode during development
+   npm run test:watch
+   ```
+
+## Next Steps
+
+1. Implement authentication/authorization layer (with tests)
+2. Add data validation with Zod or similar (with tests)
+3. Implement error handling middleware (with tests)
+4. Add GraphQL subscriptions for real-time features (with tests)
+5. Add rate limiting and security middleware (with tests)

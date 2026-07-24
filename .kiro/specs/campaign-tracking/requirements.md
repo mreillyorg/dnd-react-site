@@ -52,9 +52,7 @@ This document specifies the requirements for Campaign Tracking and Notes in a we
 7. THE Campaign_System SHALL allow the Campaign_Owner to permanently delete a Campaign, which removes all associated Sessions, NPCs, Locations, Quests, and Timeline_Entry records after confirmation
 8. THE Campaign_System SHALL display a list of all Campaigns for which the user is Campaign_Owner or Campaign_Member
 9. THE Campaign list SHALL display Campaign name, Campaign_Status, last session date, and number of sessions for each Campaign
-10. THE Campaign_System SHALL enforce the Campaign_Limit based on the user's subscription tier
-11. WHEN a user reaches their Campaign_Limit and attempts to create a new Campaign, THE Campaign_System SHALL block the action and display an upgrade prompt
-12. THE Campaign_System SHALL allow users to filter the Campaign list by Campaign_Status and search by Campaign name
+10. THE Campaign_System SHALL allow users to filter the Campaign list by Campaign_Status and search by Campaign name
 
 
 ### Requirement 2: Campaign Invitation and Party Management
@@ -129,7 +127,7 @@ This document specifies the requirements for Campaign Tracking and Notes in a we
 2. WHEN creating an NPC, THE user SHALL provide a name (required)
 3. THE Campaign_System SHALL allow the Campaign_Owner to add the following optional fields to an NPC: description, NPC_Role, race, class, level, Location, and notes
 4. THE Campaign_System SHALL support multiple NPC_Role values per NPC (e.g., an NPC can be both quest_giver and merchant)
-5. THE Campaign_System SHALL allow the Campaign_Owner to upload an avatar image for an NPC (subject to Storage_Limit)
+5. THE Campaign_System SHALL allow the Campaign_Owner to upload an avatar image for an NPC
 6. THE Campaign_System SHALL display a list of all NPCs in the Campaign with name, NPC_Role, and Location
 7. THE Campaign_System SHALL allow filtering NPCs by NPC_Role, Location, and Tag
 8. THE Campaign_System SHALL allow searching NPCs by name
@@ -266,7 +264,7 @@ This document specifies the requirements for Campaign Tracking and Notes in a we
 7. THE Campaign_System SHALL provide export options allowing the Campaign_Owner to select which sections to include (e.g., NPCs only, Sessions only)
 8. THE Campaign_System SHALL queue export operations in the background and notify the user via email when the export is ready for download
 9. THE Campaign_System SHALL retain exported files for 7 days before automatic deletion
-10. THE Campaign_System SHALL count exported PDF files against the user's Storage_Limit
+10. THE Campaign_System SHALL count exported PDF files against the user's storage quota
 
 
 ### Requirement 12: Integration with Combat and Initiative Trackers
@@ -283,19 +281,4 @@ This document specifies the requirements for Campaign Tracking and Notes in a we
 6. THE Campaign_System SHALL allow the Campaign_Owner to unlink an encounter from a Session without deleting the encounter
 
 
-### Requirement 13: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to enforce campaign limits based on subscription tiers, so that users are incentivized to upgrade for more campaigns.
-
-#### Acceptance Criteria
-
-1. THE Campaign_System SHALL enforce the Campaign_Limit defined in the user's subscription tier
-2. FOR Free_Tier users, THE Campaign_Limit SHALL be 1 active campaign
-3. FOR Adventurer_Tier users, THE Campaign_Limit SHALL be 3 active campaigns
-4. FOR Hero_Tier users, THE Campaign_Limit SHALL be 10 active campaigns
-5. FOR Legend_Tier users, THE Campaign_Limit SHALL be unlimited
-6. WHEN counting active campaigns, THE Campaign_System SHALL count only Campaigns where the user is Campaign_Owner and Campaign_Status is NOT archived
-7. WHEN a user reaches their Campaign_Limit and attempts to create a new Campaign, THE Campaign_System SHALL display an upgrade prompt showing the next tier that allows more campaigns
-8. WHEN a user downgrades to a tier with a lower Campaign_Limit and currently has more active campaigns than allowed, THE Campaign_System SHALL require the user to archive excess campaigns before the downgrade completes
-9. THE Campaign_System SHALL NOT restrict the number of Campaigns a user can join as a Campaign_Member
-10. THE Campaign_System SHALL display campaign usage on the user's account dashboard (e.g., "Campaigns: 2/3")

@@ -194,19 +194,7 @@ This document specifies the requirements for Adventurer's League DM Log Exports 
 7. THE AL_Log_System SHALL allow the DM to override any template-populated values
 
 
-### Requirement 10: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to control AL log features based on subscription tiers, so that this premium feature incentivizes upgrades.
-
-#### Acceptance Criteria
-
-1. THE AL_Log_System SHALL be accessible only to Legend_Tier subscribers
-2. FOR users below Legend_Tier, THE AL_Log_System SHALL display an upgrade prompt when attempting to export AL logs
-3. FOR Legend_Tier users, THE AL_Log_System SHALL provide unlimited AL log exports
-4. THE AL_Log_System SHALL allow all tiers to view AL log data within the application, but restrict PDF export to Legend_Tier
-5. THE pricing comparison page SHALL highlight AL DM log exports as a Legend_Tier exclusive feature
-6. WHEN a Legend_Tier user downgrades, THE AL_Log_System SHALL retain all log data but block PDF export functionality
-7. THE AL_Log_System SHALL display "Legend Tier Required" badges on AL log export buttons for non-Legend users
 
 
 ### Requirement 11: AL Log History and Management

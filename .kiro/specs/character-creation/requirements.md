@@ -198,7 +198,7 @@ The feature integrates with other companion site features including the HP Track
 3. THE System SHALL allow a user to duplicate an existing Character to use as a starting point for a new one.
 4. THE System SHALL allow a user to delete a Character after confirming the deletion in a modal dialog.
 5. WHEN a user confirms deletion of a Character, THE System SHALL permanently remove the Character and all associated data.
-6. WHERE a subscription plan restricts the maximum number of active characters, THE System SHALL enforce that limit and display an upgrade prompt when the limit is reached.
+6. THE System SHALL NOT restrict the number of characters a user can create.
 
 ---
 
@@ -292,7 +292,7 @@ The feature integrates with other companion site features including the HP Track
 5. WHEN a sync completes successfully, THE Character_Manager SHALL display a confirmation message summarizing the changes applied.
 6. IF a sync operation fails due to authentication, network, or API errors, THEN THE System SHALL display a descriptive error message and leave the Character data unchanged.
 7. THE System SHALL store the timestamp of the last successful sync and display it on the Character_Sheet.
-8. WHERE a subscription plan includes automatic sync, THE System SHALL automatically sync linked Characters at a configurable interval (minimum 15 minutes) when the Character_Sheet is not actively being edited.
+8. THE System SHALL automatically sync linked Characters at a configurable interval (minimum 15 minutes) when the Character_Sheet is not actively being edited.
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This document specifies the requirements for the Magic Items and Consumables Tracker in a web-based Dungeons & Dragons companion site. The system enables players and Dungeon Masters to manage magic items, track consumable quantities, enforce attunement limits, and organize items within campaigns and across characters. The tracker provides a comprehensive item database with support for custom items, SRD-standard items, item sharing between characters, and subscription-based access control. This feature enhances character management by providing detailed inventory tracking and ensures accurate representation of item-based mechanics.
+This document specifies the requirements for the Magic Items and Consumables Tracker in a web-based Dungeons & Dragons companion site. The system enables players and Dungeon Masters to manage magic items, track consumable quantities, enforce attunement limits, and organize items within campaigns and across characters. The tracker provides a comprehensive item database with support for custom items, SRD-standard items, and item sharing between characters. This feature enhances character management by providing detailed inventory tracking and ensures accurate representation of item-based mechanics.
 
 ## Glossary
 
@@ -28,7 +28,7 @@ This document specifies the requirements for the Magic Items and Consumables Tra
 - **Item_Properties**: Structured data representing mechanical attributes (damage dice, AC bonus, spell effects, etc.)
 - **Weight**: The encumbrance value of an Item in pounds
 - **Value**: The gold piece value of an Item
-- **Item_Image**: An optional image representing the Item (subject to Storage_Limit)
+- **Item_Image**: An optional image representing the Item
 - **Item_Source**: The origin of an Item: srd, homebrew, or third_party
 - **Favorite_Item**: An Item marked by a user for quick access from their item library
 - **Item_Library**: A personal collection of Items created or favorited by a user
@@ -68,7 +68,7 @@ This document specifies the requirements for the Magic Items and Consumables Tra
 1. THE Item_System SHALL allow any authenticated user to create Custom_Item records
 2. WHEN creating a Custom_Item, THE user SHALL provide a name (required) and Item_Type (required)
 3. THE Item_System SHALL allow the user to set the following optional fields: Item_Rarity, Attunement_Required, Item_Description, Weight, Value, Quantity, Charges, and Equipped
-4. THE Item_System SHALL allow the user to upload an Item_Image (subject to Storage_Limit)
+4. THE Item_System SHALL allow the user to upload an Item_Image
 5. THE Item_System SHALL set Item_Source to homebrew for all Custom_Item records
 6. THE Item_System SHALL store each Custom_Item in the creator's Item_Library
 7. THE Item_System SHALL allow the Item_Owner to edit and delete Custom_Item records they created
@@ -203,7 +203,7 @@ This document specifies the requirements for the Magic Items and Consumables Tra
 6. THE Item_System SHALL detect duplicate items during import (matching by name) and allow users to skip, replace, or create a copy
 7. THE Item_System SHALL support importing items from D&D Beyond URLs (if API access is available)
 8. THE Item_System SHALL allow exporting the Campaign_Item_Pool as a CSV or JSON file for record-keeping
-9. THE Item_System SHALL count imported Item_Image files against the user's Storage_Limit
+9. THE Item_System SHALL count imported Item_Image files against the user's storage quota
 10. THE Item_System SHALL provide import templates with example formats to help users structure custom imports
 
 
@@ -243,19 +243,4 @@ This document specifies the requirements for the Magic Items and Consumables Tra
 10. THE Item_System SHALL integrate with the Combat_Tracker to show equipped weapons and ammunition during combat
 
 
-### Requirement 12: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to control magic item tracking features based on subscription tiers, so that premium features incentivize upgrades.
-
-#### Acceptance Criteria
-
-1. THE Item_System SHALL be accessible to all subscription tiers
-2. FOR Free_Tier users, THE Item_System SHALL limit Custom_Item creation to 10 items in their Item_Library
-3. FOR Adventurer_Tier users, THE Item_System SHALL limit Custom_Item creation to 50 items in their Item_Library
-4. FOR Hero_Tier and Legend_Tier users, THE Item_System SHALL allow unlimited Custom_Item creation
-5. FOR Free_Tier users, THE Item_System SHALL NOT allow access to Campaign_Item_Pool features
-6. FOR Adventurer_Tier and higher users, THE Item_System SHALL allow full access to Campaign_Item_Pool features
-7. FOR Hero_Tier and Legend_Tier users, THE Item_System SHALL provide advanced features including Item_History viewing, bulk import/export, and item templates
-8. WHEN a Free_Tier user reaches their Custom_Item limit, THE Item_System SHALL display an upgrade prompt
-9. WHEN a user downgrades and exceeds their new Custom_Item limit, THE Item_System SHALL allow viewing all items but block creation of new items until the count is reduced
-10. THE Item_System SHALL display item limit usage on the user's account dashboard (e.g., "Custom Items: 8/10")

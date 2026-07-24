@@ -214,17 +214,4 @@ This document specifies the requirements for Session Scheduling and Party Coordi
 10. THE Scheduling_System SHALL keep critical notifications (session cancellations) enabled regardless of Notification_Preference settings
 
 
-### Requirement 11: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to control scheduling features based on subscription tiers, so that advanced scheduling incentivizes upgrades.
-
-#### Acceptance Criteria
-
-1. THE Scheduling_System SHALL be accessible to Adventurer_Tier and higher subscription tiers
-2. FOR Free_Tier users, THE Scheduling_System SHALL NOT be available; THE system SHALL display an upgrade prompt when accessing scheduling features
-3. FOR Adventurer_Tier users, THE Scheduling_System SHALL allow basic session scheduling without Recurring_Schedule or Session_Proposal features
-4. FOR Hero_Tier users, THE Scheduling_System SHALL provide full access to all scheduling features including Recurring_Schedule and Session_Proposal
-5. FOR Legend_Tier users, THE Scheduling_System SHALL provide all Hero_Tier features plus advanced integrations (calendar feeds, external calendar sync)
-6. WHEN a user downgrades from Hero_Tier to Adventurer_Tier, THE Scheduling_System SHALL disable Recurring_Schedule but retain existing Scheduled_Session records
-7. WHEN a user downgrades from Adventurer_Tier to Free_Tier, THE Scheduling_System SHALL retain all scheduling data but block access to scheduling features
-8. THE Scheduling_System SHALL display feature availability by tier on the pricing comparison page

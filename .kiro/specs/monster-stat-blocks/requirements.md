@@ -74,7 +74,7 @@ This document specifies the requirements for Monster Stat Block management in a 
 7. THE Monster_System SHALL allow the monster creator to edit and delete Custom_Monster records they created
 8. THE Monster_System SHALL allow users to copy an SRD_Monster into their Monster_Library as a Custom_Monster for modification
 9. THE Monster_System SHALL support rich text formatting in Special_Abilities, Actions, Reactions, Legendary_Actions, and Lair_Actions descriptions
-10. THE Monster_System SHALL allow uploading a custom image for Custom_Monster records (subject to Storage_Limit)
+10. THE Monster_System SHALL allow uploading a custom image for Custom_Monster records
 
 
 ### Requirement 3: Stat Block Popover Display
@@ -162,24 +162,9 @@ This document specifies the requirements for Monster Stat Block management in a 
 5. THE Monster_System SHALL allow users to select which monsters to import from the JSON file, showing a preview before confirming
 6. THE Monster_System SHALL detect duplicate monsters during import (matching by name) and allow users to skip, replace, or create a copy
 7. THE Monster_System SHALL support importing monsters from common formats (D&D Beyond JSON, Foundry VTT, Roll20)
-8. THE Monster_System SHALL count imported monster images against the user's Storage_Limit
+8. THE Monster_System SHALL count imported monster images against the user's storage quota
 9. THE Monster_System SHALL provide import templates with example formats to help users structure custom imports
 10. THE Monster_System SHALL allow exporting selected monsters or the entire Monster_Library
 
 
-### Requirement 8: Subscription Tier Access Control
 
-**User Story:** As a platform owner, I want to control monster stat block features based on subscription tiers, so that advanced features incentivize upgrades.
-
-#### Acceptance Criteria
-
-1. THE Monster_System SHALL allow all subscription tiers to view SRD_Monster records and browse the Monster_Database
-2. FOR Free_Tier users, THE Monster_System SHALL limit Custom_Monster creation to 5 monsters in their Monster_Library
-3. FOR Adventurer_Tier users, THE Monster_System SHALL limit Custom_Monster creation to 25 monsters in their Monster_Library
-4. FOR Hero_Tier and Legend_Tier users, THE Monster_System SHALL allow unlimited Custom_Monster creation
-5. FOR Free_Tier users, THE Monster_System SHALL NOT allow favoriting SRD_Monster records
-6. FOR Adventurer_Tier and higher users, THE Monster_System SHALL allow unlimited favoriting of SRD_Monster records
-7. FOR Hero_Tier and Legend_Tier users, THE Monster_System SHALL provide advanced features including monster import/export and bulk operations
-8. WHEN a Free_Tier user reaches their Custom_Monster limit, THE Monster_System SHALL display an upgrade prompt
-9. WHEN a user downgrades and exceeds their new Custom_Monster limit, THE Monster_System SHALL allow viewing all monsters but block creation of new monsters until the count is reduced
-10. THE Monster_System SHALL display monster limit usage on the user's account dashboard (e.g., "Custom Monsters: 4/5")
