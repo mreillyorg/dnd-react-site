@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "prisma generate && tsc -b && vite build",
+    "server:build": "tsc -p tsconfig.server.json",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:coverage": "vitest --run --coverage",
@@ -13,6 +14,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apollo/server": "^5.5.1",
+    "@graphql-tools/schema": "^10.0.38",
+    "@prisma/client": "^7.9.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "graphql": "^16.14.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
@@ -20,13 +27,17 @@
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
+    "fast-check": "^4.9.0",
     "jsdom": "^29.1.1",
     "oxlint": "^1.71.0",
+    "prisma": "^7.9.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.1.10"

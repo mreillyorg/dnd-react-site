@@ -10,7 +10,7 @@ The implementation is sequenced so that each step is independently buildable and
 
 ## Tasks
 
-- [-] 1. Backend project structure and environment configuration
+- [x] 1. Backend project structure and environment configuration
   - Create the `server/` directory tree: `server/app.ts`, `server/db/`, `server/graphql/schema/`, `server/graphql/resolvers/`, `server/services/`, `server/errors/`, `server/config.ts`
   - Install backend dependencies: `@apollo/server`, `express`, `graphql`, `@graphql-tools/schema`, `@prisma/client`, `prisma`, `dotenv`, `vitest`, `@vitest/ui`, `fast-check` (all testing deps)
   - Create `.env.example` listing all required and optional environment variables (`DATABASE_URL`, `DB_QUEUE_MAX_DEPTH`, `DB_QUEUE_WARN_MS`, `GRAPHQL_INTROSPECTION`, `NODE_ENV`)
@@ -23,18 +23,18 @@ The implementation is sequenced so that each step is independently buildable and
   - _Requirements: 8.1, 8.2, 8.3_
   - **TESTING REQUIRED: This task includes test infrastructure setup - all subsequent tasks must include tests**
 
-- [ ] 2. Prisma schema and initial migration
-  - [ ] 2.1 Write `prisma/schema.prisma` with all domain models
+- [x] 2. Prisma schema and initial migration
+  - [x] 2.1 Write `prisma/schema.prisma` with all domain models
     - Add the `generator client` block and `datasource db` block reading `DATABASE_PROVIDER` and `DATABASE_URL` from env
     - Define all models: `User`, `Character`, `Campaign`, `Session`, `Encounter`, `Combatant`, `StatBlock`, `Inventory`, `Item`, `ItemSlot` exactly as specified in the design, using only SQLite + MySQL compatible field types (no JSON, no enums — use `String` for enum-like fields)
     - Verify all relations use explicit `@relation` annotations and all foreign keys reference valid `@id` fields
     - _Requirements: 2.1, 2.2, 2.3, 3.1, 5.1_
-  - [ ] 2.2 Write unit test for schema provider-compatibility (**REQUIRED**)
+  - [x] 2.2 Write unit test for schema provider-compatibility (**REQUIRED**)
     - Assert that no model uses a SQLite-only or MySQL-only field type
     - Assert that `DATABASE_PROVIDER` and `DATABASE_URL` are read from environment, not hard-coded
     - **Test must pass before moving to 2.3**
     - _Requirements: 2.3, 5.1_
-  - [ ] 2.3 Generate the initial Prisma migration
+  - [x] 2.3 Generate the initial Prisma migration
     - Run `prisma migrate dev --name init` to produce `prisma/migrations/TIMESTAMP_init/migration.sql`
     - Commit the migration file; add a note that migration files must never be manually edited
     - Run `prisma generate` to produce the typed `PrismaClient`
@@ -42,52 +42,52 @@ The implementation is sequenced so that each step is independently buildable and
     - **Cannot proceed without passing test from 2.2**
     - _Requirements: 2.2, 2.6, 2.7_
 
-- [ ] 3. PrismaClient singleton and SQLite PRAGMA initialisation
-  - [ ] 3.1 Implement `server/db/prisma.ts`
+- [x] 3. PrismaClient singleton and SQLite PRAGMA initialisation
+  - [x] 3.1 Implement `server/db/prisma.ts`
     - Export a single `PrismaClient` instance with `log: ['error', 'warn']`
     - After `$connect()`, apply `PRAGMA foreign_keys = ON` and `PRAGMA synchronous = FULL` via `$executeRawUnsafe` when `DATABASE_URL` starts with `file:`
     - Keep the PRAGMA block a no-op when `DATABASE_URL` is a MySQL connection string
     - _Requirements: 3.3, 3.4_
-  - [ ] 3.2 Write unit tests for PrismaClient singleton (**REQUIRED**)
+  - [x] 3.2 Write unit tests for PrismaClient singleton (**REQUIRED**)
     - Test that `PRAGMA foreign_keys = ON` is called when `DATABASE_URL` starts with `file:`
     - Test that no PRAGMA is applied when `DATABASE_URL` is a MySQL-style connection string
     - **Test must pass before moving to next task**
     - _Requirements: 3.3_
 
-- [ ] 4. Configuration loader with fail-fast validation
-  - [ ] 4.1 Implement `server/config.ts`
+- [x] 4. Configuration loader with fail-fast validation
+  - [x] 4.1 Implement `server/config.ts`
     - Read and validate all env vars: `DATABASE_URL` (required — process exits with code 1 if missing), `DATABASE_PROVIDER` (defaults `sqlite`), `DB_QUEUE_MAX_DEPTH` (default `100`), `DB_QUEUE_WARN_MS` (default `500`), `GRAPHQL_INTROSPECTION` (default `true` in dev, `false` in prod), `NODE_ENV`
     - Export a frozen `config` object with typed fields; throw a clear error message for missing required vars
     - _Requirements: 8.1, 8.2, 8.4_
-  - [ ] 4.2 Write unit tests for config loader (**REQUIRED**)
+  - [x] 4.2 Write unit tests for config loader (**REQUIRED**)
     - Test fail-fast on missing `DATABASE_URL`
     - Test correct defaults for all optional vars
     - Test `GRAPHQL_INTROSPECTION` defaulting based on `NODE_ENV`
     - **All tests must pass before moving to next task**
     - _Requirements: 8.4, 8.2_
 
-- [ ] 5. Operation_Queue (serial FIFO write queue)
-  - [ ] 5.1 Implement `server/db/operationQueue.ts` — serial implementation
+- [x] 5. Operation_Queue (serial FIFO write queue)
+  - [x] 5.1 Implement `server/db/operationQueue.ts` — serial implementation
     - Define the `OperationQueue` interface with `enqueue<T>()`, `drain()`, and `pendingCount`
     - Define `QueueFullError` with `code: 'QUEUE_FULL'`
     - Implement `SerialOperationQueue`: tail-chaining promise pattern, depth tracking, queue-full rejection, per-operation timing with debug log and warn-threshold log
     - Export a factory `createOperationQueue(maxDepth, warnMs)` that returns the serial implementation
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
-  - [ ] 5.2 Implement passthrough queue for MySQL
+  - [x] 5.2 Implement passthrough queue for MySQL
     - Add a `PassthroughOperationQueue` class where `enqueue(fn)` calls `fn()` directly, `drain()` resolves immediately, and `pendingCount` is always 0
     - Export `createQueue(config)` that returns `SerialOperationQueue` for SQLite and `PassthroughOperationQueue` for MySQL
     - _Requirements: 4.6_
-  - [ ] 5.3 Write property test for Operation_Queue serialisation order (Property 3) (**REQUIRED**)
+  - [x] 5.3 Write property test for Operation_Queue serialisation order (Property 3) (**REQUIRED**)
     - **Property 3: Operation_Queue serialises writes in FIFO order under SQLite**
     - Generate arrays of 2–20 async operations, submit concurrently, assert no two overlap and order matches submission
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 4.1**
-  - [ ] 5.4 Write property test for Operation_Queue queue-full rejection (Property 4) (**REQUIRED**)
+  - [x] 5.4 Write property test for Operation_Queue queue-full rejection (Property 4) (**REQUIRED**)
     - **Property 4: Operation_Queue rejects operations when at capacity**
     - Generate `DB_QUEUE_MAX_DEPTH` values 1–50, fill queue with never-resolving stubs, assert next `enqueue()` rejects with `code === 'QUEUE_FULL'`
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 4.3, 4.4**
-  - [ ] 5.5 Write unit tests for Operation_Queue (**REQUIRED**)
+  - [x] 5.5 Write unit tests for Operation_Queue (**REQUIRED**)
     - Test `drain()` resolves after all queued operations complete
     - Test passthrough mode: operations execute immediately, `pendingCount` stays 0
     - Test debug log emitted per operation
@@ -95,27 +95,28 @@ The implementation is sequenced so that each step is independently buildable and
     - **All tests must pass before moving to next task**
     - _Requirements: 4.2, 4.5, 4.6, 4.7_
 
-- [ ] 6. Checkpoint — queue and config foundation
+
+- [x] 6. Checkpoint — queue and config foundation
   - **GATE: All tests from tasks 1-5 must pass before proceeding**
   - Run `npm run test:run` and verify all tests pass
   - Check test coverage meets 80% minimum threshold
   - Ensure all tests pass (config, PrismaClient, OperationQueue). Ask the user if questions arise.
 
-- [ ] 7. Error handling module
-  - [ ] 7.1 Implement `server/errors/mapPrismaError.ts`
+- [x] 7. Error handling module
+  - [x] 7.1 Implement `server/errors/mapPrismaError.ts`
     - Map `PrismaClientKnownRequestError` codes (P2000, P2001, P2002, P2003, P2007, P2025, P1001) to domain codes (`VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `FOREIGN_KEY_VIOLATION`, `DATABASE_UNAVAILABLE`)
     - Wrap unknown/panic errors: log full detail internally, return a sanitised `INTERNAL_SERVER_ERROR` with no Prisma internals
     - _Requirements: 7.1, 7.2_
-  - [ ] 7.2 Implement `server/errors/formatGraphQLError.ts`
+  - [x] 7.2 Implement `server/errors/formatGraphQLError.ts`
     - Apollo `formatError` plugin that ensures every `GraphQLError` in the response has a non-empty `extensions.code`
     - Strip any remaining Prisma-internal content (model names, raw SQL, Prisma error codes) from the `message` field before sending to client
     - _Requirements: 1.6, 7.3_
-  - [ ] 7.3 Write property test for error extensions.code (Property 1) (**REQUIRED**)
+  - [x] 7.3 Write property test for error extensions.code (Property 1) (**REQUIRED**)
     - **Property 1: All GraphQL errors contain an extensions.code field**
     - Generate arbitrary Prisma error instances (varying codes, messages), feed through `mapPrismaError()` and `formatGraphQLError()`, assert every result has a non-empty `extensions.code` and no Prisma-internal content
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 1.6, 7.1, 7.3**
-  - [ ] 7.4 Write unit tests for error mapping (**REQUIRED**)
+  - [x] 7.4 Write unit tests for error mapping (**REQUIRED**)
     - Test each Prisma code maps to the expected domain code
     - Test unknown error returns `INTERNAL_SERVER_ERROR` and does not leak internals
     - Test `formatGraphQLError` passes through non-Prisma errors with their original code

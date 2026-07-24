@@ -1,11 +1,428 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "5.4 Write property test for Operation_Queue queue-full rejection (Property 4) (**REQUIRED**)": {
+      "status": "passed",
+      "lastRunTimestamp": 1784909238802
+    },
+    "5.3 Write property test for Operation_Queue serialisation order (Property 3) (**REQUIRED**)": {
+      "status": "passed",
+      "lastRunTimestamp": 1784909276696
+    },
+    "7.3 Write property test for error extensions.code (Property 1) (**REQUIRED**)": {
+      "status": "passed",
+      "lastRunTimestamp": 1784910186744
+    }
+  },
   "executionHistory": {
     "1. Backend project structure and environment configuration": [
       {
         "executionId": "7b5d7e7d-ec69-47d3-aadc-8194da7476a0",
         "chatSessionId": "sess_537f8ce1-cf31-40f4-862e-5c2090743a34",
         "timestamp": 1784906970462
+      },
+      {
+        "executionId": "7b5d7e7d-ec69-47d3-aadc-8194da7476a0",
+        "chatSessionId": "sess_537f8ce1-cf31-40f4-862e-5c2090743a34",
+        "timestamp": 1784907448389
+      }
+    ],
+    "2.1 Write `prisma/schema.prisma` with all domain models": [
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784907559441
+      },
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784907858627
+      }
+    ],
+    "2.2 Write unit test for schema provider-compatibility (**REQUIRED**)": [
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784907876857
+      },
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784907964228
+      }
+    ],
+    "2.3 Generate the initial Prisma migration": [
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784907970106
+      },
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784908095935
+      }
+    ],
+    "2. Prisma schema and initial migration": [
+      {
+        "executionId": "00e7e41e-6ee5-4a57-b44f-0df6f32e0755",
+        "chatSessionId": "sess_926006c3-5b83-4b36-bf13-d0c3feb201ed",
+        "timestamp": 1784908096036
+      }
+    ],
+    "3.1 Implement `server/db/prisma.ts`": [
+      {
+        "executionId": "81e9f45d-634a-4d7b-bb97-c47a7a49cb65",
+        "chatSessionId": "sess_5b2682ea-8c66-4199-956f-fe9c17245f25",
+        "timestamp": 1784908120354
+      },
+      {
+        "executionId": "81e9f45d-634a-4d7b-bb97-c47a7a49cb65",
+        "chatSessionId": "sess_5b2682ea-8c66-4199-956f-fe9c17245f25",
+        "timestamp": 1784908310395
+      }
+    ],
+    "3.2 Write unit tests for PrismaClient singleton (**REQUIRED**)": [
+      {
+        "executionId": "81e9f45d-634a-4d7b-bb97-c47a7a49cb65",
+        "chatSessionId": "sess_5b2682ea-8c66-4199-956f-fe9c17245f25",
+        "timestamp": 1784908124879
+      },
+      {
+        "executionId": "81e9f45d-634a-4d7b-bb97-c47a7a49cb65",
+        "chatSessionId": "sess_5b2682ea-8c66-4199-956f-fe9c17245f25",
+        "timestamp": 1784908311329
+      }
+    ],
+    "3. PrismaClient singleton and SQLite PRAGMA initialisation": [
+      {
+        "executionId": "81e9f45d-634a-4d7b-bb97-c47a7a49cb65",
+        "chatSessionId": "sess_5b2682ea-8c66-4199-956f-fe9c17245f25",
+        "timestamp": 1784908311453
+      }
+    ],
+    "4.1 Implement `server/config.ts`": [
+      {
+        "executionId": "e86e5924-6a53-4b8e-b66a-6e92600a257f",
+        "chatSessionId": "sess_8e59d50d-0267-46cf-aaee-9e2cfc3141ea",
+        "timestamp": 1784908399290
+      },
+      {
+        "executionId": "e86e5924-6a53-4b8e-b66a-6e92600a257f",
+        "chatSessionId": "sess_8e59d50d-0267-46cf-aaee-9e2cfc3141ea",
+        "timestamp": 1784908499518
+      }
+    ],
+    "4.2 Write unit tests for config loader (**REQUIRED**)": [
+      {
+        "executionId": "e86e5924-6a53-4b8e-b66a-6e92600a257f",
+        "chatSessionId": "sess_8e59d50d-0267-46cf-aaee-9e2cfc3141ea",
+        "timestamp": 1784908504697
+      },
+      {
+        "executionId": "e86e5924-6a53-4b8e-b66a-6e92600a257f",
+        "chatSessionId": "sess_8e59d50d-0267-46cf-aaee-9e2cfc3141ea",
+        "timestamp": 1784908577658
+      }
+    ],
+    "4. Configuration loader with fail-fast validation": [
+      {
+        "executionId": "e86e5924-6a53-4b8e-b66a-6e92600a257f",
+        "chatSessionId": "sess_8e59d50d-0267-46cf-aaee-9e2cfc3141ea",
+        "timestamp": 1784908577763
+      }
+    ],
+    "5.1 Implement `server/db/operationQueue.ts` — serial implementation": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784908630307
+      },
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784908852487
+      }
+    ],
+    "5.2 Implement passthrough queue for MySQL": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784908856864
+      },
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909137397
+      }
+    ],
+    "5.3 Write property test for Operation_Queue serialisation order (Property 3) (**REQUIRED**)": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909143581
+      },
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909293358
+      }
+    ],
+    "5.4 Write property test for Operation_Queue queue-full rejection (Property 4) (**REQUIRED**)": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909144383
+      },
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909294326
+      }
+    ],
+    "5.5 Write unit tests for Operation_Queue (**REQUIRED**)": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909145413
+      },
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909295194
+      }
+    ],
+    "5. Operation_Queue (serial FIFO write queue)": [
+      {
+        "executionId": "221693c2-5179-449b-880a-66b5860401b4",
+        "chatSessionId": "sess_a76c7416-7d89-487d-b4a6-a4311c208528",
+        "timestamp": 1784909295295
+      }
+    ],
+    "6. Checkpoint — queue and config foundation": [
+      {
+        "executionId": "59f53986-0232-436f-ad5a-9bc1ddc4c389",
+        "chatSessionId": "sess_d4e11ec9-70b9-44bb-a411-168bf4b6546f",
+        "timestamp": 1784909310722
+      },
+      {
+        "executionId": "59f53986-0232-436f-ad5a-9bc1ddc4c389",
+        "chatSessionId": "sess_d4e11ec9-70b9-44bb-a411-168bf4b6546f",
+        "timestamp": 1784909412164
+      }
+    ],
+    "7.1 Implement `server/errors/mapPrismaError.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909478652
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909507189
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909984939
+      }
+    ],
+    "7.2 Implement `server/errors/formatGraphQLError.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909478764
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909990112
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910095769
+      }
+    ],
+    "7.3 Write property test for error extensions.code (Property 1) (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909478837
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910102270
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910200566
+      }
+    ],
+    "7.4 Write unit tests for error mapping (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909478909
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910103138
+      },
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910201295
+      }
+    ],
+    "8.1 Write SDL type definitions in `server/graphql/schema/`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909478975
+      }
+    ],
+    "8.2 Implement `server/graphql/context.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479048
+      }
+    ],
+    "8.3 Assemble schema with `makeExecutableSchema` in `server/graphql/schema/index.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479118
+      }
+    ],
+    "9.1 Implement service functions for User and Character in `server/services/`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479201
+      }
+    ],
+    "9.2 Implement service functions for Campaign, Session, and Encounter": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479305
+      }
+    ],
+    "9.3 Implement service functions for Combatant, StatBlock, Inventory, and Item": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479374
+      }
+    ],
+    "9.4 Write property test for transaction atomicity (Property 5) (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479454
+      }
+    ],
+    "10.1 Implement resolvers for User and Character": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479546
+      }
+    ],
+    "10.2 Implement resolvers for Campaign, Session, and Encounter": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479621
+      }
+    ],
+    "10.3 Implement resolvers for Combatant, StatBlock, Inventory, and Item": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479692
+      }
+    ],
+    "10.4 Write property test for auth rejection (Property 2) (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479783
+      }
+    ],
+    "10.5 Write unit tests for resolvers (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479862
+      }
+    ],
+    "11. Checkpoint — schema, services, and resolvers": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909479940
+      }
+    ],
+    "12.1 Implement `server/app.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480015
+      }
+    ],
+    "12.2 Implement graceful shutdown handler": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480088
+      }
+    ],
+    "12.3 Write property test for graceful shutdown drain (Property 6) (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480154
+      }
+    ],
+    "12.4 Write integration tests for health endpoint and GraphQL round-trip (**REQUIRED**)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480256
+      }
+    ],
+    "13.1 Create `server/test/setup.ts` (Vitest global setup file)": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480321
+      }
+    ],
+    "13.2 Wire the global setup into `vite.config.ts`": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480393
+      }
+    ],
+    "14. Final checkpoint — full test suite": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784909480465
+      }
+    ],
+    "7. Error handling module": [
+      {
+        "executionId": "20759ca6-0898-43d2-b586-c2dd72e826fd",
+        "chatSessionId": "sess_97005341-54f4-4803-91c7-6f2c431561dc",
+        "timestamp": 1784910201390
       }
     ]
   }
