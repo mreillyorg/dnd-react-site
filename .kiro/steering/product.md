@@ -21,7 +21,6 @@ Core use cases (to be refined):
 - Reference lookups (rules, spells, monsters, items)
 - Session scheduling and party coordination
 - Exports for Adventurer's League DM logs
-- Subscription model
 - Data Storage & APIs
   - GraphQL API as the data access layer for all features
   - Prisma ORM for schema management, typed client generation, and migrations
