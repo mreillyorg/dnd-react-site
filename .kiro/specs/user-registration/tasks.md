@@ -96,8 +96,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
   - **DO NOT PROCEED without passing tests**
   - Ask user if questions arise
 
-- [ ] 6. Implement React AuthContext and session management
-  - [ ] 6.1 Create `src/contexts/AuthContext.tsx`
+- [x] 6. Implement React AuthContext and session management
+  - [x] 6.1 Create `src/contexts/AuthContext.tsx`
     - Define `AuthContext` interface with user, token, isLoading, login, register, logout
     - Implement `AuthProvider` component
     - Load token from localStorage on mount
@@ -107,7 +107,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - Implement `logout()` function: remove token from localStorage, clear state, navigate to /login
     - Export `useAuth()` hook with context validation
     - _Requirements: 4.1, 4.2, 4.3_
-  - [ ] 6.2 Write unit tests for AuthContext (**REQUIRED**)
+  - [x] 6.2 Write unit tests for AuthContext (**REQUIRED**)
     - **Mock fetch for all GraphQL calls**
     - **Test token loading from localStorage**: assert fetchCurrentUser called with stored token
     - **Test login success**: assert token stored, user state updated, navigate called
