@@ -1,0 +1,71 @@
+type Character {
+  id: ID!
+  name: String!
+  level: Int!
+  class: String!
+  race: String!
+  strength: Int!
+  dexterity: Int!
+  constitution: Int!
+  intelligence: Int!
+  wisdom: Int!
+  charisma: Int!
+  maxHp: Int!
+  currentHp: Int!
+  tempHp: Int!
+  armorClass: Int!
+  userId: String!
+  user: User!
+  campaignId: String
+  campaign: Campaign
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  itemAssignments: [ItemAssignment!]!
+}
+
+input CreateCharacterInput {
+  name: String!
+  level: Int
+  class: String!
+  race: String!
+  strength: Int
+  dexterity: Int
+  constitution: Int
+  intelligence: Int
+  wisdom: Int
+  charisma: Int
+  maxHp: Int!
+  currentHp: Int!
+  tempHp: Int
+  armorClass: Int!
+  campaignId: String
+}
+
+input UpdateCharacterInput {
+  name: String
+  level: Int
+  class: String
+  race: String
+  strength: Int
+  dexterity: Int
+  constitution: Int
+  intelligence: Int
+  wisdom: Int
+  charisma: Int
+  maxHp: Int
+  currentHp: Int
+  tempHp: Int
+  armorClass: Int
+  campaignId: String
+}
+
+extend type Query {
+  character(id: ID!): Character
+  characters(userId: ID, campaignId: ID): [Character!]!
+}
+
+extend type Mutation {
+  createCharacter(input: CreateCharacterInput!): Character!
+  updateCharacter(id: ID!, input: UpdateCharacterInput!): Character!
+  deleteCharacter(id: ID!): Boolean!
+}

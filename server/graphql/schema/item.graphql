@@ -1,0 +1,111 @@
+enum ItemType {
+  WEAPON
+  ARMOR
+  WONDROUS_ITEM
+  POTION
+  SCROLL
+  RING
+  ROD
+  STAFF
+  WAND
+  OTHER
+}
+
+enum ItemRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  VERY_RARE
+  LEGENDARY
+  ARTIFACT
+}
+
+enum ItemSource {
+  SRD
+  HOMEBREW
+  THIRD_PARTY
+}
+
+type Item {
+  id: ID!
+  name: String!
+  description: String!
+  itemType: ItemType!
+  rarity: ItemRarity!
+  attunementRequired: Boolean!
+  weight: Float
+  value: Int
+  source: ItemSource!
+  createdById: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  assignments: [ItemAssignment!]!
+}
+
+type ItemAssignment {
+  id: ID!
+  quantity: Int!
+  equipped: Boolean!
+  attuned: Boolean!
+  identified: Boolean!
+  itemId: String!
+  item: Item!
+  characterId: String!
+  character: Character!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateItemInput {
+  name: String!
+  description: String!
+  itemType: ItemType!
+  rarity: ItemRarity!
+  attunementRequired: Boolean
+  weight: Float
+  value: Int
+  source: ItemSource
+}
+
+input UpdateItemInput {
+  name: String
+  description: String
+  itemType: ItemType
+  rarity: ItemRarity
+  attunementRequired: Boolean
+  weight: Float
+  value: Int
+  source: ItemSource
+}
+
+input CreateItemAssignmentInput {
+  itemId: String!
+  characterId: String!
+  quantity: Int
+  equipped: Boolean
+  attuned: Boolean
+  identified: Boolean
+}
+
+input UpdateItemAssignmentInput {
+  quantity: Int
+  equipped: Boolean
+  attuned: Boolean
+  identified: Boolean
+}
+
+extend type Query {
+  item(id: ID!): Item
+  items(itemType: ItemType, rarity: ItemRarity, source: ItemSource): [Item!]!
+  itemAssignment(id: ID!): ItemAssignment
+  itemAssignments(characterId: ID!): [ItemAssignment!]!
+}
+
+extend type Mutation {
+  createItem(input: CreateItemInput!): Item!
+  updateItem(id: ID!, input: UpdateItemInput!): Item!
+  deleteItem(id: ID!): Boolean!
+  createItemAssignment(input: CreateItemAssignmentInput!): ItemAssignment!
+  updateItemAssignment(id: ID!, input: UpdateItemAssignmentInput!): ItemAssignment!
+  deleteItemAssignment(id: ID!): Boolean!
+}

@@ -1,0 +1,93 @@
+enum MonsterSource {
+  SRD
+  HOMEBREW
+  THIRD_PARTY
+}
+
+type Monster {
+  id: ID!
+  name: String!
+  size: String!
+  type: String!
+  alignment: String
+  armorClass: Int!
+  hitPoints: Int!
+  hitDice: String!
+  speed: String!
+  strength: Int!
+  dexterity: Int!
+  constitution: Int!
+  intelligence: Int!
+  wisdom: Int!
+  charisma: Int!
+  challengeRating: Float!
+  source: MonsterSource!
+  abilities: String!
+  actions: String!
+  reactions: String
+  legendaryActions: String
+  dndbeyondLink: String
+  createdById: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  combatants: [Combatant!]!
+}
+
+input CreateMonsterInput {
+  name: String!
+  size: String!
+  type: String!
+  alignment: String
+  armorClass: Int!
+  hitPoints: Int!
+  hitDice: String!
+  speed: String!
+  strength: Int!
+  dexterity: Int!
+  constitution: Int!
+  intelligence: Int!
+  wisdom: Int!
+  charisma: Int!
+  challengeRating: Float!
+  source: MonsterSource
+  abilities: String!
+  actions: String!
+  reactions: String
+  legendaryActions: String
+  dndbeyondLink: String
+}
+
+input UpdateMonsterInput {
+  name: String
+  size: String
+  type: String
+  alignment: String
+  armorClass: Int
+  hitPoints: Int
+  hitDice: String
+  speed: String
+  strength: Int
+  dexterity: Int
+  constitution: Int
+  intelligence: Int
+  wisdom: Int
+  charisma: Int
+  challengeRating: Float
+  source: MonsterSource
+  abilities: String
+  actions: String
+  reactions: String
+  legendaryActions: String
+  dndbeyondLink: String
+}
+
+extend type Query {
+  monster(id: ID!): Monster
+  monsters(type: String, source: MonsterSource): [Monster!]!
+}
+
+extend type Mutation {
+  createMonster(input: CreateMonsterInput!): Monster!
+  updateMonster(id: ID!, input: UpdateMonsterInput!): Monster!
+  deleteMonster(id: ID!): Boolean!
+}

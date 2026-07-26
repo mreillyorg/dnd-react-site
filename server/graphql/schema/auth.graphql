@@ -1,0 +1,10 @@
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+extend type Mutation {
+  register(email: String!, password: String!, name: String): AuthPayload!
+  login(email: String!, password: String!): AuthPayload!
+  changePassword(currentPassword: String!, newPassword: String!): Boolean!
+}

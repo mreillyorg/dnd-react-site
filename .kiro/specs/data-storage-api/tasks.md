@@ -123,78 +123,78 @@ The implementation is sequenced so that each step is independently buildable and
     - **All tests must pass before moving to next task**
     - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 8. GraphQL schema (SDL) and context builder
-  - [ ] 8.1 Write SDL type definitions in `server/graphql/schema/`
+- [x] 8. GraphQL schema (SDL) and context builder
+  - [x] 8.1 Write SDL type definitions in `server/graphql/schema/`
     - Create one `.graphql` file per domain: `user.graphql`, `character.graphql`, `campaign.graphql`, `session.graphql`, `encounter.graphql`, `combatant.graphql`, `statBlock.graphql`, `item.graphql`
     - Define types, input types, queries (read operations), and mutations (write operations) for every domain entity listed in Requirement 1.2
     - Add a `base.graphql` with the root `Query` and `Mutation` types
     - _Requirements: 1.1, 1.2, 1.8_
-  - [ ] 8.2 Implement `server/graphql/context.ts`
+  - [x] 8.2 Implement `server/graphql/context.ts`
     - Build `GraphQLContext` containing `prisma: PrismaClient`, `queue: OperationQueue`, and `currentUser: AuthUser | null`
     - Extract the auth token from the `Authorization` header; set `currentUser` to the resolved user or `null` if absent/invalid
     - _Requirements: 1.7_
-  - [ ] 8.3 Assemble schema with `makeExecutableSchema` in `server/graphql/schema/index.ts`
+  - [x] 8.3 Assemble schema with `makeExecutableSchema` in `server/graphql/schema/index.ts`
     - Import all SDL files, import all resolver maps, call `makeExecutableSchema({ typeDefs, resolvers })`
     - Export the assembled `schema`
     - **Write unit tests verifying schema loads without errors and includes all expected types**
     - _Requirements: 1.1_
 
-- [ ] 9. Service layer (transaction boundaries)
-  - [ ] 9.1 Implement service functions for User and Character in `server/services/`
+- [x] 9. Service layer (transaction boundaries)
+  - [x] 9.1 Implement service functions for User and Character in `server/services/`
     - `userService.ts`: `createUser`, `getUserById`, `getUserByEmail`; writes go through `ctx.queue.enqueue(() => ctx.prisma.$transaction(...))`
     - `characterService.ts`: `createCharacter` (character + default inventory in one transaction), `getCharacterById`, `listCharactersByUser`, `updateCharacter`, `deleteCharacter`
     - **Write unit tests for each service function using mocked Prisma client**
     - _Requirements: 2.8, 6.1, 6.2, 6.3, 6.4_
-  - [ ] 9.2 Implement service functions for Campaign, Session, and Encounter
+  - [x] 9.2 Implement service functions for Campaign, Session, and Encounter
     - `campaignService.ts`: `createCampaign`, `getCampaignById`, `listCampaignsByOwner`, `updateCampaign`, `deleteCampaign`
     - `sessionService.ts`: `createSession`, `getSessionById`, `listSessionsByCampaign`, `updateSession`, `deleteSession`
     - `encounterService.ts`: `createEncounter`, `getEncounterById`, `listEncountersBySession`, `updateEncounter`, `deleteEncounter`
     - **Write unit tests for each service function**
     - _Requirements: 2.8, 6.1, 6.4_
-  - [ ] 9.3 Implement service functions for Combatant, StatBlock, Inventory, and Item
+  - [x] 9.3 Implement service functions for Combatant, StatBlock, Inventory, and Item
     - `combatantService.ts`: `createCombatant`, `updateCombatant` (HP, initiative), `deleteCombatant`, `listCombatantsByEncounter`
     - `statBlockService.ts`: `createStatBlock`, `getStatBlockById`, `listStatBlocks`, `updateStatBlock`, `deleteStatBlock`
     - `inventoryService.ts`: `addItemToInventory`, `removeItemFromInventory`, `updateItemSlot`, `getInventoryByCharacter`
     - **Write unit tests for each service function**
     - _Requirements: 2.8, 6.1, 6.4_
-  - [ ] 9.4 Write property test for transaction atomicity (Property 5) (**REQUIRED**)
+  - [x] 9.4 Write property test for transaction atomicity (Property 5) (**REQUIRED**)
     - **Property 5: Transaction atomicity — partial failures produce no partial writes**
     - Generate pairs of valid + intentionally-failing Prisma operations in `$transaction()`, assert post-failure row counts equal pre-transaction counts
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 2.8, 6.1, 6.2, 6.3**
 
-- [ ] 10. GraphQL resolvers
-  - [ ] 10.1 Implement resolvers for User and Character
+- [x] 10. GraphQL resolvers
+  - [x] 10.1 Implement resolvers for User and Character
     - `user.resolver.ts`: map `Query.me`, `Mutation.createUser`, `Mutation.updateUser`; call service functions; protect with auth check (throw `UNAUTHENTICATED` if `ctx.currentUser` is null for protected fields)
     - `character.resolver.ts`: map queries and mutations to character service; enforce ownership check
     - _Requirements: 1.3, 1.7, 6.4_
-  - [ ] 10.2 Implement resolvers for Campaign, Session, and Encounter
+  - [x] 10.2 Implement resolvers for Campaign, Session, and Encounter
     - Wire `campaign.resolver.ts`, `session.resolver.ts`, `encounter.resolver.ts` to their respective services
     - Apply `UNAUTHENTICATED` guard on all campaign/session/encounter mutations
     - _Requirements: 1.3, 1.7_
-  - [ ] 10.3 Implement resolvers for Combatant, StatBlock, Inventory, and Item
+  - [x] 10.3 Implement resolvers for Combatant, StatBlock, Inventory, and Item
     - Wire `combatant.resolver.ts`, `statBlock.resolver.ts`, `inventory.resolver.ts`, `item.resolver.ts` to services
     - _Requirements: 1.3_
-  - [ ] 10.4 Write property test for auth rejection (Property 2) (**REQUIRED**)
+  - [x] 10.4 Write property test for auth rejection (Property 2) (**REQUIRED**)
     - **Property 2: Protected resolvers reject unauthenticated requests**
     - Generate arbitrary GraphQL operation strings and variable maps for protected queries/mutations, execute against the schema with no auth context, assert every response has at least one error with `extensions.code === 'UNAUTHENTICATED'`
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 1.7**
-  - [ ] 10.5 Write unit tests for resolvers (**REQUIRED**)
+  - [x] 10.5 Write unit tests for resolvers (**REQUIRED**)
     - Mock the service layer; test each resolver calls the correct service function
     - Test auth guard throws `UNAUTHENTICATED` when `currentUser` is null
     - Test error propagation from service layer to resolver
     - **All tests must pass before moving to next task**
     - _Requirements: 1.3, 1.7_
 
-- [ ] 11. Checkpoint — schema, services, and resolvers
+- [x] 11. Checkpoint — schema, services, and resolvers
   - **GATE: All tests from tasks 6-10 must pass before proceeding**
   - Run `npm run test:run` and verify all tests pass
   - Check test coverage meets 80% minimum threshold
   - Ensure all tests pass (error mapping, service layer, resolvers, property tests 1–5). Ask the user if questions arise.
 
-- [ ] 12. Express app, Apollo Server, and health endpoint
-  - [ ] 12.1 Implement `server/app.ts`
+- [x] 12. Express app, Apollo Server, and health endpoint
+  - [x] 12.1 Implement `server/app.ts`
     - Load config (fail fast on missing `DATABASE_URL`)
     - Run `prisma migrate deploy` before accepting requests; halt with exit code 1 on migration failure
     - Apply SQLite PRAGMAs via `prisma.ts` singleton initialisation
@@ -204,33 +204,33 @@ The implementation is sequenced so that each step is independently buildable and
     - Mount `GET /health` endpoint: run `prisma.$queryRaw\`SELECT 1\`` with a short timeout; return `200 { status: 'ok', database: 'connected' }` or `503 { status: 'degraded', database: 'unreachable' }`
     - Register `SIGTERM`/`SIGINT` handlers for graceful shutdown
     - _Requirements: 1.1, 1.4, 1.5, 2.4, 2.5, 3.2, 7.6, 8.4_
-  - [ ] 12.2 Implement graceful shutdown handler
+  - [x] 12.2 Implement graceful shutdown handler
     - On `SIGTERM`/`SIGINT`: stop accepting new connections, call `queue.drain()`, then `prisma.$disconnect()`
     - _Requirements: 4.7_
-  - [ ] 12.3 Write property test for graceful shutdown drain (Property 6) (**REQUIRED**)
+  - [x] 12.3 Write property test for graceful shutdown drain (Property 6) (**REQUIRED**)
     - **Property 6: Graceful shutdown drains all queued writes**
     - Generate N write operations, start draining, simulate shutdown signal, assert all N operations resolve/reject before `prisma.$disconnect()` is called
     - **This property test MUST pass before proceeding**
     - **Validates: Requirements 4.7**
-  - [ ] 12.4 Write integration tests for health endpoint and GraphQL round-trip (**REQUIRED**)
+  - [x] 12.4 Write integration tests for health endpoint and GraphQL round-trip (**REQUIRED**)
     - Test `GET /health` returns `200` when DB is reachable (in-memory SQLite)
     - Test `GET /health` returns `503` when DB is unreachable (mocked PrismaClient throwing)
     - Test full GraphQL round-trip: `createCharacter` mutation followed by `character` query returns persisted data
     - **All tests must pass before moving to next task**
     - _Requirements: 7.6, 1.1_
 
-- [ ] 13. Vitest global test setup and teardown
-  - [ ] 13.1 Create `server/test/setup.ts` (Vitest global setup file)
+- [x] 13. Vitest global test setup and teardown
+  - [x] 13.1 Create `server/test/setup.ts` (Vitest global setup file)
     - Set `DATABASE_URL=file::memory:?cache=shared` and `NODE_ENV=test`
     - Run `prisma migrate deploy` once before all suites start
     - Export a `teardown` that truncates all tables in reverse-dependency order using a single `prisma.$transaction([prisma.itemSlot.deleteMany(), ...])`
     - _Requirements: 3.5, 8.5_
-  - [ ] 13.2 Wire the global setup into `vite.config.ts`
+  - [x] 13.2 Wire the global setup into `vite.config.ts`
     - Add `globalSetup` pointing to `server/test/setup.ts` and `setupFiles` for the per-test reset hook
     - Ensure `fast-check` tests run with at least 100 iterations (the fast-check default)
     - _Requirements: 8.5_
 
-- [ ] 14. Final checkpoint — full test suite
+- [x] 14. Final checkpoint — full test suite
   - **FINAL GATE: ALL tests must pass with 80%+ coverage**
   - Run `npm run test:coverage` and confirm:
     - All unit tests pass (0 failures)

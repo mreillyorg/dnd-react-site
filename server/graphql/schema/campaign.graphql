@@ -1,0 +1,195 @@
+enum CampaignStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum QuestStatus {
+  NOT_STARTED
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+type Campaign {
+  id: ID!
+  name: String!
+  description: String
+  setting: String
+  status: CampaignStatus!
+  ownerId: String!
+  owner: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  characters: [Character!]!
+  sessions: [Session!]!
+  npcs: [NPC!]!
+  locations: [Location!]!
+  quests: [Quest!]!
+  timelineEntries: [TimelineEntry!]!
+}
+
+type NPC {
+  id: ID!
+  name: String!
+  description: String
+  race: String
+  class: String
+  level: Int
+  role: String
+  locationId: String
+  location: Location
+  campaignId: String!
+  campaign: Campaign!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Location {
+  id: ID!
+  name: String!
+  description: String
+  region: String
+  parentId: String
+  parent: Location
+  children: [Location!]!
+  campaignId: String!
+  campaign: Campaign!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  npcs: [NPC!]!
+}
+
+type Quest {
+  id: ID!
+  name: String!
+  description: String
+  status: QuestStatus!
+  rewards: String
+  campaignId: String!
+  campaign: Campaign!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TimelineEntry {
+  id: ID!
+  title: String
+  description: String!
+  inGameDate: String!
+  campaignId: String!
+  campaign: Campaign!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateCampaignInput {
+  name: String!
+  description: String
+  setting: String
+  status: CampaignStatus
+}
+
+input UpdateCampaignInput {
+  name: String
+  description: String
+  setting: String
+  status: CampaignStatus
+}
+
+input CreateNPCInput {
+  name: String!
+  description: String
+  race: String
+  class: String
+  level: Int
+  role: String
+  locationId: String
+  campaignId: String!
+}
+
+input UpdateNPCInput {
+  name: String
+  description: String
+  race: String
+  class: String
+  level: Int
+  role: String
+  locationId: String
+}
+
+input CreateLocationInput {
+  name: String!
+  description: String
+  region: String
+  parentId: String
+  campaignId: String!
+}
+
+input UpdateLocationInput {
+  name: String
+  description: String
+  region: String
+  parentId: String
+}
+
+input CreateQuestInput {
+  name: String!
+  description: String
+  status: QuestStatus
+  rewards: String
+  campaignId: String!
+}
+
+input UpdateQuestInput {
+  name: String
+  description: String
+  status: QuestStatus
+  rewards: String
+}
+
+input CreateTimelineEntryInput {
+  title: String
+  description: String!
+  inGameDate: String!
+  campaignId: String!
+}
+
+input UpdateTimelineEntryInput {
+  title: String
+  description: String
+  inGameDate: String
+}
+
+extend type Query {
+  campaign(id: ID!): Campaign
+  campaigns(ownerId: ID): [Campaign!]!
+  npc(id: ID!): NPC
+  npcs(campaignId: ID!): [NPC!]!
+  location(id: ID!): Location
+  locations(campaignId: ID!): [Location!]!
+  quest(id: ID!): Quest
+  quests(campaignId: ID!, status: QuestStatus): [Quest!]!
+  timelineEntry(id: ID!): TimelineEntry
+  timelineEntries(campaignId: ID!): [TimelineEntry!]!
+}
+
+extend type Mutation {
+  createCampaign(input: CreateCampaignInput!): Campaign!
+  updateCampaign(id: ID!, input: UpdateCampaignInput!): Campaign!
+  deleteCampaign(id: ID!): Boolean!
+  createNPC(input: CreateNPCInput!): NPC!
+  updateNPC(id: ID!, input: UpdateNPCInput!): NPC!
+  deleteNPC(id: ID!): Boolean!
+  createLocation(input: CreateLocationInput!): Location!
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location!
+  deleteLocation(id: ID!): Boolean!
+  createQuest(input: CreateQuestInput!): Quest!
+  updateQuest(id: ID!, input: UpdateQuestInput!): Quest!
+  deleteQuest(id: ID!): Boolean!
+  createTimelineEntry(input: CreateTimelineEntryInput!): TimelineEntry!
+  updateTimelineEntry(id: ID!, input: UpdateTimelineEntryInput!): TimelineEntry!
+  deleteTimelineEntry(id: ID!): Boolean!
+}

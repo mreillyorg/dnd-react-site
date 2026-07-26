@@ -8,7 +8,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
 
 ## Tasks
 
-- [ ] 1. Install authentication dependencies and configure test infrastructure
+- [x] 1. Install authentication dependencies and configure test infrastructure
   - Install backend packages: `bcrypt`, `@types/bcrypt`, `jsonwebtoken`, `@types/jsonwebtoken`, `zod`
   - Verify Vitest is configured with 80% coverage thresholds
   - Add JWT_SECRET to `.env.example` and `.env` files
@@ -17,8 +17,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
   - _Requirements: All security requirements_
   - **TESTING REQUIRED: Verify test infrastructure is ready**
 
-- [ ] 2. Implement AuthService with password hashing and validation
-  - [ ] 2.1 Create `src/services/authService.ts`
+- [x] 2. Implement AuthService with password hashing and validation
+  - [x] 2.1 Create `src/services/authService.ts`
     - Implement password validation schemas using Zod (min 8 chars, uppercase, lowercase, number)
     - Implement email validation schema
     - Implement `register()` method: validate input, check for existing user, hash password with bcrypt (12 rounds), create user, generate JWT
@@ -27,7 +27,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - Implement `generateToken()` private method: sign JWT with 7-day expiration
     - Implement `changePassword()` method: verify current password, validate new password, hash and update
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [ ] 2.2 Write unit tests for AuthService (**REQUIRED**)
+  - [x] 2.2 Write unit tests for AuthService (**REQUIRED**)
     - **Test register() success case**: assert user created, password hashed, token generated
     - **Test register() duplicate email**: assert throws error
     - **Test register() email validation**: assert rejects invalid emails
@@ -46,8 +46,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 3. Implement GraphQL authentication schema
-  - [ ] 3.1 Create GraphQL types in `src/graphql/types/Auth.ts`
+- [x] 3. Implement GraphQL authentication schema
+  - [x] 3.1 Create GraphQL types in `src/graphql/types/Auth.ts`
     - Define `AuthPayload` type with `token: String!` and `user: User!` fields
     - Implement `register` mutation with email, password, name arguments
     - Implement `login` mutation with email, password arguments
@@ -56,7 +56,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - Wire all resolvers to AuthService methods
     - Handle errors and throw GraphQL errors with proper error codes
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
-  - [ ] 3.2 Write unit tests for Auth resolvers (**REQUIRED**)
+  - [x] 3.2 Write unit tests for Auth resolvers (**REQUIRED**)
     - **Mock AuthService for all tests**
     - **Test register resolver**: assert calls AuthService.register with correct args
     - **Test register resolver error handling**: assert GraphQL error thrown when service throws

@@ -7,10 +7,20 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/test/setup.ts'],
+    // Global setup: runs once before all suites to apply migrations to in-memory SQLite
+    globalSetup: ['./server/test/setup.ts'],
+    // Per-test-file setup: frontend (jest-dom matchers) + server (DB reset between tests)
+    setupFiles: ['./src/test/setup.ts', './server/test/resetDb.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
+      include: ['server/**/*.ts'],
+      exclude: [
+        'server/test/**',
+        'server/app.ts',
+        'server/**/*.test.ts',
+        'server/**/*.property.test.ts',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
@@ -18,5 +28,6 @@ export default defineConfig({
         statements: 80,
       },
     },
+    // fast-check uses 100 iterations (numRuns) by default — no override needed
   },
 })

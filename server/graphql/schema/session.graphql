@@ -1,0 +1,73 @@
+type Session {
+  id: ID!
+  sessionNumber: Int!
+  title: String
+  realWorldDate: DateTime!
+  inGameDate: String
+  duration: Float
+  campaignId: String!
+  campaign: Campaign!
+  dmId: String!
+  dm: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  notes: [SessionNote!]!
+  encounters: [CombatEncounter!]!
+}
+
+type SessionNote {
+  id: ID!
+  title: String
+  content: String!
+  isSummary: Boolean!
+  sessionId: String!
+  session: Session!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateSessionInput {
+  sessionNumber: Int!
+  title: String
+  realWorldDate: DateTime!
+  inGameDate: String
+  duration: Float
+  campaignId: String!
+}
+
+input UpdateSessionInput {
+  sessionNumber: Int
+  title: String
+  realWorldDate: DateTime
+  inGameDate: String
+  duration: Float
+}
+
+input CreateSessionNoteInput {
+  title: String
+  content: String!
+  isSummary: Boolean
+  sessionId: String!
+}
+
+input UpdateSessionNoteInput {
+  title: String
+  content: String
+  isSummary: Boolean
+}
+
+extend type Query {
+  session(id: ID!): Session
+  sessions(campaignId: ID!): [Session!]!
+  sessionNote(id: ID!): SessionNote
+  sessionNotes(sessionId: ID!): [SessionNote!]!
+}
+
+extend type Mutation {
+  createSession(input: CreateSessionInput!): Session!
+  updateSession(id: ID!, input: UpdateSessionInput!): Session!
+  deleteSession(id: ID!): Boolean!
+  createSessionNote(input: CreateSessionNoteInput!): SessionNote!
+  updateSessionNote(id: ID!, input: UpdateSessionNoteInput!): SessionNote!
+  deleteSessionNote(id: ID!): Boolean!
+}

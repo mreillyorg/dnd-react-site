@@ -1,0 +1,41 @@
+enum ThemeMode {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String
+  themeMode: ThemeMode!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  characters: [Character!]!
+  campaigns: [Campaign!]!
+  sessions: [Session!]!
+}
+
+input CreateUserInput {
+  email: String!
+  password: String!
+  name: String
+  themeMode: ThemeMode
+}
+
+input UpdateUserInput {
+  name: String
+  themeMode: ThemeMode
+}
+
+extend type Query {
+  me: User
+  user(id: ID!): User
+  users: [User!]!
+}
+
+extend type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}

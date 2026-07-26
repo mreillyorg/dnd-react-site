@@ -1,0 +1,56 @@
+enum CombatantType {
+  PLAYER
+  MONSTER
+  NPC
+}
+
+type Combatant {
+  id: ID!
+  name: String!
+  initiative: Int!
+  maxHp: Int!
+  currentHp: Int!
+  tempHp: Int!
+  armorClass: Int!
+  combatantType: CombatantType!
+  characterId: String
+  monsterId: String
+  monster: Monster
+  encounterId: String!
+  encounter: CombatEncounter!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateCombatantInput {
+  name: String!
+  initiative: Int!
+  maxHp: Int!
+  currentHp: Int!
+  tempHp: Int
+  armorClass: Int!
+  combatantType: CombatantType!
+  characterId: String
+  monsterId: String
+  encounterId: String!
+}
+
+input UpdateCombatantInput {
+  name: String
+  initiative: Int
+  maxHp: Int
+  currentHp: Int
+  tempHp: Int
+  armorClass: Int
+}
+
+extend type Query {
+  combatant(id: ID!): Combatant
+  combatants(encounterId: ID!): [Combatant!]!
+}
+
+extend type Mutation {
+  createCombatant(input: CreateCombatantInput!): Combatant!
+  updateCombatant(id: ID!, input: UpdateCombatantInput!): Combatant!
+  deleteCombatant(id: ID!): Boolean!
+}

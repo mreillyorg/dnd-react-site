@@ -1,0 +1,36 @@
+type CombatEncounter {
+  id: ID!
+  name: String
+  isActive: Boolean!
+  currentRound: Int!
+  currentTurn: Int!
+  sessionId: String
+  session: Session
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  combatants: [Combatant!]!
+}
+
+input CreateCombatEncounterInput {
+  name: String
+  isActive: Boolean
+  sessionId: String
+}
+
+input UpdateCombatEncounterInput {
+  name: String
+  isActive: Boolean
+  currentRound: Int
+  currentTurn: Int
+}
+
+extend type Query {
+  combatEncounter(id: ID!): CombatEncounter
+  combatEncounters(sessionId: ID): [CombatEncounter!]!
+}
+
+extend type Mutation {
+  createCombatEncounter(input: CreateCombatEncounterInput!): CombatEncounter!
+  updateCombatEncounter(id: ID!, input: UpdateCombatEncounterInput!): CombatEncounter!
+  deleteCombatEncounter(id: ID!): Boolean!
+}
