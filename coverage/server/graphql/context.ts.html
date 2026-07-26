@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/23</span>
+                <span class='fraction'>23/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -209,12 +209,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">22x</span>
+<span class="cline-any cline-yes">22x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -229,22 +229,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -256,13 +254,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -309,15 +309,15 @@ export interface CreateContextDeps {
  * Extracts a Bearer token from an Authorization header value.
  * Returns `null` if the header is missing, empty, or not in "Bearer &lt;token&gt;" format.
  */
-export function <span class="fstat-no" title="function not covered" >extractBearerToken(</span>
+export function extractBearerToken(
   authHeader: string | undefined | null
 ): string | null {
-<span class="cstat-no" title="statement not covered" >  if (!authHeader) <span class="cstat-no" title="statement not covered" >return null;</span></span>
-  const parts = <span class="cstat-no" title="statement not covered" >authHeader.split(" ");</span>
-<span class="cstat-no" title="statement not covered" >  if (parts.length !== 2 || parts[0] !== "Bearer") <span class="cstat-no" title="statement not covered" >return null;</span></span>
-  const token = <span class="cstat-no" title="statement not covered" >parts[1];</span>
-<span class="cstat-no" title="statement not covered" >  if (!token || token.trim().length === 0) <span class="cstat-no" title="statement not covered" >return null;</span></span>
-<span class="cstat-no" title="statement not covered" >  return token;</span>
+  if (!authHeader) return null;
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer") return null;
+  const token = parts[1];
+  if (!token || token.trim().length === 0) return null;
+  return token;
 }
 &nbsp;
 /**
@@ -328,24 +328,24 @@ export function <span class="fstat-no" title="function not covered" >extractBear
  * Errors are logged but never thrown — an invalid token simply means
  * the request is unauthenticated.
  */
-async function <span class="fstat-no" title="function not covered" >resolveUser(</span>
+async function resolveUser(
   token: string,
   prisma: PrismaClient
 ): Promise&lt;AuthUser | null&gt; {
-<span class="cstat-no" title="statement not covered" >  try {</span>
-    const userId = <span class="cstat-no" title="statement not covered" >verifyToken(token);</span>
+  try {
+    const userId = verifyToken(token);
 &nbsp;
-    const user = <span class="cstat-no" title="statement not covered" >await prisma.user.findUnique({</span>
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true },
     });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (!user) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+    if (!user) return null;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return { id: user.id, email: user.email };</span>
+    return { id: user.id, email: user.email };
   } catch (error) {
-<span class="cstat-no" title="statement not covered" >    console.error("[context] Token verification failed:", error);</span>
-<span class="cstat-no" title="statement not covered" >    return null;</span>
+    console.error("[context] Token verification failed:", error);
+    return null;
   }
 }
 &nbsp;
@@ -358,14 +358,14 @@ async function <span class="fstat-no" title="function not covered" >resolveUser(
  * // Pass contextFactory as the `context` option to Apollo Server
  * ```
  */
-export function <span class="fstat-no" title="function not covered" >createContextFactory(d</span>eps: CreateContextDeps) {
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >async ({</span> req }: { req: IncomingMessage }): Promise&lt;GraphQLContext&gt; =&gt; {</span>
-    const authHeader = <span class="cstat-no" title="statement not covered" >req.headers["authorization"];</span>
-    const headerValue = <span class="cstat-no" title="statement not covered" >Array.isArray(authHeader) ? authHeader[0] : authHeader;</span>
-    const token = <span class="cstat-no" title="statement not covered" >extractBearerToken(headerValue);</span>
-    const currentUser = <span class="cstat-no" title="statement not covered" >token ? await resolveUser(token, deps.prisma) : null;</span>
+export function createContextFactory(deps: CreateContextDeps) {
+  return async ({ req }: { req: IncomingMessage }): Promise&lt;GraphQLContext&gt; =&gt; {
+    const authHeader = req.headers["authorization"];
+    const headerValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+    const token = extractBearerToken(headerValue);
+    const currentUser = token ? await resolveUser(token, deps.prisma) : null;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return {</span>
+    return {
       prisma: deps.prisma,
       queue: deps.queue,
       currentUser,
@@ -379,7 +379,7 @@ export function <span class="fstat-no" title="function not covered" >createConte
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T14:32:26.308Z
+                at 2026-07-26T22:09:16.778Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -186,12 +186,12 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 6.1_
 
-- [ ] 10. Implement GraphQL client helper
-  - [ ] 10.1 Create `src/lib/graphqlClient.ts`
+- [x] 10. Implement GraphQL client helper
+  - [x] 10.1 Create `src/lib/graphqlClient.ts`
     - Implement `graphqlRequest<T>()` function: fetch from /graphql endpoint, include Authorization header with token from localStorage, parse response, throw on errors
     - Export typed request function for use throughout app
     - _Requirements: 7.1_
-  - [ ] 10.2 Write unit tests for graphqlClient (**REQUIRED**)
+  - [x] 10.2 Write unit tests for graphqlClient (**REQUIRED**)
     - **Mock fetch**
     - **Test successful request**: assert correct fetch params, Authorization header included
     - **Test request without token**: assert request works without Authorization header
@@ -202,8 +202,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 7.1_
 
-- [ ] 11. Integration testing — Full authentication flow
-  - [ ] 11.1 Write end-to-end authentication flow tests (**REQUIRED**)
+- [x] 11. Integration testing — Full authentication flow
+  - [x] 11.1 Write end-to-end authentication flow tests (**REQUIRED**)
     - **Test full registration flow**: GraphQL mutation → database → JWT generation → localStorage
     - **Test full login flow**: GraphQL mutation → password verification → JWT generation → localStorage
     - **Test protected resource access**: valid token → userId in context → query succeeds
@@ -215,14 +215,14 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage for integration scenarios**
     - _Requirements: All requirements_
 
-- [ ] 12. Update App.tsx routing and navigation
+- [x] 12. Update App.tsx routing and navigation
   - Add AuthProvider wrapper around app
   - Configure routes for /login and /register
   - Add ProtectedRoute wrapper for authenticated routes
   - Add navigation links
   - _Requirements: 8.1_
 
-- [ ] 13. Final checkpoint — Complete test suite
+- [x] 13. Final checkpoint — Complete test suite
   - **FINAL GATE: ALL tests must pass with 80%+ coverage**
   - Run full test suite: `npm run test:coverage`
   - Verify all unit tests pass (AuthService, resolvers, context, components)

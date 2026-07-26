@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -108,27 +108,25 @@
 <a name='L43'></a><a href='#L43'>43</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -139,7 +137,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -150,25 +150,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// Server configuration loader
 // Reads and validates all environment variables, failing fast on missing required values.
 &nbsp;
-const <span class="cstat-no" title="statement not covered" >nodeEnv = process.env.NODE_ENV ?? 'development';</span>
-const isDev = <span class="cstat-no" title="statement not covered" >nodeEnv !== 'production';</span>
+const nodeEnv = process.env.NODE_ENV ?? 'development';
+const isDev = nodeEnv !== 'production';
 &nbsp;
-const databaseUrl = <span class="cstat-no" title="statement not covered" >process.env.DATABASE_URL;</span>
-<span class="cstat-no" title="statement not covered" >if (!databaseUrl) {</span>
-<span class="cstat-no" title="statement not covered" >  console.error(</span>
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error(
     'FATAL: DATABASE_URL environment variable is required but was not set. Exiting.',
   );
-<span class="cstat-no" title="statement not covered" >  process.exit(1);</span>
+  process.exit(1);
 }
 &nbsp;
-const databaseProvider = <span class="cstat-no" title="statement not covered" >process.env.DATABASE_PROVIDER ?? 'sqlite';</span>
+const databaseProvider = process.env.DATABASE_PROVIDER ?? 'sqlite';
 &nbsp;
-const dbQueueMaxDepth = <span class="cstat-no" title="statement not covered" >Number(process.env.DB_QUEUE_MAX_DEPTH ?? '100');</span>
-const dbQueueWarnMs = <span class="cstat-no" title="statement not covered" >Number(process.env.DB_QUEUE_WARN_MS ?? '500');</span>
+const dbQueueMaxDepth = Number(process.env.DB_QUEUE_MAX_DEPTH ?? '100');
+const dbQueueWarnMs = Number(process.env.DB_QUEUE_WARN_MS ?? '500');
 &nbsp;
-const graphqlIntrospectionRaw = <span class="cstat-no" title="statement not covered" >process.env.GRAPHQL_INTROSPECTION;</span>
+const graphqlIntrospectionRaw = process.env.GRAPHQL_INTROSPECTION;
 const graphqlIntrospection =
-<span class="cstat-no" title="statement not covered" >  graphqlIntrospectionRaw !== undefined</span>
+  graphqlIntrospectionRaw !== undefined
     ? graphqlIntrospectionRaw === 'true'
     : isDev;
 &nbsp;
@@ -181,7 +181,7 @@ export interface AppConfig {
   readonly graphqlIntrospection: boolean;
 }
 &nbsp;
-export const config: AppConfig = <span class="cstat-no" title="statement not covered" >Object.freeze({</span>
+export const config: AppConfig = Object.freeze({
   nodeEnv,
   databaseUrl,
   databaseProvider,
@@ -196,7 +196,7 @@ export const config: AppConfig = <span class="cstat-no" title="statement not cov
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T14:32:26.308Z
+                at 2026-07-26T22:09:16.778Z
             </div>
         <script src="../prettify.js"></script>
         <script>

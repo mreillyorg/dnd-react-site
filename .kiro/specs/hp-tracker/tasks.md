@@ -8,7 +8,7 @@ Implement HP tracking for combat encounters including damage, healing, temporary
 
 ## Tasks
 
-- [ ] 1. Implement HP calculation service
+- [~] 1. Implement HP calculation service
   - [ ] 1.1 Create `src/services/hpService.ts`
     - Implement `applyDamage(state, damage)`: temp HP absorbs first, then currentHp reduced, detect unconscious/instant death
     - Implement `applyHealing(state, healing)`: increase currentHp capped at maxHp
@@ -36,7 +36,7 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2. Implement GraphQL HP mutations and queries
+- [~] 2. Implement GraphQL HP mutations and queries
   - [ ] 2.1 Create HP-related GraphQL types and mutations
     - Add `applyDamage(combatantId: ID!, damage: Int!)` mutation
     - Add `applyHealing(combatantId: ID!, healing: Int!)` mutation

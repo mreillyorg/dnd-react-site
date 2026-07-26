@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">73.91% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/46</span>
+                <span class='fraction'>34/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -297,9 +297,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -323,7 +323,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -333,7 +333,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -344,7 +344,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -359,9 +359,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -391,9 +391,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -460,14 +460,14 @@ export interface ServiceDeps {
  * no default items, the transaction just creates the character. The
  * transaction boundary ensures atomicity if we later add default items.
  */
-export async function <span class="fstat-no" title="function not covered" >createCharacter(</span>
+export async function createCharacter(
   deps: ServiceDeps,
   userId: string,
   input: CreateCharacterInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.$transaction(<span class="fstat-no" title="function not covered" >async (t</span>x) =&gt; {</span>
-      const character = <span class="cstat-no" title="statement not covered" >await tx.character.create({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.$transaction(async (tx) =&gt; {
+      const character = await tx.character.create({
         data: {
           name: input.name,
           level: input.level ?? 1,
@@ -491,7 +491,7 @@ export async function <span class="fstat-no" title="function not covered" >creat
         },
       });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      return character;</span>
+      return character;
     }),
   );
 }
@@ -500,8 +500,8 @@ export async function <span class="fstat-no" title="function not covered" >creat
  * Retrieves a character by ID.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >getCharacterById(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.character.findUnique({</span>
+export async function getCharacterById(deps: ServiceDeps, id: string) {
+  return deps.prisma.character.findUnique({
     where: { id },
     include: { itemAssignments: true },
   });
@@ -511,8 +511,8 @@ export async function <span class="fstat-no" title="function not covered" >getCh
  * Lists all characters belonging to a specific user.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >listCharactersByUser(d</span>eps: ServiceDeps, userId: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.character.findMany({</span>
+export async function listCharactersByUser(deps: ServiceDeps, userId: string) {
+  return deps.prisma.character.findMany({
     where: { userId },
     include: { itemAssignments: true },
   });
@@ -522,31 +522,31 @@ export async function <span class="fstat-no" title="function not covered" >listC
  * Updates an existing character. The write goes through the operation queue
  * and is wrapped in a transaction.
  */
-export async function <span class="fstat-no" title="function not covered" >updateCharacter(</span>
+export async function updateCharacter(
   deps: ServiceDeps,
   id: string,
   input: UpdateCharacterInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.$transaction(<span class="fstat-no" title="function not covered" >async (t</span>x) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      return tx.character.update({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.$transaction(async (tx) =&gt; {
+      return tx.character.update({
         where: { id },
         data: {
           ...(input.name !== undefined &amp;&amp; { name: input.name }),
           ...(input.level !== undefined &amp;&amp; { level: input.level }),
-          ...(input.class !== undefined &amp;&amp; { class: input.class }),
-          ...(input.race !== undefined &amp;&amp; { race: input.race }),
-          ...(input.strength !== undefined &amp;&amp; { strength: input.strength }),
-          ...(input.dexterity !== undefined &amp;&amp; { dexterity: input.dexterity }),
-          ...(input.constitution !== undefined &amp;&amp; { constitution: input.constitution }),
-          ...(input.intelligence !== undefined &amp;&amp; { intelligence: input.intelligence }),
-          ...(input.wisdom !== undefined &amp;&amp; { wisdom: input.wisdom }),
-          ...(input.charisma !== undefined &amp;&amp; { charisma: input.charisma }),
+          ...(input.class !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ class: input.class }),</span>
+          ...(input.race !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ race: input.race }),</span>
+          ...(input.strength !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ strength: input.strength }),</span>
+          ...(input.dexterity !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ dexterity: input.dexterity }),</span>
+          ...(input.constitution !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ constitution: input.constitution }),</span>
+          ...(input.intelligence !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ intelligence: input.intelligence }),</span>
+          ...(input.wisdom !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ wisdom: input.wisdom }),</span>
+          ...(input.charisma !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ charisma: input.charisma }),</span>
           ...(input.maxHp !== undefined &amp;&amp; { maxHp: input.maxHp }),
-          ...(input.currentHp !== undefined &amp;&amp; { currentHp: input.currentHp }),
-          ...(input.tempHp !== undefined &amp;&amp; { tempHp: input.tempHp }),
-          ...(input.armorClass !== undefined &amp;&amp; { armorClass: input.armorClass }),
-          ...(input.campaignId !== undefined &amp;&amp; { campaignId: input.campaignId }),
+          ...(input.currentHp !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ currentHp: input.currentHp }),</span>
+          ...(input.tempHp !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ tempHp: input.tempHp }),</span>
+          ...(input.armorClass !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ armorClass: input.armorClass }),</span>
+          ...(input.campaignId !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ campaignId: input.campaignId }),</span>
         },
         include: { itemAssignments: true },
       });
@@ -558,10 +558,10 @@ export async function <span class="fstat-no" title="function not covered" >updat
  * Deletes a character by ID. The write goes through the operation queue
  * and is wrapped in a transaction.
  */
-export async function <span class="fstat-no" title="function not covered" >deleteCharacter(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.$transaction(<span class="fstat-no" title="function not covered" >async (t</span>x) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      return tx.character.delete({</span>
+export async function deleteCharacter(deps: ServiceDeps, id: string) {
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.$transaction(async (tx) =&gt; {
+      return tx.character.delete({
         where: { id },
       });
     }),
@@ -574,7 +574,7 @@ export async function <span class="fstat-no" title="function not covered" >delet
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T14:32:26.308Z
+                at 2026-07-26T22:09:16.778Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

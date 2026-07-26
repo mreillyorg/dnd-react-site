@@ -231,6 +231,75 @@
         "chatSessionId": "sess_7446359f-47f0-4762-a329-b95e12adf13d",
         "timestamp": 1785076390427
       }
+    ],
+    "10. Implement GraphQL client helper": [
+      {
+        "executionId": "4c5e7e11-f71e-4adc-bc6f-5b9b0e668e27",
+        "chatSessionId": "sess_5a537d4a-63bf-435d-aebf-7b48644fc35c",
+        "timestamp": 1785102414399
+      },
+      {
+        "executionId": "4c5e7e11-f71e-4adc-bc6f-5b9b0e668e27",
+        "chatSessionId": "sess_5a537d4a-63bf-435d-aebf-7b48644fc35c",
+        "timestamp": 1785102670015
+      }
+    ],
+    "10.1 Create `src/lib/graphqlClient.ts`": [
+      {
+        "executionId": "4c5e7e11-f71e-4adc-bc6f-5b9b0e668e27",
+        "chatSessionId": "sess_5a537d4a-63bf-435d-aebf-7b48644fc35c",
+        "timestamp": 1785102664886
+      }
+    ],
+    "10.2 Write unit tests for graphqlClient (**REQUIRED**)": [
+      {
+        "executionId": "4c5e7e11-f71e-4adc-bc6f-5b9b0e668e27",
+        "chatSessionId": "sess_5a537d4a-63bf-435d-aebf-7b48644fc35c",
+        "timestamp": 1785102669975
+      }
+    ],
+    "11.1 Write end-to-end authentication flow tests (**REQUIRED**)": [
+      {
+        "executionId": "837e30d4-e258-4359-9a0f-e715a4f97df2",
+        "chatSessionId": "sess_763b9135-c7da-4331-bae2-a377dfa0b117",
+        "timestamp": 1785102895864
+      },
+      {
+        "executionId": "837e30d4-e258-4359-9a0f-e715a4f97df2",
+        "chatSessionId": "sess_763b9135-c7da-4331-bae2-a377dfa0b117",
+        "timestamp": 1785103333432
+      }
+    ],
+    "11. Integration testing — Full authentication flow": [
+      {
+        "executionId": "837e30d4-e258-4359-9a0f-e715a4f97df2",
+        "chatSessionId": "sess_763b9135-c7da-4331-bae2-a377dfa0b117",
+        "timestamp": 1785103333517
+      }
+    ],
+    "12. Update App.tsx routing and navigation": [
+      {
+        "executionId": "4dafbc11-7bc9-4be7-8be4-d1162c38414b",
+        "chatSessionId": "sess_9f2db95f-f0e4-4a0a-8162-4290154ec9b1",
+        "timestamp": 1785103352508
+      },
+      {
+        "executionId": "4dafbc11-7bc9-4be7-8be4-d1162c38414b",
+        "chatSessionId": "sess_9f2db95f-f0e4-4a0a-8162-4290154ec9b1",
+        "timestamp": 1785103558776
+      }
+    ],
+    "13. Final checkpoint — Complete test suite": [
+      {
+        "executionId": "48d8fa0c-1b76-424c-aa7c-672ccc899348",
+        "chatSessionId": "sess_ac6255c6-25cf-4b0b-be23-015a2cc8e056",
+        "timestamp": 1785103583407
+      },
+      {
+        "executionId": "48d8fa0c-1b76-424c-aa7c-672ccc899348",
+        "chatSessionId": "sess_ac6255c6-25cf-4b0b-be23-015a2cc8e056",
+        "timestamp": 1785103780402
+      }
     ]
   }
 }
