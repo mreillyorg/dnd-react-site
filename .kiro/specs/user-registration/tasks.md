@@ -121,8 +121,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 7. Implement Login page component
-  - [ ] 7.1 Create `src/pages/LoginPage.tsx`
+- [x] 7. Implement Login page component
+  - [x] 7.1 Create `src/pages/LoginPage.tsx`
     - Implement form with email and password inputs using daisyUI components
     - Add form validation (required fields)
     - Call `useAuth().login()` on form submit
@@ -131,7 +131,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - Add link to register page
     - Use proper autocomplete attributes (email, current-password)
     - _Requirements: 5.1, 5.2_
-  - [ ] 7.2 Write component tests for LoginPage (**REQUIRED**)
+  - [x] 7.2 Write component tests for LoginPage (**REQUIRED**)
     - **Mock useAuth hook**
     - **Test form rendering**: assert email and password inputs present
     - **Test form submission**: assert login called with correct values
@@ -144,8 +144,8 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 5.1, 5.2_
 
-- [ ] 8. Implement Register page component
-  - [ ] 8.1 Create `src/pages/RegisterPage.tsx`
+- [x] 8. Implement Register page component
+  - [x] 8.1 Create `src/pages/RegisterPage.tsx`
     - Implement form with name, email, password, confirmPassword inputs using daisyUI components
     - Add password strength indicator
     - Validate passwords match before submission
@@ -155,7 +155,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - Add link to login page
     - Use proper autocomplete attributes (name, email, new-password)
     - _Requirements: 5.1, 5.2_
-  - [ ] 8.2 Write component tests for RegisterPage (**REQUIRED**)
+  - [x] 8.2 Write component tests for RegisterPage (**REQUIRED**)
     - **Mock useAuth hook**
     - **Test form rendering**: assert all input fields present
     - **Test password match validation**: assert error when passwords don't match
