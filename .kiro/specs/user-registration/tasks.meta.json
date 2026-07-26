@@ -74,6 +74,44 @@
         "chatSessionId": "sess_6771f47f-b753-46e1-b282-5a237296de07",
         "timestamp": 1785074275980
       }
+    ],
+    "4.1 Update `src/graphql/server.ts`": [
+      {
+        "executionId": "b15ee404-9732-405d-a983-4041a9fed8a9",
+        "chatSessionId": "sess_5eecea3e-07c4-4f31-b880-1a0749e4faf0",
+        "timestamp": 1785074378439
+      },
+      {
+        "executionId": "b15ee404-9732-405d-a983-4041a9fed8a9",
+        "chatSessionId": "sess_5eecea3e-07c4-4f31-b880-1a0749e4faf0",
+        "timestamp": 1785074826870
+      }
+    ],
+    "4.2 Write unit tests for context builder (**REQUIRED**)": [
+      {
+        "executionId": "b15ee404-9732-405d-a983-4041a9fed8a9",
+        "chatSessionId": "sess_5eecea3e-07c4-4f31-b880-1a0749e4faf0",
+        "timestamp": 1785074827658
+      }
+    ],
+    "4. Update GraphQL context to extract JWT from Authorization header": [
+      {
+        "executionId": "b15ee404-9732-405d-a983-4041a9fed8a9",
+        "chatSessionId": "sess_5eecea3e-07c4-4f31-b880-1a0749e4faf0",
+        "timestamp": 1785074827703
+      }
+    ],
+    "5. Checkpoint — Backend authentication complete": [
+      {
+        "executionId": "2c1a1bfd-7bc7-43fa-adf4-6b03d902e157",
+        "chatSessionId": "sess_f81145e4-8532-4504-9b6d-501b2b34160f",
+        "timestamp": 1785074848201
+      },
+      {
+        "executionId": "2c1a1bfd-7bc7-43fa-adf4-6b03d902e157",
+        "chatSessionId": "sess_f81145e4-8532-4504-9b6d-501b2b34160f",
+        "timestamp": 1785075117376
+      }
     ]
   }
 }

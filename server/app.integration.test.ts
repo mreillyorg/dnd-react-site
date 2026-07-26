@@ -20,6 +20,7 @@ import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -92,6 +93,11 @@ describe('Integration: GraphQL round-trip', () => {
   let apolloServer: ApolloServer;
 
   beforeAll(async () => {
+    // Ensure JWT_SECRET is available for token generation/verification
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = 'test-secret-key-for-integration-tests-only';
+    }
+
     // Create a mock prisma that supports the operations needed for the round-trip.
     // This simulates a real database by storing state in memory.
     const store: { users: Record<string, any>; characters: Record<string, any> } = {
@@ -233,10 +239,12 @@ describe('Integration: GraphQL round-trip', () => {
     expect(createdUser.id).toBeDefined();
     expect(createdUser.email).toBe('gandalf@middleearth.com');
 
-    // Build auth token for subsequent requests
-    const authToken = Buffer.from(
-      JSON.stringify({ id: createdUser.id, email: createdUser.email }),
-    ).toString('base64');
+    // Build a real JWT auth token for subsequent requests
+    const authToken = jwt.sign(
+      { userId: createdUser.id },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' },
+    );
 
     // Step 2: Execute createCharacter mutation (requires auth)
     const createCharacterMutation = `

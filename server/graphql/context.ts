@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { IncomingMessage } from "node:http";
 
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { verifyToken } from "../services/authService.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,7 +38,7 @@ export interface CreateContextDeps {
  * Extracts a Bearer token from an Authorization header value.
  * Returns `null` if the header is missing, empty, or not in "Bearer <token>" format.
  */
-function extractBearerToken(
+export function extractBearerToken(
   authHeader: string | undefined | null
 ): string | null {
   if (!authHeader) return null;
@@ -49,30 +50,30 @@ function extractBearerToken(
 }
 
 /**
- * Resolves an AuthUser from a bearer token.
+ * Resolves an AuthUser from a bearer token by verifying the JWT
+ * and looking up the user in the database.
  *
- * Currently a stub implementation that decodes a simple base64-encoded JSON
- * payload with `{ id, email }`. In a real implementation this would verify
- * a JWT signature or call an auth service.
+ * Returns `null` if the token is invalid, expired, or the user doesn't exist.
+ * Errors are logged but never thrown — an invalid token simply means
+ * the request is unauthenticated.
  */
-function resolveUser(token: string): AuthUser | null {
+async function resolveUser(
+  token: string,
+  prisma: PrismaClient
+): Promise<AuthUser | null> {
   try {
-    const decoded = Buffer.from(token, "base64").toString("utf-8");
-    const payload: unknown = JSON.parse(decoded);
+    const userId = verifyToken(token);
 
-    if (
-      typeof payload === "object" &&
-      payload !== null &&
-      "id" in payload &&
-      "email" in payload &&
-      typeof (payload as AuthUser).id === "string" &&
-      typeof (payload as AuthUser).email === "string"
-    ) {
-      return { id: (payload as AuthUser).id, email: (payload as AuthUser).email };
-    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
 
-    return null;
-  } catch {
+    if (!user) return null;
+
+    return { id: user.id, email: user.email };
+  } catch (error) {
+    console.error("[context] Token verification failed:", error);
     return null;
   }
 }
@@ -91,7 +92,7 @@ export function createContextFactory(deps: CreateContextDeps) {
     const authHeader = req.headers["authorization"];
     const headerValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
     const token = extractBearerToken(headerValue);
-    const currentUser = token ? resolveUser(token) : null;
+    const currentUser = token ? await resolveUser(token, deps.prisma) : null;
 
     return {
       prisma: deps.prisma,

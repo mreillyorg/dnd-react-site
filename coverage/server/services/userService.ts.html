@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -158,9 +158,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -177,7 +177,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -187,7 +187,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -218,13 +218,13 @@ export interface ServiceDeps {
  * Creates a new user. The write goes through the operation queue and is
  * wrapped in a Prisma transaction for consistency.
  */
-export async function <span class="fstat-no" title="function not covered" >createUser(</span>
+export async function createUser(
   deps: ServiceDeps,
   input: CreateUserInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.$transaction(<span class="fstat-no" title="function not covered" >async (t</span>x) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      return tx.user.create({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.$transaction(async (tx) =&gt; {
+      return tx.user.create({
         data: {
           email: input.email,
           passwordHash: input.password, // Hashing is the caller's responsibility
@@ -240,8 +240,8 @@ export async function <span class="fstat-no" title="function not covered" >creat
  * Retrieves a user by their unique ID.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >getUserById(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.user.findUnique({</span>
+export async function getUserById(deps: ServiceDeps, id: string) {
+  return deps.prisma.user.findUnique({
     where: { id },
   });
 }
@@ -250,8 +250,8 @@ export async function <span class="fstat-no" title="function not covered" >getUs
  * Retrieves a user by their email address.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >getUserByEmail(d</span>eps: ServiceDeps, email: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.user.findUnique({</span>
+export async function getUserByEmail(deps: ServiceDeps, email: string) {
+  return deps.prisma.user.findUnique({
     where: { email },
   });
 }
@@ -262,7 +262,7 @@ export async function <span class="fstat-no" title="function not covered" >getUs
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T13:57:35.601Z
+                at 2026-07-26T14:11:38.378Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

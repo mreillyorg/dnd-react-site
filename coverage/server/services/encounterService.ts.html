@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -189,8 +189,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -205,7 +205,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -213,20 +213,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -238,13 +225,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { PrismaClient } from "@prisma/client";
@@ -280,9 +280,9 @@ export interface UpdateEncounterInput {
  * Creates a new combat encounter.
  * Write goes through the queue for SQLite single-writer safety.
  */
-export function <span class="fstat-no" title="function not covered" >createEncounter(c</span>tx: ServiceContext, input: CreateEncounterInput) {
-<span class="cstat-no" title="statement not covered" >  return ctx.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    ctx.prisma.combatEncounter.create({</span>
+export function createEncounter(ctx: ServiceContext, input: CreateEncounterInput) {
+  return ctx.queue.enqueue(() =&gt;
+    ctx.prisma.combatEncounter.create({
       data: {
         name: input.name ?? undefined,
         isActive: input.isActive ?? undefined,
@@ -296,29 +296,29 @@ export function <span class="fstat-no" title="function not covered" >createEncou
  * Retrieves an encounter by its ID.
  * Reads go directly through Prisma (no queue needed).
  */
-export function <span class="fstat-no" title="function not covered" >getEncounterById(c</span>tx: ServiceContext, id: string) {
-<span class="cstat-no" title="statement not covered" >  return ctx.prisma.combatEncounter.findUnique({ where: { id } });</span>
+export function getEncounterById(ctx: ServiceContext, id: string) {
+  return ctx.prisma.combatEncounter.findUnique({ where: { id } });
 }
 &nbsp;
 /**
  * Lists all encounters for a specific session.
  * Reads go directly through Prisma (no queue needed).
  */
-export function <span class="fstat-no" title="function not covered" >listEncountersBySession(c</span>tx: ServiceContext, sessionId: string) {
-<span class="cstat-no" title="statement not covered" >  return ctx.prisma.combatEncounter.findMany({ where: { sessionId } });</span>
+export function listEncountersBySession(ctx: ServiceContext, sessionId: string) {
+  return ctx.prisma.combatEncounter.findMany({ where: { sessionId } });
 }
 &nbsp;
 /**
  * Updates an existing encounter.
  * Write goes through the queue for SQLite single-writer safety.
  */
-export function <span class="fstat-no" title="function not covered" >updateEncounter(</span>
+export function updateEncounter(
   ctx: ServiceContext,
   id: string,
   input: UpdateEncounterInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return ctx.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    ctx.prisma.combatEncounter.update({</span>
+  return ctx.queue.enqueue(() =&gt;
+    ctx.prisma.combatEncounter.update({
       where: { id },
       data: {
         ...(input.name !== undefined &amp;&amp; { name: input.name }),
@@ -334,9 +334,9 @@ export function <span class="fstat-no" title="function not covered" >updateEncou
  * Deletes an encounter by its ID.
  * Write goes through the queue for SQLite single-writer safety.
  */
-export function <span class="fstat-no" title="function not covered" >deleteEncounter(c</span>tx: ServiceContext, id: string) {
-<span class="cstat-no" title="statement not covered" >  return ctx.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    ctx.prisma.combatEncounter.delete({ where: { id } }),</span>
+export function deleteEncounter(ctx: ServiceContext, id: string) {
+  return ctx.queue.enqueue(() =&gt;
+    ctx.prisma.combatEncounter.delete({ where: { id } }),
   );
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -346,7 +346,7 @@ export function <span class="fstat-no" title="function not covered" >deleteEncou
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T13:57:35.601Z
+                at 2026-07-26T14:11:38.378Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

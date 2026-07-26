@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">90% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>9/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">90% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>9/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -196,26 +196,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">106x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -269,31 +269,31 @@ export interface ShutdownOptions {
  * @param deps - The server components to shut down
  * @param options - Additional options (e.g., whether to call process.exit)
  */
-export async function <span class="fstat-no" title="function not covered" >gracefulShutdown(</span>
+export async function gracefulShutdown(
   signal: string,
   deps: ShutdownDependencies,
-  options: ShutdownOptions = <span class="branch-0 cbranch-no" title="branch not covered" >{},</span>
+  options: ShutdownOptions = {},
 ): Promise&lt;void&gt; {
-  const { httpServer, queue, apolloServer, prismaDisconnect } = <span class="cstat-no" title="statement not covered" >deps;</span>
-  const { exit = <span class="branch-0 cbranch-no" title="branch not covered" >true } = <span class="cstat-no" title="statement not covered" >o</span>ptions;</span>
+  const { httpServer, queue, apolloServer, prismaDisconnect } = deps;
+  const { exit = true } = options;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  console.log(`[shutdown] Received ${signal}. Starting graceful shutdown...`);</span>
+  console.log(`[shutdown] Received ${signal}. Starting graceful shutdown...`);
 &nbsp;
   // 1. Stop accepting new connections
-<span class="cstat-no" title="statement not covered" >  httpServer.close();</span>
+  httpServer.close();
 &nbsp;
   // 2. Drain the operation queue (complete all pending writes)
-<span class="cstat-no" title="statement not covered" >  await queue.drain();</span>
+  await queue.drain();
 &nbsp;
   // 3. Stop Apollo Server
-<span class="cstat-no" title="statement not covered" >  await apolloServer.stop();</span>
+  await apolloServer.stop();
 &nbsp;
   // 4. Disconnect Prisma
-<span class="cstat-no" title="statement not covered" >  await prismaDisconnect();</span>
+  await prismaDisconnect();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  console.log('[shutdown] Shutdown complete.');</span>
+  console.log('[shutdown] Shutdown complete.');
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (exit) {</span>
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (exit) {
 <span class="cstat-no" title="statement not covered" >    process.exit(0);</span>
   }
 }
@@ -304,7 +304,7 @@ export async function <span class="fstat-no" title="function not covered" >grace
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T13:57:35.601Z
+                at 2026-07-26T14:11:38.378Z
             </div>
         <script src="../prettify.js"></script>
         <script>

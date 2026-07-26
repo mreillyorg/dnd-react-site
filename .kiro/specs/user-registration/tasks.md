@@ -70,13 +70,13 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 4. Update GraphQL context to extract JWT from Authorization header
-  - [ ] 4.1 Update `src/graphql/server.ts`
+- [x] 4. Update GraphQL context to extract JWT from Authorization header
+  - [x] 4.1 Update `src/graphql/server.ts`
     - Implement `getUserIdFromRequest()` function: extract Bearer token from Authorization header, verify with AuthService, return userId or undefined
     - Update context builder to include userId from token
     - Handle token verification errors gracefully (log and return undefined, don't throw)
     - _Requirements: 3.1, 3.2_
-  - [ ] 4.2 Write unit tests for context builder (**REQUIRED**)
+  - [x] 4.2 Write unit tests for context builder (**REQUIRED**)
     - **Test context with valid token**: assert ctx.userId is set correctly
     - **Test context with invalid token**: assert ctx.userId is undefined
     - **Test context with missing Authorization header**: assert ctx.userId is undefined
@@ -86,7 +86,7 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 3.1, 3.2_
 
-- [ ] 5. Checkpoint — Backend authentication complete
+- [x] 5. Checkpoint — Backend authentication complete
   - **GATE: All backend tests must pass with 80%+ coverage**
   - Run `npm run test:coverage` for backend
   - Verify all AuthService tests pass

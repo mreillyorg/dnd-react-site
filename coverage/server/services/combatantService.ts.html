@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">78.57% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>11/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -221,8 +221,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -248,8 +248,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -268,8 +268,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -283,7 +283,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -329,12 +329,12 @@ export interface ServiceDeps {
  * Creates a new combatant in an encounter.
  * Single-model write routed through the operation queue (no $transaction needed).
  */
-export async function <span class="fstat-no" title="function not covered" >createCombatant(</span>
+export async function createCombatant(
   deps: ServiceDeps,
   input: CreateCombatantInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.combatant.create({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.combatant.create({
       data: {
         name: input.name,
         initiative: input.initiative,
@@ -355,21 +355,21 @@ export async function <span class="fstat-no" title="function not covered" >creat
  * Updates a combatant (HP, initiative, etc.).
  * Single-model write routed through the operation queue.
  */
-export async function <span class="fstat-no" title="function not covered" >updateCombatant(</span>
+export async function updateCombatant(
   deps: ServiceDeps,
   id: string,
   input: UpdateCombatantInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.combatant.update({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.combatant.update({
       where: { id },
       data: {
-        ...(input.name !== undefined &amp;&amp; { name: input.name }),
+        ...(input.name !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ name: input.name }),</span>
         ...(input.initiative !== undefined &amp;&amp; { initiative: input.initiative }),
-        ...(input.maxHp !== undefined &amp;&amp; { maxHp: input.maxHp }),
+        ...(input.maxHp !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ maxHp: input.maxHp }),</span>
         ...(input.currentHp !== undefined &amp;&amp; { currentHp: input.currentHp }),
         ...(input.tempHp !== undefined &amp;&amp; { tempHp: input.tempHp }),
-        ...(input.armorClass !== undefined &amp;&amp; { armorClass: input.armorClass }),
+        ...(input.armorClass !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ armorClass: input.armorClass }),</span>
       },
     }),
   );
@@ -379,9 +379,9 @@ export async function <span class="fstat-no" title="function not covered" >updat
  * Deletes a combatant by ID.
  * Single-model write routed through the operation queue.
  */
-export async function <span class="fstat-no" title="function not covered" >deleteCombatant(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.combatant.delete({</span>
+export async function deleteCombatant(deps: ServiceDeps, id: string) {
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.combatant.delete({
       where: { id },
     }),
   );
@@ -391,11 +391,11 @@ export async function <span class="fstat-no" title="function not covered" >delet
  * Lists all combatants belonging to a specific encounter.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >listCombatantsByEncounter(</span>
+export async function listCombatantsByEncounter(
   deps: ServiceDeps,
   encounterId: string,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.combatant.findMany({</span>
+  return deps.prisma.combatant.findMany({
     where: { encounterId },
   });
 }
@@ -406,7 +406,7 @@ export async function <span class="fstat-no" title="function not covered" >listC
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T13:57:35.601Z
+                at 2026-07-26T14:11:38.378Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

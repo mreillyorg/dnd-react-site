@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">59.09% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/44</span>
+                <span class='fraction'>26/44</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -307,8 +307,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -342,7 +342,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -352,7 +352,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -364,8 +364,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -399,8 +399,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -473,13 +473,13 @@ export interface ServiceDeps {
  * Creates a new stat block (Monster record).
  * Single-model write routed through the operation queue.
  */
-export async function <span class="fstat-no" title="function not covered" >createStatBlock(</span>
+export async function createStatBlock(
   deps: ServiceDeps,
   input: CreateStatBlockInput,
   createdById?: string,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.monster.create({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.monster.create({
       data: {
         name: input.name,
         size: input.size,
@@ -512,8 +512,8 @@ export async function <span class="fstat-no" title="function not covered" >creat
  * Retrieves a stat block by ID.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >getStatBlockById(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.monster.findUnique({</span>
+export async function getStatBlockById(deps: ServiceDeps, id: string) {
+  return deps.prisma.monster.findUnique({
     where: { id },
   });
 }
@@ -522,44 +522,44 @@ export async function <span class="fstat-no" title="function not covered" >getSt
  * Lists all stat blocks, optionally filtered by type or challenge rating.
  * Reads go directly through Prisma (no queue needed).
  */
-export async function <span class="fstat-no" title="function not covered" >listStatBlocks(d</span>eps: ServiceDeps) {
-<span class="cstat-no" title="statement not covered" >  return deps.prisma.monster.findMany();</span>
+export async function listStatBlocks(deps: ServiceDeps) {
+  return deps.prisma.monster.findMany();
 }
 &nbsp;
 /**
  * Updates an existing stat block.
  * Single-model write routed through the operation queue.
  */
-export async function <span class="fstat-no" title="function not covered" >updateStatBlock(</span>
+export async function updateStatBlock(
   deps: ServiceDeps,
   id: string,
   input: UpdateStatBlockInput,
 ) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.monster.update({</span>
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.monster.update({
       where: { id },
       data: {
         ...(input.name !== undefined &amp;&amp; { name: input.name }),
-        ...(input.size !== undefined &amp;&amp; { size: input.size }),
-        ...(input.type !== undefined &amp;&amp; { type: input.type }),
-        ...(input.alignment !== undefined &amp;&amp; { alignment: input.alignment }),
+        ...(input.size !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ size: input.size }),</span>
+        ...(input.type !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ type: input.type }),</span>
+        ...(input.alignment !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ alignment: input.alignment }),</span>
         ...(input.armorClass !== undefined &amp;&amp; { armorClass: input.armorClass }),
         ...(input.hitPoints !== undefined &amp;&amp; { hitPoints: input.hitPoints }),
-        ...(input.hitDice !== undefined &amp;&amp; { hitDice: input.hitDice }),
-        ...(input.speed !== undefined &amp;&amp; { speed: input.speed }),
-        ...(input.strength !== undefined &amp;&amp; { strength: input.strength }),
-        ...(input.dexterity !== undefined &amp;&amp; { dexterity: input.dexterity }),
-        ...(input.constitution !== undefined &amp;&amp; { constitution: input.constitution }),
-        ...(input.intelligence !== undefined &amp;&amp; { intelligence: input.intelligence }),
-        ...(input.wisdom !== undefined &amp;&amp; { wisdom: input.wisdom }),
-        ...(input.charisma !== undefined &amp;&amp; { charisma: input.charisma }),
-        ...(input.challengeRating !== undefined &amp;&amp; { challengeRating: input.challengeRating }),
-        ...(input.source !== undefined &amp;&amp; { source: input.source }),
-        ...(input.abilities !== undefined &amp;&amp; { abilities: input.abilities }),
-        ...(input.actions !== undefined &amp;&amp; { actions: input.actions }),
-        ...(input.reactions !== undefined &amp;&amp; { reactions: input.reactions }),
-        ...(input.legendaryActions !== undefined &amp;&amp; { legendaryActions: input.legendaryActions }),
-        ...(input.dndbeyondLink !== undefined &amp;&amp; { dndbeyondLink: input.dndbeyondLink }),
+        ...(input.hitDice !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ hitDice: input.hitDice }),</span>
+        ...(input.speed !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ speed: input.speed }),</span>
+        ...(input.strength !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ strength: input.strength }),</span>
+        ...(input.dexterity !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ dexterity: input.dexterity }),</span>
+        ...(input.constitution !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ constitution: input.constitution }),</span>
+        ...(input.intelligence !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ intelligence: input.intelligence }),</span>
+        ...(input.wisdom !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ wisdom: input.wisdom }),</span>
+        ...(input.charisma !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ charisma: input.charisma }),</span>
+        ...(input.challengeRating !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ challengeRating: input.challengeRating }),</span>
+        ...(input.source !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ source: input.source }),</span>
+        ...(input.abilities !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ abilities: input.abilities }),</span>
+        ...(input.actions !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ actions: input.actions }),</span>
+        ...(input.reactions !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ reactions: input.reactions }),</span>
+        ...(input.legendaryActions !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ legendaryActions: input.legendaryActions }),</span>
+        ...(input.dndbeyondLink !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >{ dndbeyondLink: input.dndbeyondLink }),</span>
       },
     }),
   );
@@ -569,9 +569,9 @@ export async function <span class="fstat-no" title="function not covered" >updat
  * Deletes a stat block by ID.
  * Single-model write routed through the operation queue.
  */
-export async function <span class="fstat-no" title="function not covered" >deleteStatBlock(d</span>eps: ServiceDeps, id: string) {
-<span class="cstat-no" title="statement not covered" >  return deps.queue.<span class="fstat-no" title="function not covered" >enqueue(() =&gt;</span></span>
-<span class="cstat-no" title="statement not covered" >    deps.prisma.monster.delete({</span>
+export async function deleteStatBlock(deps: ServiceDeps, id: string) {
+  return deps.queue.enqueue(() =&gt;
+    deps.prisma.monster.delete({
       where: { id },
     }),
   );
@@ -583,7 +583,7 @@ export async function <span class="fstat-no" title="function not covered" >delet
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-26T13:57:35.601Z
+                at 2026-07-26T14:11:38.378Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
