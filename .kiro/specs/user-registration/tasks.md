@@ -169,14 +169,14 @@ Implement secure user registration and authentication using JWT tokens, bcrypt p
     - **Minimum 80% coverage required**
     - _Requirements: 5.1, 5.2_
 
-- [ ] 9. Implement ProtectedRoute component
-  - [ ] 9.1 Create `src/components/ProtectedRoute.tsx`
+- [x] 9. Implement ProtectedRoute component
+  - [x] 9.1 Create `src/components/ProtectedRoute.tsx`
     - Check authentication status with `useAuth()`
     - Show loading spinner while checking authentication
     - Redirect to /login if user is not authenticated
     - Render children if authenticated
     - _Requirements: 6.1_
-  - [ ] 9.2 Write component tests for ProtectedRoute (**REQUIRED**)
+  - [x] 9.2 Write component tests for ProtectedRoute (**REQUIRED**)
     - **Mock useAuth hook**
     - **Test loading state**: assert spinner shown while isLoading is true
     - **Test unauthenticated redirect**: assert Navigate to /login when user is null
