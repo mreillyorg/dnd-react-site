@@ -1,0 +1,7 @@
+extend type Mutation {
+  applyDamage(combatantId: ID!, damage: Int!): Combatant!
+  applyHealing(combatantId: ID!, healing: Int!): Combatant!
+  setTempHp(combatantId: ID!, tempHp: Int!): Combatant!
+  setMaxHp(combatantId: ID!, maxHp: Int!): Combatant!
+  setCurrentHp(combatantId: ID!, currentHp: Int!): Combatant!
+}

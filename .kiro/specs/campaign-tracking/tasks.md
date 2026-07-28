@@ -129,6 +129,7 @@ Implement campaign management including CRUD, member invitations, sessions/notes
     - `CampaignList`: owned + member campaigns with status badges
     - `CampaignDashboard`: widgets for active quests, recent sessions, NPCs
     - `CreateCampaignForm`: name, setting, description
+    - Use Tailwind CSS utility classes and daisyUI components (card, badge, btn, input, fieldset) for all styling
     - _Requirements: 7.1_
   - [ ] 8.2 Write component tests (**REQUIRED**)
     - **Test CampaignList rendering with owned and member sections**
@@ -145,6 +146,7 @@ Implement campaign management including CRUD, member invitations, sessions/notes
     - `LocationList` / `LocationDetail`: hierarchy display, map references
     - `QuestList` / `QuestDetail`: status indicators, linked entities
     - `TagFilter`: reusable tag filter component
+    - Use Tailwind CSS utility classes and daisyUI components (card, badge, table, collapse, btn) for all styling
     - _Requirements: 7.2_
   - [ ] 9.2 Write component tests (**REQUIRED**)
     - **Test NPC list rendering and filtering**
@@ -161,6 +163,7 @@ Implement campaign management including CRUD, member invitations, sessions/notes
     - `SessionList`: chronological session list
     - `SessionDetail`: notes editor, linked encounters
     - `TimelineView`: chronological events with filtering
+    - Use Tailwind CSS utility classes and daisyUI components (card, timeline, btn, input) for all styling
     - _Requirements: 7.3_
   - [ ] 10.2 Write component tests (**REQUIRED**)
     - **Test SessionList rendering**

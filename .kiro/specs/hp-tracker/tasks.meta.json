@@ -1,0 +1,156 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create `src/services/hpService.ts`": [
+      {
+        "executionId": "bc9526a3-f443-4665-b01e-262d0a632dcb",
+        "chatSessionId": "sess_6cf1edb5-266f-421c-8241-85c5cf5ed5a2",
+        "timestamp": 1785147464074
+      },
+      {
+        "executionId": "bc9526a3-f443-4665-b01e-262d0a632dcb",
+        "chatSessionId": "sess_6cf1edb5-266f-421c-8241-85c5cf5ed5a2",
+        "timestamp": 1785147564520
+      }
+    ],
+    "1.2 Write unit tests for HP service (**REQUIRED**)": [
+      {
+        "executionId": "bc9526a3-f443-4665-b01e-262d0a632dcb",
+        "chatSessionId": "sess_6cf1edb5-266f-421c-8241-85c5cf5ed5a2",
+        "timestamp": 1785147569296
+      },
+      {
+        "executionId": "bc9526a3-f443-4665-b01e-262d0a632dcb",
+        "chatSessionId": "sess_6cf1edb5-266f-421c-8241-85c5cf5ed5a2",
+        "timestamp": 1785147732134
+      }
+    ],
+    "1. Implement HP calculation service": [
+      {
+        "executionId": "bc9526a3-f443-4665-b01e-262d0a632dcb",
+        "chatSessionId": "sess_6cf1edb5-266f-421c-8241-85c5cf5ed5a2",
+        "timestamp": 1785147732203
+      }
+    ],
+    "2.1 Create HP-related GraphQL types and mutations": [
+      {
+        "executionId": "e4786108-a6c4-4b76-bcb9-74ee73b5a9de",
+        "chatSessionId": "sess_30d40683-7746-4e0a-8300-8b805ea3af9e",
+        "timestamp": 1785147847971
+      },
+      {
+        "executionId": "e4786108-a6c4-4b76-bcb9-74ee73b5a9de",
+        "chatSessionId": "sess_30d40683-7746-4e0a-8300-8b805ea3af9e",
+        "timestamp": 1785148086346
+      }
+    ],
+    "2.2 Write unit tests for HP mutations (**REQUIRED**)": [
+      {
+        "executionId": "e4786108-a6c4-4b76-bcb9-74ee73b5a9de",
+        "chatSessionId": "sess_30d40683-7746-4e0a-8300-8b805ea3af9e",
+        "timestamp": 1785148091681
+      },
+      {
+        "executionId": "e4786108-a6c4-4b76-bcb9-74ee73b5a9de",
+        "chatSessionId": "sess_30d40683-7746-4e0a-8300-8b805ea3af9e",
+        "timestamp": 1785148243262
+      }
+    ],
+    "2. Implement GraphQL HP mutations and queries": [
+      {
+        "executionId": "e4786108-a6c4-4b76-bcb9-74ee73b5a9de",
+        "chatSessionId": "sess_30d40683-7746-4e0a-8300-8b805ea3af9e",
+        "timestamp": 1785148243347
+      }
+    ],
+    "3. Checkpoint — Backend HP complete": [
+      {
+        "executionId": "86452c88-6ea2-4c28-8ff0-7b8ec9904a06",
+        "chatSessionId": "sess_d021d2e1-39f0-4992-8c28-6ebf550f123f",
+        "timestamp": 1785148259210
+      },
+      {
+        "executionId": "86452c88-6ea2-4c28-8ff0-7b8ec9904a06",
+        "chatSessionId": "sess_d021d2e1-39f0-4992-8c28-6ebf550f123f",
+        "timestamp": 1785148340570
+      }
+    ],
+    "4.1 Create `src/components/combat/HpBar.tsx`": [
+      {
+        "executionId": "c1e03d3e-9377-41e2-969e-675f04f631d3",
+        "chatSessionId": "sess_66c4f90f-88af-4a09-a446-e55f91676c00",
+        "timestamp": 1785148377012
+      },
+      {
+        "executionId": "9944e428-5d71-495f-8101-f11d451697d3",
+        "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
+        "timestamp": 1785149376809
+      },
+      {
+        "executionId": "9944e428-5d71-495f-8101-f11d451697d3",
+        "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
+        "timestamp": 1785149532571
+      }
+    ],
+    "5. Implement HpControls component": [
+      {
+        "executionId": "a803308c-f8ff-4bdb-8026-7840191aee25",
+        "chatSessionId": "sess_8514a443-b798-467f-9e85-6ffb91f0c487",
+        "timestamp": 1785148598794
+      },
+      {
+        "executionId": "8572d58e-cf74-42cb-a933-98bdab5ac768",
+        "chatSessionId": "sess_bc19f8ce-682e-485e-b51f-f711c0fcc5a4",
+        "timestamp": 1785150678752
+      },
+      {
+        "executionId": "8572d58e-cf74-42cb-a933-98bdab5ac768",
+        "chatSessionId": "sess_bc19f8ce-682e-485e-b51f-f711c0fcc5a4",
+        "timestamp": 1785152164962
+      }
+    ],
+    "5.1 Create `src/components/combat/HpControls.tsx`": [
+      {
+        "executionId": "a803308c-f8ff-4bdb-8026-7840191aee25",
+        "chatSessionId": "sess_8514a443-b798-467f-9e85-6ffb91f0c487",
+        "timestamp": 1785148659246
+      },
+      {
+        "executionId": "8572d58e-cf74-42cb-a933-98bdab5ac768",
+        "chatSessionId": "sess_bc19f8ce-682e-485e-b51f-f711c0fcc5a4",
+        "timestamp": 1785152160050
+      }
+    ],
+    "5.2 Write component tests for HpControls (**REQUIRED**)": [
+      {
+        "executionId": "a803308c-f8ff-4bdb-8026-7840191aee25",
+        "chatSessionId": "sess_8514a443-b798-467f-9e85-6ffb91f0c487",
+        "timestamp": 1785148660356
+      },
+      {
+        "executionId": "8572d58e-cf74-42cb-a933-98bdab5ac768",
+        "chatSessionId": "sess_bc19f8ce-682e-485e-b51f-f711c0fcc5a4",
+        "timestamp": 1785152164904
+      }
+    ],
+    "4.2 Write component tests for HpBar (**REQUIRED**)": [
+      {
+        "executionId": "9944e428-5d71-495f-8101-f11d451697d3",
+        "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
+        "timestamp": 1785149377850
+      },
+      {
+        "executionId": "9944e428-5d71-495f-8101-f11d451697d3",
+        "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
+        "timestamp": 1785149533394
+      }
+    ],
+    "4. Implement HpBar component": [
+      {
+        "executionId": "9944e428-5d71-495f-8101-f11d451697d3",
+        "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
+        "timestamp": 1785149533463
+      }
+    ]
+  }
+}

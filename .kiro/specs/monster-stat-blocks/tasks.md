@@ -70,6 +70,7 @@ Implement monster stat block management including SRD database, custom creation,
     - Reactions and Legendary Actions (if present)
     - D&D Beyond link button
     - D&D 5e visual styling (parchment/red headers)
+    - Use Tailwind CSS utility classes and daisyUI components (card, divider, badge, btn) for all styling
     - _Requirements: 3.1_
   - [ ] 4.2 Write component tests for StatBlockCard (**REQUIRED**)
     - **Test header rendering**: name, type, CR displayed
@@ -92,6 +93,7 @@ Implement monster stat block management including SRD database, custom creation,
     - Close when mouse leaves both trigger and popover
     - Position: prefer right, fallback left/above/below
     - Scrollable for long stat blocks
+    - Use Tailwind CSS utility classes and daisyUI components (card, tooltip) for all styling
     - _Requirements: 3.2_
   - [ ] 5.2 Write component tests for StatBlockPopover (**REQUIRED**)
     - **Test popover hidden by default**
@@ -109,6 +111,7 @@ Implement monster stat block management including SRD database, custom creation,
     - `MonsterLibrary`: user's custom + favorited monsters
     - `CreateMonsterForm`: multi-section form for all stat block fields
     - Quick-add to combat tracker button
+    - Use Tailwind CSS utility classes and daisyUI components (input, select, btn, card, table, pagination) for all styling
     - _Requirements: 3.3_
   - [ ] 6.2 Write component tests (**REQUIRED**)
     - **Test MonsterBrowser search functionality**

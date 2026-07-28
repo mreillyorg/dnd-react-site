@@ -9,6 +9,7 @@ import { campaignResolvers } from '../resolvers/campaign.resolver.ts';
 import { sessionResolvers } from '../resolvers/session.resolver.ts';
 import { encounterResolvers } from '../resolvers/encounter.resolver.ts';
 import { combatantResolvers } from '../resolvers/combatant.resolver.ts';
+import { hpResolvers } from '../resolvers/hp.resolver.ts';
 import { statBlockResolvers } from '../resolvers/statBlock.resolver.ts';
 import { inventoryResolvers } from '../resolvers/inventory.resolver.ts';
 import { itemResolvers } from '../resolvers/item.resolver.ts';
@@ -26,6 +27,7 @@ const schemaFiles = [
   'session.graphql',
   'encounter.graphql',
   'combatant.graphql',
+  'hp.graphql',
   'statBlock.graphql',
   'item.graphql',
 ];
@@ -42,6 +44,7 @@ const resolvers = [
   sessionResolvers,
   encounterResolvers,
   combatantResolvers,
+  hpResolvers,
   statBlockResolvers,
   inventoryResolvers,
   itemResolvers,

@@ -87,6 +87,7 @@ Implement item inventory management including assignment, attunement (max 3), co
     - Filter by type, rarity, equipped status
     - Sort by name, type, rarity
     - Show total weight and carrying capacity
+    - Use Tailwind CSS utility classes and daisyUI components (table, badge, progress, card) for all styling
     - _Requirements: 4.1_
   - [ ] 5.2 Write component tests (**REQUIRED**)
     - **Test InventoryList renders items**
@@ -105,6 +106,7 @@ Implement item inventory management including assignment, attunement (max 3), co
     - Quantity increment/decrement buttons
     - Equip/attune toggle buttons
     - Remove button with confirmation
+    - Use Tailwind CSS utility classes and daisyUI components (card, badge, btn, modal) for all styling
     - _Requirements: 4.2_
   - [ ] 6.2 Write component tests (**REQUIRED**)
     - **Test ItemCard rendering**: all fields displayed
@@ -122,6 +124,7 @@ Implement item inventory management including assignment, attunement (max 3), co
     - `ItemLibrary`: browse SRD items and custom items
     - Search and filter functionality
     - Add-to-inventory button
+    - Use Tailwind CSS utility classes and daisyUI components (input, select, btn, card, fieldset) for all styling
     - _Requirements: 4.3_
   - [ ] 7.2 Write component tests (**REQUIRED**)
     - **Test CustomItemForm rendering**

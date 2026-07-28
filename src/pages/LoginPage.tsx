@@ -24,43 +24,45 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-96 bg-base-100 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
+      <div className="card bg-base-100 w-full max-w-sm shadow-sm">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">Login</h2>
+          <h2 className="card-title text-2xl justify-center mb-2">Login</h2>
 
           <form onSubmit={handleSubmit}>
-            <div className="form-control">
+            <fieldset className="fieldset">
               <label className="label" htmlFor="email">
-                <span className="label-text">Email</span>
+                Email
               </label>
               <input
                 id="email"
                 type="email"
-                className="input input-bordered"
+                className="input w-full"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
                 aria-required="true"
               />
-            </div>
+            </fieldset>
 
-            <div className="form-control mt-4">
+            <fieldset className="fieldset">
               <label className="label" htmlFor="password">
-                <span className="label-text">Password</span>
+                Password
               </label>
               <input
                 id="password"
                 type="password"
-                className="input input-bordered"
+                className="input w-full"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
                 aria-required="true"
               />
-            </div>
+            </fieldset>
 
             {error && (
               <div className="alert alert-error mt-4" role="alert">
@@ -68,13 +70,16 @@ export function LoginPage() {
               </div>
             )}
 
-            <div className="form-control mt-6">
+            <div className="mt-6">
               <button
                 type="submit"
-                className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                className="btn btn-primary w-full"
                 disabled={isLoading}
                 aria-busy={isLoading}
               >
+                {isLoading && (
+                  <span className="loading loading-spinner loading-sm" />
+                )}
                 {isLoading ? 'Logging in...' : 'Login'}
               </button>
             </div>
@@ -82,7 +87,7 @@ export function LoginPage() {
 
           <div className="divider">OR</div>
 
-          <p className="text-center">
+          <p className="text-center text-sm">
             Don't have an account?{' '}
             <Link to="/register" className="link link-primary">
               Register

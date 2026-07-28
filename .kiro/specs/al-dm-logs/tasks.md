@@ -100,6 +100,7 @@ Implement AL DM log generation including session tracking, player rosters, advan
     - Location input
     - AL Season selector
     - Auto-calculate advancement/treasure/downtime on duration change
+    - Use Tailwind CSS utility classes and daisyUI components (input, select, btn, fieldset, alert) for all styling
     - _Requirements: 4.1_
   - [ ] 5.2 Write component tests (**REQUIRED**)
     - **Test form renders all fields**
@@ -118,6 +119,7 @@ Implement AL DM log generation including session tracking, player rosters, advan
     - Player count indicator with 3-7 range warning
     - Remove player button
     - Link existing campaign characters
+    - Use Tailwind CSS utility classes and daisyUI components (input, btn, badge, alert, table) for all styling
     - _Requirements: 4.2_
   - [ ] 6.2 Write component tests (**REQUIRED**)
     - **Test add player form renders**
@@ -134,6 +136,7 @@ Implement AL DM log generation including session tracking, player rosters, advan
     - `RewardDistributor`: assign magic items, story awards to players
     - `AlLogPreview`: formatted preview matching PDF output
     - Export button triggering PDF generation
+    - Use Tailwind CSS utility classes and daisyUI components (card, table, btn, divider) for all styling
     - _Requirements: 4.3_
   - [ ] 7.2 Write component tests (**REQUIRED**)
     - **Test RewardDistributor item assignment**
@@ -153,6 +156,7 @@ Implement AL DM log generation including session tracking, player rosters, advan
     - Re-export button for past sessions
     - Duplicate session button for repeat runs
     - DM summary statistics
+    - Use Tailwind CSS utility classes and daisyUI components (table, input, select, btn, stat, card) for all styling
     - _Requirements: 4.4_
   - [ ] 8.2 Write component tests (**REQUIRED**)
     - **Test history list rendering**

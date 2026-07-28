@@ -96,6 +96,7 @@ Implement D&D 5e character creation and management including ability scores, mul
     - Step 5: Review and create
     - Navigation between steps with validation
     - Submit calls createCharacter mutation
+    - Use Tailwind CSS utility classes and daisyUI components (steps, input, select, btn, card) for all styling
     - _Requirements: 4.1_
   - [ ] 5.2 Write component tests for CharacterCreationWizard (**REQUIRED**)
     - **Test step 1 rendering**: name, race, background fields
@@ -118,6 +119,7 @@ Implement D&D 5e character creation and management including ability scores, mul
     - Show class levels
     - Show features and spells
     - Edit mode for updating values
+    - Use Tailwind CSS utility classes and daisyUI components (card, badge, table, collapse) for all styling
     - _Requirements: 4.2_
   - [ ] 6.2 Write component tests for CharacterSheet (**REQUIRED**)
     - **Test ability scores display with modifiers**
@@ -139,6 +141,7 @@ Implement D&D 5e character creation and management including ability scores, mul
     - Link to character sheet
     - Delete button with confirmation
     - Create new character button linking to wizard
+    - Use Tailwind CSS utility classes and daisyUI components (card, btn, modal) for all styling
     - _Requirements: 4.3_
   - [ ] 7.2 Write component tests for CharacterList (**REQUIRED**)
     - **Test character cards rendering**

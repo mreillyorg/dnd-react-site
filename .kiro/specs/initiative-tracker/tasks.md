@@ -70,6 +70,7 @@ Implement initiative tracking for combat encounters including turn order, round 
     - Show initiative value, name, HP summary, AC
     - Gray out dead/unconscious combatants
     - Support drag-and-drop reordering
+    - Use Tailwind CSS utility classes and daisyUI components for all styling
     - _Requirements: 3.1_
   - [ ] 4.2 Write component tests for InitiativeList (**REQUIRED**)
     - **Test sorted order display**: assert combatants in initiative order
@@ -87,6 +88,7 @@ Implement initiative tracking for combat encounters including turn order, round 
     - Previous Turn button: calls previousTurn mutation
     - Round counter display
     - End Encounter button with confirmation
+    - Use Tailwind CSS utility classes and daisyUI components (btn, badge) for all styling
     - _Requirements: 3.2_
   - [ ] 5.2 Write component tests for TurnControls (**REQUIRED**)
     - **Test Next Turn click**: assert mutation called
@@ -104,6 +106,7 @@ Implement initiative tracking for combat encounters including turn order, round 
     - Roll initiative button (auto-fills with d20 result)
     - Validation: all fields required, positive numbers
     - Submit calls addCombatant mutation
+    - Use Tailwind CSS utility classes and daisyUI components (input, select, btn, fieldset) for all styling
     - _Requirements: 3.3_
   - [ ] 6.2 Write component tests for AddCombatantForm (**REQUIRED**)
     - **Test form rendering**: all fields present

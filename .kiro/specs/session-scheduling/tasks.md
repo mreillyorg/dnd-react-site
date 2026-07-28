@@ -89,6 +89,7 @@ Implement session scheduling with RSVP tracking, recurring sessions, proposal vo
     - Color coding: confirmed (green), tentative (yellow), past (gray)
     - Click session to view details
     - View mode toggle (month/week/list)
+    - Use Tailwind CSS utility classes and daisyUI components (card, badge, btn, tab) for all styling
     - _Requirements: 4.1_
   - [ ] 5.2 Write component tests (**REQUIRED**)
     - **Test month view renders sessions on correct dates**
@@ -106,6 +107,7 @@ Implement session scheduling with RSVP tracking, recurring sessions, proposal vo
     - `RsvpPanel`: attending/maybe/not_attending buttons, summary counts
     - `ScheduleSessionForm`: date, time, duration, location, meeting link
     - Form validation for all fields
+    - Use Tailwind CSS utility classes and daisyUI components (btn, btn-group, input, fieldset, stat, alert) for all styling
     - _Requirements: 4.2_
   - [ ] 6.2 Write component tests (**REQUIRED**)
     - **Test RsvpPanel button rendering**
@@ -122,6 +124,7 @@ Implement session scheduling with RSVP tracking, recurring sessions, proposal vo
   - [ ] 7.1 Create proposal and recurring components
     - `ProposalCard`: display options with vote counts, vote buttons
     - `RecurringScheduleForm`: frequency, day, time, end date
+    - Use Tailwind CSS utility classes and daisyUI components (card, radio, btn, input, select, badge) for all styling
     - _Requirements: 4.3_
   - [ ] 7.2 Write component tests (**REQUIRED**)
     - **Test ProposalCard options display**

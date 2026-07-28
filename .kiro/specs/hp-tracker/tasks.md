@@ -8,15 +8,15 @@ Implement HP tracking for combat encounters including damage, healing, temporary
 
 ## Tasks
 
-- [~] 1. Implement HP calculation service
-  - [ ] 1.1 Create `src/services/hpService.ts`
+- [x] 1. Implement HP calculation service
+  - [x] 1.1 Create `src/services/hpService.ts`
     - Implement `applyDamage(state, damage)`: temp HP absorbs first, then currentHp reduced, detect unconscious/instant death
     - Implement `applyHealing(state, healing)`: increase currentHp capped at maxHp
     - Implement `setTempHp(state, tempHp)`: take higher value (no stacking)
     - Implement `calculateHpPercentage(current, max)`: return 0-100 value
     - Implement `getHpColorClass(percentage)`: green > 50%, yellow 25-50%, red < 25%
     - _Requirements: 1.1, 1.2, 1.3_
-  - [ ] 1.2 Write unit tests for HP service (**REQUIRED**)
+  - [x] 1.2 Write unit tests for HP service (**REQUIRED**)
     - **Test applyDamage basic**: 20 damage to 50/50 HP → 30/50
     - **Test applyDamage with temp HP**: 15 damage to 50/50 HP with 10 temp → 45/50, 0 temp
     - **Test applyDamage temp absorbs partial**: 5 damage with 10 temp → 5 temp, HP unchanged
@@ -36,8 +36,8 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 1.1, 1.2, 1.3_
 
-- [~] 2. Implement GraphQL HP mutations and queries
-  - [ ] 2.1 Create HP-related GraphQL types and mutations
+- [x] 2. Implement GraphQL HP mutations and queries
+  - [x] 2.1 Create HP-related GraphQL types and mutations
     - Add `applyDamage(combatantId: ID!, damage: Int!)` mutation
     - Add `applyHealing(combatantId: ID!, healing: Int!)` mutation
     - Add `setTempHp(combatantId: ID!, tempHp: Int!)` mutation
@@ -47,7 +47,7 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - Validate inputs (non-negative damage/healing)
     - Require authentication
     - _Requirements: 2.1, 2.2_
-  - [ ] 2.2 Write unit tests for HP mutations (**REQUIRED**)
+  - [x] 2.2 Write unit tests for HP mutations (**REQUIRED**)
     - **Test applyDamage mutation**: assert updates DB, returns updated combatant
     - **Test applyHealing mutation**: assert updates DB, returns updated combatant
     - **Test setTempHp mutation**: assert updates DB correctly
@@ -60,20 +60,21 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 2.1, 2.2_
 
-- [ ] 3. Checkpoint — Backend HP complete
+- [x] 3. Checkpoint — Backend HP complete
   - **GATE: All backend tests must pass with 80%+ coverage**
   - Run `npm run test:coverage`
   - **DO NOT PROCEED without passing tests**
 
-- [ ] 4. Implement HpBar component
-  - [ ] 4.1 Create `src/components/combat/HpBar.tsx`
+- [x] 4. Implement HpBar component
+  - [x] 4.1 Create `src/components/combat/HpBar.tsx`
     - Display visual progress bar with current/max HP text
     - Color coding: green > 50%, yellow 25-50%, red < 25%
     - Animate width changes on HP updates
     - Show temp HP as overlay segment
+    - Use Tailwind CSS/daisyUI
     - Support different sizes (sm, md, lg)
     - _Requirements: 3.1_
-  - [ ] 4.2 Write component tests for HpBar (**REQUIRED**)
+  - [x] 4.2 Write component tests for HpBar (**REQUIRED**)
     - **Test full HP rendering**: green bar at 100%
     - **Test half HP rendering**: yellow bar at 50%
     - **Test low HP rendering**: red bar at 20%
@@ -85,16 +86,17 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 3.1_
 
-- [ ] 5. Implement HpControls component
-  - [ ] 5.1 Create `src/components/combat/HpControls.tsx`
+- [x] 5. Implement HpControls component
+  - [x] 5.1 Create `src/components/combat/HpControls.tsx`
     - Damage input with apply button
     - Heal input with apply button
+    - Use Tailwind CSS/daisyUI
     - Temp HP input with set button
     - Number input validation (positive integers only)
     - Quick buttons for common values (1, 5, 10)
     - Call appropriate GraphQL mutations on apply
     - _Requirements: 3.2_
-  - [ ] 5.2 Write component tests for HpControls (**REQUIRED**)
+  - [x] 5.2 Write component tests for HpControls (**REQUIRED**)
     - **Test damage input and submit**: assert applyDamage called
     - **Test heal input and submit**: assert applyHealing called
     - **Test temp HP input and submit**: assert setTempHp called

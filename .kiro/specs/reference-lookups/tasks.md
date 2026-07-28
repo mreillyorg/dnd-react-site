@@ -97,6 +97,7 @@ Implement SRD reference content access including spells, conditions, rules, sear
     - Sort by name, level, school
     - Spell detail view with all fields
     - Bookmark button on each spell
+    - Use Tailwind CSS utility classes and daisyUI components (card, table, select, input, btn, badge) for all styling
     - _Requirements: 5.1_
   - [ ] 6.2 Write component tests (**REQUIRED**)
     - **Test spell list renders**
@@ -114,6 +115,7 @@ Implement SRD reference content access including spells, conditions, rules, sear
     - `ReferenceSearch`: search input with autocomplete dropdown
     - `ConditionList`: all conditions alphabetically with descriptions
     - `RulesBrowser`: hierarchical navigation with breadcrumbs
+    - Use Tailwind CSS utility classes and daisyUI components (input, dropdown, card, breadcrumbs, collapse) for all styling
     - _Requirements: 5.2_
   - [ ] 7.2 Write component tests (**REQUIRED**)
     - **Test search input renders**
@@ -130,6 +132,7 @@ Implement SRD reference content access including spells, conditions, rules, sear
   - [ ] 8.1 Create bookmark and modal components
     - `BookmarkPanel`: user's saved references organized by type
     - `ReferenceModal`: inline popup for contextual reference links
+    - Use Tailwind CSS utility classes and daisyUI components (card, modal, btn, tab) for all styling
     - _Requirements: 5.3_
   - [ ] 8.2 Write component tests (**REQUIRED**)
     - **Test BookmarkPanel renders grouped bookmarks**
