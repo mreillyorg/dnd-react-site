@@ -151,6 +151,119 @@
         "chatSessionId": "sess_11c0dee4-e24c-4569-9e7f-9335130eb5ac",
         "timestamp": 1785149533463
       }
+    ],
+    "6. Implement CombatantCard component": [
+      {
+        "executionId": "b0a7c010-9b88-4619-818e-7a90a61c3be4",
+        "chatSessionId": "sess_cdc7028d-c0f8-4f72-8a91-c287450b57a4",
+        "timestamp": 1785240017350
+      },
+      {
+        "executionId": "b0a7c010-9b88-4619-818e-7a90a61c3be4",
+        "chatSessionId": "sess_cdc7028d-c0f8-4f72-8a91-c287450b57a4",
+        "timestamp": 1785240222551
+      }
+    ],
+    "6.1 Create `src/components/combat/CombatantCard.tsx`": [
+      {
+        "executionId": "b0a7c010-9b88-4619-818e-7a90a61c3be4",
+        "chatSessionId": "sess_cdc7028d-c0f8-4f72-8a91-c287450b57a4",
+        "timestamp": 1785240029797
+      },
+      {
+        "executionId": "b0a7c010-9b88-4619-818e-7a90a61c3be4",
+        "chatSessionId": "sess_cdc7028d-c0f8-4f72-8a91-c287450b57a4",
+        "timestamp": 1785240217215
+      }
+    ],
+    "6.2 Write component tests for CombatantCard (**REQUIRED**)": [
+      {
+        "executionId": "b0a7c010-9b88-4619-818e-7a90a61c3be4",
+        "chatSessionId": "sess_cdc7028d-c0f8-4f72-8a91-c287450b57a4",
+        "timestamp": 1785240222493
+      },
+      {
+        "executionId": "d24c13de-e426-411f-b636-1e9a4c81ee57",
+        "chatSessionId": "sess_44920372-d55f-4b3d-a5ac-a3be0005316f",
+        "timestamp": 1785240234289
+      },
+      {
+        "executionId": "d24c13de-e426-411f-b636-1e9a4c81ee57",
+        "chatSessionId": "sess_44920372-d55f-4b3d-a5ac-a3be0005316f",
+        "timestamp": 1785240521926
+      }
+    ],
+    "7.1 Create `src/components/combat/EncounterHpPanel.tsx`": [
+      {
+        "executionId": "c05f4a3f-5f64-47f5-8686-b14f38083d2d",
+        "chatSessionId": "sess_2260ddb4-a2ec-4225-8123-eb6cf93c5f62",
+        "timestamp": 1785240547694
+      },
+      {
+        "executionId": "c05f4a3f-5f64-47f5-8686-b14f38083d2d",
+        "chatSessionId": "sess_2260ddb4-a2ec-4225-8123-eb6cf93c5f62",
+        "timestamp": 1785240717859
+      }
+    ],
+    "7.2 Write component tests for EncounterHpPanel (**REQUIRED**)": [
+      {
+        "executionId": "c05f4a3f-5f64-47f5-8686-b14f38083d2d",
+        "chatSessionId": "sess_2260ddb4-a2ec-4225-8123-eb6cf93c5f62",
+        "timestamp": 1785240723121
+      },
+      {
+        "executionId": "c05f4a3f-5f64-47f5-8686-b14f38083d2d",
+        "chatSessionId": "sess_2260ddb4-a2ec-4225-8123-eb6cf93c5f62",
+        "timestamp": 1785242337232
+      },
+      {
+        "executionId": "d354473f-e721-4cb8-a4da-6b21362182eb",
+        "chatSessionId": "sess_f7a6a4c0-3327-4c11-a193-719ec4904d42",
+        "timestamp": 1785242360001
+      },
+      {
+        "executionId": "d354473f-e721-4cb8-a4da-6b21362182eb",
+        "chatSessionId": "sess_f7a6a4c0-3327-4c11-a193-719ec4904d42",
+        "timestamp": 1785242624264
+      }
+    ],
+    "7. Implement EncounterHpPanel": [
+      {
+        "executionId": "c05f4a3f-5f64-47f5-8686-b14f38083d2d",
+        "chatSessionId": "sess_2260ddb4-a2ec-4225-8123-eb6cf93c5f62",
+        "timestamp": 1785242337318
+      }
+    ],
+    "8.1 Write integration tests (**REQUIRED**)": [
+      {
+        "executionId": "93a4bdb2-8a00-48ad-9126-0045354bd867",
+        "chatSessionId": "sess_11eab49f-d587-44ff-8ef6-97a325061f9c",
+        "timestamp": 1785242641641
+      },
+      {
+        "executionId": "93a4bdb2-8a00-48ad-9126-0045354bd867",
+        "chatSessionId": "sess_11eab49f-d587-44ff-8ef6-97a325061f9c",
+        "timestamp": 1785242903681
+      }
+    ],
+    "8. Integration testing — Full HP flow": [
+      {
+        "executionId": "93a4bdb2-8a00-48ad-9126-0045354bd867",
+        "chatSessionId": "sess_11eab49f-d587-44ff-8ef6-97a325061f9c",
+        "timestamp": 1785242903750
+      }
+    ],
+    "9. Final checkpoint": [
+      {
+        "executionId": "4a7d006b-a879-4280-a6c2-05830a808be9",
+        "chatSessionId": "sess_41a2b3e9-3157-4a2c-b518-6b09d15ba49f",
+        "timestamp": 1785242916883
+      },
+      {
+        "executionId": "4a7d006b-a879-4280-a6c2-05830a808be9",
+        "chatSessionId": "sess_41a2b3e9-3157-4a2c-b518-6b09d15ba49f",
+        "timestamp": 1785242992045
+      }
     ]
   }
 }

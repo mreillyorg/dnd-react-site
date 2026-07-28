@@ -108,8 +108,8 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 3.2_
 
-- [ ] 6. Implement CombatantCard component
-  - [ ] 6.1 Create `src/components/combat/CombatantCard.tsx`
+- [x] 6. Implement CombatantCard component
+  - [x] 6.1 Create `src/components/combat/CombatantCard.tsx`
     - Display combatant name, type badge (player/monster/NPC)
     - Include HpBar component
     - Include HpControls component
@@ -117,7 +117,7 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - Highlight active combatant
     - Indicate unconscious/dead state
     - _Requirements: 3.3_
-  - [ ] 6.2 Write component tests for CombatantCard (**REQUIRED**)
+  - [x] 6.2 Write component tests for CombatantCard (**REQUIRED**)
     - **Test name and type display**
     - **Test HP bar included with correct values**
     - **Test HP controls included**
@@ -129,15 +129,15 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 3.3_
 
-- [ ] 7. Implement EncounterHpPanel
-  - [ ] 7.1 Create `src/components/combat/EncounterHpPanel.tsx`
+- [x] 7. Implement EncounterHpPanel
+  - [x] 7.1 Create `src/components/combat/EncounterHpPanel.tsx`
     - Fetch combatants for encounter via GraphQL query
     - Display list of CombatantCard components
     - Support adding new combatants
     - Support removing combatants
     - Sort by initiative order
     - _Requirements: 3.4_
-  - [ ] 7.2 Write component tests for EncounterHpPanel (**REQUIRED**)
+  - [x] 7.2 Write component tests for EncounterHpPanel (**REQUIRED**)
     - **Test combatant list rendering**
     - **Test sorted by initiative**
     - **Test add combatant flow**
@@ -148,8 +148,8 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **Minimum 80% coverage required**
     - _Requirements: 3.4_
 
-- [ ] 8. Integration testing — Full HP flow
-  - [ ] 8.1 Write integration tests (**REQUIRED**)
+- [x] 8. Integration testing — Full HP flow
+  - [x] 8.1 Write integration tests (**REQUIRED**)
     - **Test full damage flow**: UI input → mutation → DB update → UI reflects new HP
     - **Test full healing flow**: same pattern
     - **Test temp HP flow**: set temp → damage absorbed by temp first
@@ -158,7 +158,7 @@ Implement HP tracking for combat encounters including damage, healing, temporary
     - **All tests must pass before proceeding**
     - **Minimum 80% coverage**
 
-- [ ] 9. Final checkpoint
+- [x] 9. Final checkpoint
   - **FINAL GATE: ALL tests must pass with 80%+ coverage**
   - Run `npm run test:coverage`
   - Verify all unit, component, and integration tests pass
