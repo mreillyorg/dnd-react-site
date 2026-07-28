@@ -60,30 +60,8 @@ describe('formatGraphQLError', () => {
     });
   });
 
-  describe('Prisma content stripping', () => {
-    it('strips messages containing Prisma error codes (P2002)', () => {
-      const input: GraphQLFormattedError = {
-        message: 'Unique constraint failed on the fields: P2002',
-        extensions: { code: 'CONFLICT' },
-      };
-
-      const result = formatGraphQLError(input, new Error());
-
-      expect(result.message).toBe('An internal error occurred');
-    });
-
-    it('strips messages containing Prisma error codes (P1001)', () => {
-      const input: GraphQLFormattedError = {
-        message: 'Error P1001: Could not connect to database',
-        extensions: { code: 'DATABASE_UNAVAILABLE' },
-      };
-
-      const result = formatGraphQLError(input, new Error());
-
-      expect(result.message).toBe('An internal error occurred');
-    });
-
-    it('strips messages containing SQL keywords', () => {
+  describe('database content stripping', () => {
+    it('strips messages containing SQL keywords (SELECT)', () => {
       const input: GraphQLFormattedError = {
         message: 'Failed to execute SELECT * FROM users WHERE id = 1',
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
@@ -105,9 +83,20 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages containing the word "prisma"', () => {
+    it('strips messages containing SQLITE_CONSTRAINT', () => {
       const input: GraphQLFormattedError = {
-        message: 'Prisma client encountered an unexpected error',
+        message: 'SQLITE_CONSTRAINT: UNIQUE constraint failed: User.email',
+        extensions: { code: 'CONFLICT' },
+      };
+
+      const result = formatGraphQLError(input, new Error());
+
+      expect(result.message).toBe('An internal error occurred');
+    });
+
+    it('strips messages containing "constraint failed"', () => {
+      const input: GraphQLFormattedError = {
+        message: 'FOREIGN KEY constraint failed on table Character',
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       };
 
@@ -116,9 +105,9 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages referencing prisma.$ methods', () => {
+    it('strips messages containing "no such table"', () => {
       const input: GraphQLFormattedError = {
-        message: 'Error in prisma.$queryRaw invocation',
+        message: 'SqliteError: no such table: User',
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       };
 
@@ -127,7 +116,18 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('passes through clean messages without Prisma content', () => {
+    it('strips messages containing "database is locked"', () => {
+      const input: GraphQLFormattedError = {
+        message: 'SqliteError: database is locked',
+        extensions: { code: 'INTERNAL_SERVER_ERROR' },
+      };
+
+      const result = formatGraphQLError(input, new Error());
+
+      expect(result.message).toBe('An internal error occurred');
+    });
+
+    it('passes through clean messages without database content', () => {
       const input: GraphQLFormattedError = {
         message: 'Record not found',
         extensions: { code: 'NOT_FOUND' },
@@ -153,7 +153,7 @@ describe('formatGraphQLError', () => {
   describe('combined behavior', () => {
     it('both sanitizes message and ensures code in one pass', () => {
       const input: GraphQLFormattedError = {
-        message: 'prisma.$transaction failed unexpectedly',
+        message: 'UNIQUE constraint failed: User.email',
       };
 
       const result = formatGraphQLError(input, new Error());

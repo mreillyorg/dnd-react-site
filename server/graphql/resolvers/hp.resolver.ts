@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { combatants } from "../../db/schema.ts";
 import { applyDamage, applyHealing, setTempHp } from "../../../src/services/hpService.ts";
 
 // ---------------------------------------------------------------------------
@@ -16,12 +18,10 @@ function requireAuth(ctx: GraphQLContext) {
   return ctx.currentUser;
 }
 
-function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
-}
-
 async function findCombatantOrThrow(ctx: GraphQLContext, id: string) {
-  const combatant = await ctx.prisma.combatant.findUnique({ where: { id } });
+  const combatant = await ctx.db.query.combatants.findFirst({
+    where: eq(combatants.id, id),
+  });
   if (!combatant) {
     throw new GraphQLError("Combatant not found", {
       extensions: { code: "NOT_FOUND" },
@@ -42,7 +42,6 @@ export const hpResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      const deps = getDeps(ctx);
 
       if (args.damage < 0) {
         throw new GraphQLError("Damage must be non-negative", {
@@ -57,15 +56,15 @@ export const hpResolvers = {
         args.damage,
       );
 
-      return deps.queue.enqueue(() =>
-        deps.prisma.combatant.update({
-          where: { id: args.combatantId },
-          data: {
-            currentHp: result.newCurrentHp,
-            tempHp: result.newTempHp,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [updated] = ctx.db
+          .update(combatants)
+          .set({ currentHp: result.newCurrentHp, tempHp: result.newTempHp })
+          .where(eq(combatants.id, args.combatantId))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
 
     applyHealing: async (
@@ -74,7 +73,6 @@ export const hpResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      const deps = getDeps(ctx);
 
       if (args.healing < 0) {
         throw new GraphQLError("Healing must be non-negative", {
@@ -89,14 +87,15 @@ export const hpResolvers = {
         args.healing,
       );
 
-      return deps.queue.enqueue(() =>
-        deps.prisma.combatant.update({
-          where: { id: args.combatantId },
-          data: {
-            currentHp: result.currentHp,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [updated] = ctx.db
+          .update(combatants)
+          .set({ currentHp: result.currentHp })
+          .where(eq(combatants.id, args.combatantId))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
 
     setTempHp: async (
@@ -105,7 +104,6 @@ export const hpResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      const deps = getDeps(ctx);
 
       if (args.tempHp < 0) {
         throw new GraphQLError("Temp HP must be non-negative", {
@@ -120,14 +118,15 @@ export const hpResolvers = {
         args.tempHp,
       );
 
-      return deps.queue.enqueue(() =>
-        deps.prisma.combatant.update({
-          where: { id: args.combatantId },
-          data: {
-            tempHp: result.tempHp,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [updated] = ctx.db
+          .update(combatants)
+          .set({ tempHp: result.tempHp })
+          .where(eq(combatants.id, args.combatantId))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
 
     setMaxHp: async (
@@ -136,7 +135,6 @@ export const hpResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      const deps = getDeps(ctx);
 
       if (args.maxHp <= 0) {
         throw new GraphQLError("Max HP must be greater than zero", {
@@ -145,19 +143,17 @@ export const hpResolvers = {
       }
 
       const combatant = await findCombatantOrThrow(ctx, args.combatantId);
-
-      // Clamp currentHp to new maxHp if it would exceed it
       const newCurrentHp = Math.min(combatant.currentHp, args.maxHp);
 
-      return deps.queue.enqueue(() =>
-        deps.prisma.combatant.update({
-          where: { id: args.combatantId },
-          data: {
-            maxHp: args.maxHp,
-            currentHp: newCurrentHp,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [updated] = ctx.db
+          .update(combatants)
+          .set({ maxHp: args.maxHp, currentHp: newCurrentHp })
+          .where(eq(combatants.id, args.combatantId))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
 
     setCurrentHp: async (
@@ -166,7 +162,6 @@ export const hpResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      const deps = getDeps(ctx);
 
       if (args.currentHp < 0) {
         throw new GraphQLError("Current HP must be non-negative", {
@@ -175,18 +170,17 @@ export const hpResolvers = {
       }
 
       const combatant = await findCombatantOrThrow(ctx, args.combatantId);
-
-      // Clamp between 0 and maxHp
       const newCurrentHp = Math.min(Math.max(0, args.currentHp), combatant.maxHp);
 
-      return deps.queue.enqueue(() =>
-        deps.prisma.combatant.update({
-          where: { id: args.combatantId },
-          data: {
-            currentHp: newCurrentHp,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [updated] = ctx.db
+          .update(combatants)
+          .set({ currentHp: newCurrentHp })
+          .where(eq(combatants.id, args.combatantId))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
   },
 };

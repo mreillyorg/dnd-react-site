@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { users, oauthIdentities } from "../../db/schema.ts";
 import { createAuthorizationURL, invalidateSession } from "../../services/oauthService.ts";
 import { SUPPORTED_PROVIDERS, type SupportedProvider } from "../../services/oauthProviders.ts";
 
@@ -18,7 +20,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -35,11 +37,9 @@ export const authResolvers = {
       if (!ctx.currentUser) {
         return null;
       }
-      // Fetch the full user record from the database
-      const user = await ctx.prisma.user.findUnique({
-        where: { id: ctx.currentUser.id },
+      return ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.currentUser.id),
       });
-      return user;
     },
 
     initiateOAuth: (
@@ -67,9 +67,9 @@ export const authResolvers = {
     ) => {
       const user = requireAuth(ctx);
 
-      const identities = await ctx.prisma.oAuthIdentity.findMany({
-        where: { userId: user.id },
-        select: { provider: true },
+      const identities = await ctx.db.query.oauthIdentities.findMany({
+        where: eq(oauthIdentities.userId, user.id),
+        columns: { provider: true },
       });
 
       return identities.map((identity) => identity.provider);

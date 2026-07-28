@@ -27,8 +27,8 @@ describe('gracefulShutdown', () => {
           callOrder.push('apolloServer.stop');
         }),
       } as unknown as ShutdownDependencies['apolloServer'],
-      prismaDisconnect: vi.fn(async () => {
-        callOrder.push('prismaDisconnect');
+      closeDatabase: vi.fn(async () => {
+        callOrder.push('closeDatabase');
       }),
     };
   });
@@ -40,7 +40,7 @@ describe('gracefulShutdown', () => {
       'httpServer.close',
       'queue.drain',
       'apolloServer.stop',
-      'prismaDisconnect',
+      'closeDatabase',
     ]);
   });
 
@@ -53,19 +53,19 @@ describe('gracefulShutdown', () => {
     expect(closeIndex).toBeLessThan(drainIndex);
   });
 
-  it('drains queue before disconnecting prisma', async () => {
+  it('drains queue before closing database', async () => {
     await gracefulShutdown('SIGTERM', deps, { exit: false });
 
     const drainIndex = callOrder.indexOf('queue.drain');
-    const disconnectIndex = callOrder.indexOf('prismaDisconnect');
+    const disconnectIndex = callOrder.indexOf('closeDatabase');
     expect(drainIndex).toBeLessThan(disconnectIndex);
   });
 
-  it('stops apollo server before disconnecting prisma', async () => {
+  it('stops apollo server before closing database', async () => {
     await gracefulShutdown('SIGTERM', deps, { exit: false });
 
     const apolloIndex = callOrder.indexOf('apolloServer.stop');
-    const disconnectIndex = callOrder.indexOf('prismaDisconnect');
+    const disconnectIndex = callOrder.indexOf('closeDatabase');
     expect(apolloIndex).toBeLessThan(disconnectIndex);
   });
 
@@ -78,24 +78,22 @@ describe('gracefulShutdown', () => {
     exitSpy.mockRestore();
   });
 
-  it('waits for queue.drain() to complete before calling prismaDisconnect', async () => {
+  it('waits for queue.drain() to complete before calling closeDatabase', async () => {
     let drainResolved = false;
     deps.queue.drain = vi.fn(async () => {
-      // Simulate slow drain
       await new Promise((resolve) => setTimeout(resolve, 50));
       drainResolved = true;
       callOrder.push('queue.drain');
     });
 
-    deps.prismaDisconnect = vi.fn(async () => {
-      // prismaDisconnect should only be called after drain resolves
+    deps.closeDatabase = vi.fn(async () => {
       expect(drainResolved).toBe(true);
-      callOrder.push('prismaDisconnect');
+      callOrder.push('closeDatabase');
     });
 
     await gracefulShutdown('SIGTERM', deps, { exit: false });
 
     expect(drainResolved).toBe(true);
-    expect(deps.prismaDisconnect).toHaveBeenCalled();
+    expect(deps.closeDatabase).toHaveBeenCalled();
   });
 });

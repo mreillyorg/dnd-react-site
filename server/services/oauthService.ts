@@ -4,8 +4,11 @@ import {
   generateState,
   decodeIdToken,
 } from "arctic";
-import type { PrismaClient } from "@prisma/client";
+import { eq, and } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { users, oauthIdentities, authSessions } from "../db/schema.ts";
 import {
   getProvider,
   PROVIDER_SCOPES,
@@ -17,7 +20,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface ServiceDeps {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -129,7 +132,6 @@ export async function exchangeCode(
   const providerInstance = getProvider(provider);
   let tokens;
 
-  // Call validateAuthorizationCode with the appropriate signature per provider
   if (provider === "google") {
     if (!codeVerifier) {
       throw new Error("Code verifier is required for Google OAuth");
@@ -160,14 +162,11 @@ export async function exchangeCode(
     tokens = await (providerInstance as import("arctic").Apple).validateAuthorizationCode(code);
   }
 
-  // Extract profile from token response
   return extractProfile(provider, tokens);
 }
 
 /**
  * Extracts user profile information from OAuth tokens.
- * For OIDC providers (Google, Microsoft, Apple), decodes the ID token.
- * For others, uses the access token to call userinfo endpoints.
  */
 async function extractProfile(
   provider: SupportedProvider,
@@ -206,7 +205,6 @@ async function extractProfile(
 
     case "github": {
       const accessToken = tokens.accessToken();
-      // Fetch user info
       const userResponse = await fetch("https://api.github.com/user", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -218,7 +216,6 @@ async function extractProfile(
       }
       const user = (await userResponse.json()) as Record<string, unknown>;
 
-      // Fetch primary email (may not be public)
       let email = (user.email as string) ?? "";
       if (!email) {
         const emailResponse = await fetch(
@@ -277,35 +274,26 @@ async function extractProfile(
 
 /**
  * Resolves an existing user or creates a new one based on the OAuth profile.
- *
- * - If an OAuthIdentity with (provider, providerUserId) already exists linked to a
- *   different email, throws an identity conflict error.
- * - If a user with the email exists, links the new OAuthIdentity to that user.
- * - If no user exists, creates a new user + OAuthIdentity atomically.
  */
 export async function resolveOrCreateUser(
   deps: ServiceDeps,
   profile: OAuthProfile,
 ): Promise<{ id: string; email: string; name: string | null }> {
-  // Check if this provider+providerUserId is already linked to a different email
-  const existingIdentity = await deps.prisma.oAuthIdentity.findUnique({
-    where: {
-      provider_providerUserId: {
-        provider: profile.provider,
-        providerUserId: profile.providerUserId,
-      },
-    },
-    include: { user: true },
+  // Check if this provider+providerUserId is already linked
+  const existingIdentity = await deps.db.query.oauthIdentities.findFirst({
+    where: and(
+      eq(oauthIdentities.provider, profile.provider),
+      eq(oauthIdentities.providerUserId, profile.providerUserId),
+    ),
+    with: { user: true },
   });
 
   if (existingIdentity) {
-    // Identity exists — if it belongs to a user with a different email, conflict
     if (existingIdentity.user.email !== profile.email) {
       throw new Error(
         "This OAuth identity is already associated with another account",
       );
     }
-    // Identity matches the same user/email — just return the user
     return {
       id: existingIdentity.user.id,
       email: existingIdentity.user.email,
@@ -314,21 +302,20 @@ export async function resolveOrCreateUser(
   }
 
   // Look up user by email
-  const existingUser = await deps.prisma.user.findUnique({
-    where: { email: profile.email },
+  const existingUser = await deps.db.query.users.findFirst({
+    where: eq(users.email, profile.email),
   });
 
   if (existingUser) {
     // Link the new OAuth identity to the existing user
-    await deps.queue.enqueue(() =>
-      deps.prisma.oAuthIdentity.create({
-        data: {
-          provider: profile.provider,
-          providerUserId: profile.providerUserId,
-          userId: existingUser.id,
-        },
-      }),
-    );
+    await deps.queue.enqueue(() => {
+      deps.db.insert(oauthIdentities).values({
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+        userId: existingUser.id,
+      }).run();
+      return Promise.resolve();
+    });
     return {
       id: existingUser.id,
       email: existingUser.email,
@@ -337,25 +324,25 @@ export async function resolveOrCreateUser(
   }
 
   // Create a new user + OAuthIdentity atomically via the queue
-  const newUser = await deps.queue.enqueue(() =>
-    deps.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email: profile.email,
-          name: profile.name,
-          themeMode: "SYSTEM",
-        },
-      });
-      await tx.oAuthIdentity.create({
-        data: {
-          provider: profile.provider,
-          providerUserId: profile.providerUserId,
-          userId: user.id,
-        },
-      });
+  // better-sqlite3 transactions are synchronous, so we use db.transaction()
+  const newUser = await deps.queue.enqueue(() => {
+    const result = deps.db.transaction((tx) => {
+      const [user] = tx.insert(users).values({
+        email: profile.email,
+        name: profile.name,
+        themeMode: "SYSTEM",
+      }).returning().all();
+
+      tx.insert(oauthIdentities).values({
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+        userId: user.id,
+      }).run();
+
       return user;
-    }),
-  );
+    });
+    return Promise.resolve(result);
+  });
 
   return {
     id: newUser.id,
@@ -380,15 +367,14 @@ export async function createSession(
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_EXPIRY_MS);
 
-  await deps.queue.enqueue(() =>
-    deps.prisma.authSession.create({
-      data: {
-        token,
-        userId,
-        expiresAt,
-      },
-    }),
-  );
+  await deps.queue.enqueue(() => {
+    deps.db.insert(authSessions).values({
+      token,
+      userId,
+      expiresAt,
+    }).run();
+    return Promise.resolve();
+  });
 
   return token;
 }
@@ -397,15 +383,14 @@ export async function createSession(
  * Validates a session token.
  * Returns the associated user's { id, email } if the session is valid and not expired.
  * Returns null if the session is not found or expired.
- * Expired sessions are cleaned up (deleted) via the queue.
  */
 export async function validateSession(
   deps: ServiceDeps,
   token: string,
 ): Promise<AuthUser | null> {
-  const session = await deps.prisma.authSession.findUnique({
-    where: { token },
-    include: { user: true },
+  const session = await deps.db.query.authSessions.findFirst({
+    where: eq(authSessions.token, token),
+    with: { user: true },
   });
 
   if (!session) {
@@ -414,11 +399,12 @@ export async function validateSession(
 
   // Check if expired
   if (session.expiresAt <= new Date()) {
-    // Clean up the expired session
-    deps.queue.enqueue(() =>
-      deps.prisma.authSession.delete({ where: { id: session.id } }),
-    ).catch(() => {
-      // Swallow cleanup errors — best effort
+    // Clean up the expired session (best effort)
+    deps.queue.enqueue(() => {
+      deps.db.delete(authSessions).where(eq(authSessions.id, session.id)).run();
+      return Promise.resolve();
+    }).catch(() => {
+      // Swallow cleanup errors
     });
     return null;
   }
@@ -437,7 +423,8 @@ export async function invalidateSession(
   deps: ServiceDeps,
   token: string,
 ): Promise<void> {
-  await deps.queue.enqueue(() =>
-    deps.prisma.authSession.deleteMany({ where: { token } }),
-  );
+  await deps.queue.enqueue(() => {
+    deps.db.delete(authSessions).where(eq(authSessions.token, token)).run();
+    return Promise.resolve();
+  });
 }

@@ -1,5 +1,8 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { itemAssignments, items } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,7 +25,7 @@ export interface UpdateItemSlotInput {
 }
 
 export interface ServiceDeps {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -38,18 +41,21 @@ export async function addItemToInventory(
   deps: ServiceDeps,
   input: AddItemToInventoryInput,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.itemAssignment.create({
-      data: {
+  return deps.queue.enqueue(() => {
+    const [created] = deps.db
+      .insert(itemAssignments)
+      .values({
         itemId: input.itemId,
         characterId: input.characterId,
         quantity: input.quantity ?? 1,
         equipped: input.equipped ?? false,
         attuned: input.attuned ?? false,
         identified: input.identified ?? true,
-      },
-    }),
-  );
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
+  });
 }
 
 /**
@@ -60,11 +66,14 @@ export async function removeItemFromInventory(
   deps: ServiceDeps,
   id: string,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.itemAssignment.delete({
-      where: { id },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const [deleted] = deps.db
+      .delete(itemAssignments)
+      .where(eq(itemAssignments.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }
 
 /**
@@ -76,29 +85,33 @@ export async function updateItemSlot(
   id: string,
   input: UpdateItemSlotInput,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.itemAssignment.update({
-      where: { id },
-      data: {
-        ...(input.quantity !== undefined && { quantity: input.quantity }),
-        ...(input.equipped !== undefined && { equipped: input.equipped }),
-        ...(input.attuned !== undefined && { attuned: input.attuned }),
-        ...(input.identified !== undefined && { identified: input.identified }),
-      },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.quantity !== undefined) data.quantity = input.quantity;
+    if (input.equipped !== undefined) data.equipped = input.equipped;
+    if (input.attuned !== undefined) data.attuned = input.attuned;
+    if (input.identified !== undefined) data.identified = input.identified;
+
+    const [updated] = deps.db
+      .update(itemAssignments)
+      .set(data)
+      .where(eq(itemAssignments.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
- * Gets all inventory items for a character.
- * Reads go directly through Prisma (no queue needed).
+ * Gets all inventory items for a character (with item details).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export async function getInventoryByCharacter(
   deps: ServiceDeps,
   characterId: string,
 ) {
-  return deps.prisma.itemAssignment.findMany({
-    where: { characterId },
-    include: { item: true },
+  return deps.db.query.itemAssignments.findMany({
+    where: eq(itemAssignments.characterId, characterId),
+    with: { item: true },
   });
 }

@@ -24,7 +24,7 @@ export const encounterResolvers = {
   Query: {
     combatEncounter: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       return encounterService.getEncounterById(
-        { prisma: ctx.prisma, queue: ctx.queue },
+        { db: ctx.db, queue: ctx.queue },
         args.id,
       );
     },
@@ -32,11 +32,11 @@ export const encounterResolvers = {
     combatEncounters: (_: unknown, args: { sessionId?: string | null }, ctx: GraphQLContext) => {
       if (args.sessionId) {
         return encounterService.listEncountersBySession(
-          { prisma: ctx.prisma, queue: ctx.queue },
+          { db: ctx.db, queue: ctx.queue },
           args.sessionId,
         );
       }
-      return ctx.prisma.combatEncounter.findMany();
+      return ctx.db.query.combatEncounters.findMany();
     },
   },
 
@@ -44,7 +44,7 @@ export const encounterResolvers = {
     createCombatEncounter: (_: unknown, args: { input: { name?: string | null; isActive?: boolean | null; sessionId?: string | null } }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return encounterService.createEncounter(
-        { prisma: ctx.prisma, queue: ctx.queue },
+        { db: ctx.db, queue: ctx.queue },
         args.input,
       );
     },
@@ -52,7 +52,7 @@ export const encounterResolvers = {
     updateCombatEncounter: (_: unknown, args: { id: string; input: { name?: string | null; isActive?: boolean | null; currentRound?: number | null; currentTurn?: number | null } }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return encounterService.updateEncounter(
-        { prisma: ctx.prisma, queue: ctx.queue },
+        { db: ctx.db, queue: ctx.queue },
         args.id,
         args.input,
       );
@@ -61,7 +61,7 @@ export const encounterResolvers = {
     deleteCombatEncounter: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await encounterService.deleteEncounter(
-        { prisma: ctx.prisma, queue: ctx.queue },
+        { db: ctx.db, queue: ctx.queue },
         args.id,
       );
       return true;

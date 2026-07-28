@@ -1,5 +1,8 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { combatants } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,7 +31,7 @@ export interface UpdateCombatantInput {
 }
 
 export interface ServiceDeps {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -38,15 +41,16 @@ export interface ServiceDeps {
 
 /**
  * Creates a new combatant in an encounter.
- * Single-model write routed through the operation queue (no $transaction needed).
+ * Single-model write routed through the operation queue.
  */
 export async function createCombatant(
   deps: ServiceDeps,
   input: CreateCombatantInput,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.combatant.create({
-      data: {
+  return deps.queue.enqueue(() => {
+    const [created] = deps.db
+      .insert(combatants)
+      .values({
         name: input.name,
         initiative: input.initiative,
         maxHp: input.maxHp,
@@ -57,9 +61,11 @@ export async function createCombatant(
         characterId: input.characterId,
         monsterId: input.monsterId,
         encounterId: input.encounterId,
-      },
-    }),
-  );
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
+  });
 }
 
 /**
@@ -71,19 +77,23 @@ export async function updateCombatant(
   id: string,
   input: UpdateCombatantInput,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.combatant.update({
-      where: { id },
-      data: {
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.initiative !== undefined && { initiative: input.initiative }),
-        ...(input.maxHp !== undefined && { maxHp: input.maxHp }),
-        ...(input.currentHp !== undefined && { currentHp: input.currentHp }),
-        ...(input.tempHp !== undefined && { tempHp: input.tempHp }),
-        ...(input.armorClass !== undefined && { armorClass: input.armorClass }),
-      },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.initiative !== undefined) data.initiative = input.initiative;
+    if (input.maxHp !== undefined) data.maxHp = input.maxHp;
+    if (input.currentHp !== undefined) data.currentHp = input.currentHp;
+    if (input.tempHp !== undefined) data.tempHp = input.tempHp;
+    if (input.armorClass !== undefined) data.armorClass = input.armorClass;
+
+    const [updated] = deps.db
+      .update(combatants)
+      .set(data)
+      .where(eq(combatants.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
@@ -91,22 +101,25 @@ export async function updateCombatant(
  * Single-model write routed through the operation queue.
  */
 export async function deleteCombatant(deps: ServiceDeps, id: string) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.combatant.delete({
-      where: { id },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const [deleted] = deps.db
+      .delete(combatants)
+      .where(eq(combatants.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }
 
 /**
  * Lists all combatants belonging to a specific encounter.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export async function listCombatantsByEncounter(
   deps: ServiceDeps,
   encounterId: string,
 ) {
-  return deps.prisma.combatant.findMany({
-    where: { encounterId },
+  return deps.db.query.combatants.findMany({
+    where: eq(combatants.encounterId, encounterId),
   });
 }

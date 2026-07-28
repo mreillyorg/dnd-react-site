@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq, and } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { monsters } from "../../db/schema.ts";
 import {
   createStatBlock,
   getStatBlockById,
@@ -27,7 +29,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -50,12 +52,14 @@ export const statBlockResolvers = {
       ctx: GraphQLContext,
     ) => {
       // Apply optional filters
-      const where: Record<string, string> = {};
-      if (args.type) where.type = args.type;
-      if (args.source) where.source = args.source;
+      const conditions = [];
+      if (args.type) conditions.push(eq(monsters.type, args.type));
+      if (args.source) conditions.push(eq(monsters.source, args.source));
 
-      if (Object.keys(where).length > 0) {
-        return ctx.prisma.monster.findMany({ where });
+      if (conditions.length > 0) {
+        return ctx.db.query.monsters.findMany({
+          where: conditions.length === 1 ? conditions[0] : and(...conditions),
+        });
       }
 
       return listStatBlocks(getDeps(ctx));

@@ -9,8 +9,9 @@ import {
   exchangeCode,
   resolveOrCreateUser,
   createSession,
-  type ServiceDeps,
 } from "../services/oauthService.ts";
+import type { DrizzleDb } from "../db/drizzle.ts";
+import type { OperationQueue } from "../db/operationQueue.ts";
 import { setSessionCookie } from "../services/sessionCookie.ts";
 import { config } from "../config.ts";
 
@@ -32,7 +33,7 @@ const STATE_COOKIE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
  *   GET /auth/initiate/:provider — starts the OAuth flow
  *   GET /auth/callback/:provider — handles the OAuth callback
  */
-export function createAuthRouter(deps: ServiceDeps): Router {
+export function createAuthRouter(deps: { db: DrizzleDb; queue: OperationQueue }): Router {
   const router = Router();
 
   // -------------------------------------------------------------------------

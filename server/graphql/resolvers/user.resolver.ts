@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { users } from "../../db/schema.ts";
 import {
   createUser,
   getUserById,
@@ -20,7 +22,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -43,7 +45,7 @@ export const userResolvers = {
     },
 
     users: async (_parent: unknown, _args: unknown, ctx: GraphQLContext) => {
-      return ctx.prisma.user.findMany();
+      return ctx.db.query.users.findMany();
     },
   },
 
@@ -53,7 +55,6 @@ export const userResolvers = {
       args: { input: { email: string; password: string; name?: string; themeMode?: string } },
       ctx: GraphQLContext,
     ) => {
-      // Public - no auth required
       return createUser(getDeps(ctx), args.input);
     },
 
@@ -64,17 +65,19 @@ export const userResolvers = {
     ) => {
       requireAuth(ctx);
       const deps = getDeps(ctx);
-      return deps.queue.enqueue(() =>
-        deps.prisma.$transaction(async (tx) => {
-          return tx.user.update({
-            where: { id: args.id },
-            data: {
-              ...(args.input.name !== undefined && { name: args.input.name }),
-              ...(args.input.themeMode !== undefined && { themeMode: args.input.themeMode }),
-            },
-          });
-        }),
-      );
+      return deps.queue.enqueue(() => {
+        const data: Record<string, unknown> = {};
+        if (args.input.name !== undefined) data.name = args.input.name;
+        if (args.input.themeMode !== undefined) data.themeMode = args.input.themeMode;
+
+        const [updated] = deps.db
+          .update(users)
+          .set(data)
+          .where(eq(users.id, args.id))
+          .returning()
+          .all();
+        return Promise.resolve(updated);
+      });
     },
 
     deleteUser: async (
@@ -84,11 +87,10 @@ export const userResolvers = {
     ) => {
       requireAuth(ctx);
       const deps = getDeps(ctx);
-      await deps.queue.enqueue(() =>
-        deps.prisma.$transaction(async (tx) => {
-          return tx.user.delete({ where: { id: args.id } });
-        }),
-      );
+      await deps.queue.enqueue(() => {
+        deps.db.delete(users).where(eq(users.id, args.id)).run();
+        return Promise.resolve();
+      });
       return true;
     },
   },

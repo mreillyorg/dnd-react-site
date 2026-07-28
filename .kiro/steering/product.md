@@ -23,9 +23,9 @@ Core use cases (to be refined):
 - Exports for Adventurer's League DM logs
 - Data Storage & APIs
   - GraphQL API as the data access layer for all features
-  - Prisma ORM for schema management, typed client generation, and migrations
+  - Drizzle ORM for typed schema definition, query building, and migrations
   - SQLite in Rollback Journal Mode as the default persistence layer (zero-infrastructure local setup)
   - Serialised in-process write queue to prevent SQLite write contention under concurrent GraphQL load
-  - MySQL identified as an optional future provider to investigate for production scalability; Prisma schema authored to remain provider-compatible
+  - MySQL identified as an optional future provider to investigate for production scalability; Drizzle schema portable across SQL dialects
 
 The target audience is tabletop RPG players ranging from beginners to experienced groups.

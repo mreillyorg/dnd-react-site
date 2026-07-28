@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { itemAssignments } from "../../db/schema.ts";
 import {
   addItemToInventory,
   removeItemFromInventory,
@@ -26,7 +28,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,9 +42,9 @@ export const inventoryResolvers = {
       args: { id: string },
       ctx: GraphQLContext,
     ) => {
-      return ctx.prisma.itemAssignment.findUnique({
-        where: { id: args.id },
-        include: { item: true, character: true },
+      return ctx.db.query.itemAssignments.findFirst({
+        where: eq(itemAssignments.id, args.id),
+        with: { item: true, character: true },
       });
     },
 

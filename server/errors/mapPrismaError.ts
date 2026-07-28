@@ -1,11 +1,5 @@
-// Maps Prisma errors to structured domain errors.
-// Ensures no Prisma internals leak to clients.
-
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientUnknownRequestError,
-  PrismaClientRustPanicError,
-} from '@prisma/client/runtime/client';
+// Maps database errors to structured domain errors.
+// Ensures no database internals leak to clients.
 
 /**
  * Domain error codes used throughout the application.
@@ -32,67 +26,53 @@ export class AppError extends Error {
 }
 
 /**
- * Mapping from PrismaClientKnownRequestError codes to domain codes and messages.
+ * SQLite error code patterns mapped to domain codes.
+ * SQLite uses SQLITE_CONSTRAINT_* codes for constraint violations.
  */
-const KNOWN_ERROR_MAP: Record<string, { code: DomainErrorCode; message: string }> = {
-  P2000: { code: 'VALIDATION_ERROR', message: 'Value too long for column type' },
-  P2001: { code: 'NOT_FOUND', message: 'Record not found' },
-  P2002: { code: 'CONFLICT', message: 'Unique constraint violation' },
-  P2003: { code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
-  P2007: { code: 'VALIDATION_ERROR', message: 'Data validation error' },
-  P2025: { code: 'NOT_FOUND', message: 'Record not found' },
-  P1001: { code: 'DATABASE_UNAVAILABLE', message: 'Database server is unreachable' },
-};
+const SQLITE_ERROR_MAP: Array<{ pattern: RegExp; code: DomainErrorCode; message: string }> = [
+  { pattern: /UNIQUE constraint failed/i, code: 'CONFLICT', message: 'Unique constraint violation' },
+  { pattern: /FOREIGN KEY constraint failed/i, code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
+  { pattern: /NOT NULL constraint failed/i, code: 'VALIDATION_ERROR', message: 'Required field is missing' },
+  { pattern: /CHECK constraint failed/i, code: 'VALIDATION_ERROR', message: 'Data validation error' },
+  { pattern: /no such table/i, code: 'DATABASE_UNAVAILABLE', message: 'Database schema error' },
+  { pattern: /database is locked/i, code: 'DATABASE_UNAVAILABLE', message: 'Database is temporarily unavailable' },
+];
 
 /**
- * Maps any error thrown by Prisma operations into a structured AppError.
+ * Maps any error thrown by database operations into a structured AppError.
  *
- * - PrismaClientKnownRequestError: mapped to a specific domain code
- * - PrismaClientUnknownRequestError / PrismaClientRustPanicError: logged internally,
- *   returns a sanitised INTERNAL_SERVER_ERROR
- * - Non-Prisma errors: passed through as INTERNAL_SERVER_ERROR
+ * - SQLite constraint errors: mapped to specific domain codes
+ * - Connection/schema errors: mapped to DATABASE_UNAVAILABLE
+ * - Other errors: sanitised as INTERNAL_SERVER_ERROR
  */
-export function mapPrismaError(error: unknown): AppError {
-  // Handle PrismaClientKnownRequestError
-  if (error instanceof PrismaClientKnownRequestError) {
-    const mapping = KNOWN_ERROR_MAP[error.code];
-    if (mapping) {
-      return new AppError(mapping.code, mapping.message);
-    }
-    // Known Prisma error but unmapped code — treat as internal
-    console.error('[mapPrismaError] Unmapped PrismaClientKnownRequestError:', {
-      code: error.code,
-      message: error.message,
-      meta: error.meta,
-    });
-    return new AppError('INTERNAL_SERVER_ERROR', 'An unexpected database error occurred');
+export function mapDatabaseError(error: unknown): AppError {
+  if (error instanceof AppError) {
+    return error;
   }
 
-  // Handle PrismaClientUnknownRequestError
-  if (error instanceof PrismaClientUnknownRequestError) {
-    console.error('[mapPrismaError] PrismaClientUnknownRequestError:', {
-      message: error.message,
-    });
-    return new AppError('INTERNAL_SERVER_ERROR', 'An unexpected database error occurred');
-  }
-
-  // Handle PrismaClientRustPanicError
-  if (error instanceof PrismaClientRustPanicError) {
-    console.error('[mapPrismaError] PrismaClientRustPanicError:', {
-      message: error.message,
-    });
-    return new AppError('INTERNAL_SERVER_ERROR', 'An unexpected database error occurred');
-  }
-
-  // Non-Prisma error — still sanitise
   if (error instanceof Error) {
-    console.error('[mapPrismaError] Non-Prisma error:', {
+    const message = error.message;
+
+    // Check against known SQLite error patterns
+    for (const { pattern, code, message: domainMessage } of SQLITE_ERROR_MAP) {
+      if (pattern.test(message)) {
+        return new AppError(code, domainMessage);
+      }
+    }
+
+    // Unrecognised database error — log and sanitise
+    console.error('[mapDatabaseError] Unrecognised error:', {
       name: error.name,
       message: error.message,
     });
   } else {
-    console.error('[mapPrismaError] Unknown thrown value:', error);
+    console.error('[mapDatabaseError] Unknown thrown value:', error);
   }
 
   return new AppError('INTERNAL_SERVER_ERROR', 'An unexpected error occurred');
 }
+
+/**
+ * @deprecated Use mapDatabaseError instead. Kept for backward compatibility during migration.
+ */
+export const mapPrismaError = mapDatabaseError;

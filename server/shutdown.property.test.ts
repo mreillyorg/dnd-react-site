@@ -7,7 +7,7 @@
  * - Generates N (1–20) async write operations with small delays.
  * - Enqueues them into a real SerialOperationQueue.
  * - Calls gracefulShutdown with { exit: false }.
- * - Asserts all N operations complete BEFORE prismaDisconnect is called.
+ * - Asserts all N operations complete BEFORE closeDatabase is called.
  */
 
 import { describe, it, vi } from 'vitest';
@@ -18,7 +18,7 @@ import type { ShutdownDependencies } from './shutdown.ts';
 import { SerialOperationQueue } from './db/operationQueue.ts';
 
 describe('Graceful Shutdown Property Tests', () => {
-  it('Property 6: graceful shutdown drains all queued writes before prismaDisconnect', async () => {
+  it('Property 6: graceful shutdown drains all queued writes before closeDatabase', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: 20 }),
@@ -54,12 +54,12 @@ describe('Graceful Shutdown Property Tests', () => {
             apolloServer: {
               stop: vi.fn(async () => {}),
             } as unknown as ShutdownDependencies['apolloServer'],
-            prismaDisconnect: vi.fn(async () => {
+            closeDatabase: vi.fn(async () => {
               disconnectCalledAt = operationCounter;
             }),
           };
 
-          // Call graceful shutdown — it should drain the queue before disconnecting
+          // Call graceful shutdown — it should drain the queue before closing DB
           await gracefulShutdown('SIGTERM', deps, { exit: false });
 
           // Wait for all enqueued operation promises to settle (they should already be done)
@@ -70,7 +70,7 @@ describe('Graceful Shutdown Property Tests', () => {
             return false;
           }
 
-          // Assert: prismaDisconnect was called after all operations completed
+          // Assert: closeDatabase was called after all operations completed
           if (disconnectCalledAt !== n) {
             return false;
           }

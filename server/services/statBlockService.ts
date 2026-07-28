@@ -1,5 +1,8 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { monsters } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,7 +57,7 @@ export interface UpdateStatBlockInput {
 }
 
 export interface ServiceDeps {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -71,9 +74,10 @@ export async function createStatBlock(
   input: CreateStatBlockInput,
   createdById?: string,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.monster.create({
-      data: {
+  return deps.queue.enqueue(() => {
+    const [created] = deps.db
+      .insert(monsters)
+      .values({
         name: input.name,
         size: input.size,
         type: input.type,
@@ -96,27 +100,29 @@ export async function createStatBlock(
         legendaryActions: input.legendaryActions,
         dndbeyondLink: input.dndbeyondLink,
         createdById,
-      },
-    }),
-  );
-}
-
-/**
- * Retrieves a stat block by ID.
- * Reads go directly through Prisma (no queue needed).
- */
-export async function getStatBlockById(deps: ServiceDeps, id: string) {
-  return deps.prisma.monster.findUnique({
-    where: { id },
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
   });
 }
 
 /**
- * Lists all stat blocks, optionally filtered by type or challenge rating.
- * Reads go directly through Prisma (no queue needed).
+ * Retrieves a stat block by ID.
+ * Reads go directly through Drizzle (no queue needed).
+ */
+export async function getStatBlockById(deps: ServiceDeps, id: string) {
+  return deps.db.query.monsters.findFirst({
+    where: eq(monsters.id, id),
+  }) ?? null;
+}
+
+/**
+ * Lists all stat blocks.
+ * Reads go directly through Drizzle (no queue needed).
  */
 export async function listStatBlocks(deps: ServiceDeps) {
-  return deps.prisma.monster.findMany();
+  return deps.db.query.monsters.findMany();
 }
 
 /**
@@ -128,34 +134,38 @@ export async function updateStatBlock(
   id: string,
   input: UpdateStatBlockInput,
 ) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.monster.update({
-      where: { id },
-      data: {
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.size !== undefined && { size: input.size }),
-        ...(input.type !== undefined && { type: input.type }),
-        ...(input.alignment !== undefined && { alignment: input.alignment }),
-        ...(input.armorClass !== undefined && { armorClass: input.armorClass }),
-        ...(input.hitPoints !== undefined && { hitPoints: input.hitPoints }),
-        ...(input.hitDice !== undefined && { hitDice: input.hitDice }),
-        ...(input.speed !== undefined && { speed: input.speed }),
-        ...(input.strength !== undefined && { strength: input.strength }),
-        ...(input.dexterity !== undefined && { dexterity: input.dexterity }),
-        ...(input.constitution !== undefined && { constitution: input.constitution }),
-        ...(input.intelligence !== undefined && { intelligence: input.intelligence }),
-        ...(input.wisdom !== undefined && { wisdom: input.wisdom }),
-        ...(input.charisma !== undefined && { charisma: input.charisma }),
-        ...(input.challengeRating !== undefined && { challengeRating: input.challengeRating }),
-        ...(input.source !== undefined && { source: input.source }),
-        ...(input.abilities !== undefined && { abilities: input.abilities }),
-        ...(input.actions !== undefined && { actions: input.actions }),
-        ...(input.reactions !== undefined && { reactions: input.reactions }),
-        ...(input.legendaryActions !== undefined && { legendaryActions: input.legendaryActions }),
-        ...(input.dndbeyondLink !== undefined && { dndbeyondLink: input.dndbeyondLink }),
-      },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.size !== undefined) data.size = input.size;
+    if (input.type !== undefined) data.type = input.type;
+    if (input.alignment !== undefined) data.alignment = input.alignment;
+    if (input.armorClass !== undefined) data.armorClass = input.armorClass;
+    if (input.hitPoints !== undefined) data.hitPoints = input.hitPoints;
+    if (input.hitDice !== undefined) data.hitDice = input.hitDice;
+    if (input.speed !== undefined) data.speed = input.speed;
+    if (input.strength !== undefined) data.strength = input.strength;
+    if (input.dexterity !== undefined) data.dexterity = input.dexterity;
+    if (input.constitution !== undefined) data.constitution = input.constitution;
+    if (input.intelligence !== undefined) data.intelligence = input.intelligence;
+    if (input.wisdom !== undefined) data.wisdom = input.wisdom;
+    if (input.charisma !== undefined) data.charisma = input.charisma;
+    if (input.challengeRating !== undefined) data.challengeRating = input.challengeRating;
+    if (input.source !== undefined) data.source = input.source;
+    if (input.abilities !== undefined) data.abilities = input.abilities;
+    if (input.actions !== undefined) data.actions = input.actions;
+    if (input.reactions !== undefined) data.reactions = input.reactions;
+    if (input.legendaryActions !== undefined) data.legendaryActions = input.legendaryActions;
+    if (input.dndbeyondLink !== undefined) data.dndbeyondLink = input.dndbeyondLink;
+
+    const [updated] = deps.db
+      .update(monsters)
+      .set(data)
+      .where(eq(monsters.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
@@ -163,9 +173,12 @@ export async function updateStatBlock(
  * Single-model write routed through the operation queue.
  */
 export async function deleteStatBlock(deps: ServiceDeps, id: string) {
-  return deps.queue.enqueue(() =>
-    deps.prisma.monster.delete({
-      where: { id },
-    }),
-  );
+  return deps.queue.enqueue(() => {
+    const [deleted] = deps.db
+      .delete(monsters)
+      .where(eq(monsters.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }

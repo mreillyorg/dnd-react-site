@@ -1,12 +1,15 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { campaigns } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface ServiceContext {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -38,33 +41,40 @@ export function createCampaign(
 ) {
   const { ownerId, name, description, setting, status } = input;
 
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.campaign.create({
-      data: {
+  return ctx.queue.enqueue(() => {
+    const [created] = ctx.db
+      .insert(campaigns)
+      .values({
         name,
         description: description ?? undefined,
         setting: setting ?? undefined,
         status: status ?? undefined,
         ownerId,
-      },
-    }),
-  );
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
+  });
 }
 
 /**
  * Retrieves a campaign by its ID.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function getCampaignById(ctx: ServiceContext, id: string) {
-  return ctx.prisma.campaign.findUnique({ where: { id } });
+  return ctx.db.query.campaigns.findFirst({
+    where: eq(campaigns.id, id),
+  });
 }
 
 /**
  * Lists all campaigns owned by a specific user.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function listCampaignsByOwner(ctx: ServiceContext, ownerId: string) {
-  return ctx.prisma.campaign.findMany({ where: { ownerId } });
+  return ctx.db.query.campaigns.findMany({
+    where: eq(campaigns.ownerId, ownerId),
+  });
 }
 
 /**
@@ -76,17 +86,21 @@ export function updateCampaign(
   id: string,
   input: UpdateCampaignInput,
 ) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.campaign.update({
-      where: { id },
-      data: {
-        ...(input.name !== undefined && input.name !== null && { name: input.name }),
-        ...(input.description !== undefined && { description: input.description }),
-        ...(input.setting !== undefined && { setting: input.setting }),
-        ...(input.status !== undefined && input.status !== null && { status: input.status }),
-      },
-    }),
-  );
+  return ctx.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.name !== undefined && input.name !== null) data.name = input.name;
+    if (input.description !== undefined) data.description = input.description;
+    if (input.setting !== undefined) data.setting = input.setting;
+    if (input.status !== undefined && input.status !== null) data.status = input.status;
+
+    const [updated] = ctx.db
+      .update(campaigns)
+      .set(data)
+      .where(eq(campaigns.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
@@ -94,7 +108,12 @@ export function updateCampaign(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteCampaign(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.campaign.delete({ where: { id } }),
-  );
+  return ctx.queue.enqueue(() => {
+    const [deleted] = ctx.db
+      .delete(campaigns)
+      .where(eq(campaigns.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }

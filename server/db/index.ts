@@ -1,3 +1,4 @@
-// Database module - Prisma client and write queue
-// This file will be implemented in Tasks 3 and 5.
-export {};
+// Database module - Drizzle ORM client and write queue
+export { db, sqliteDb, type DrizzleDb } from "./drizzle.ts";
+export * from "./schema.ts";
+export { createOperationQueue, createQueue, type OperationQueue } from "./operationQueue.ts";

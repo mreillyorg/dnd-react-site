@@ -1,12 +1,15 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { combatEncounters } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface ServiceContext {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -32,31 +35,34 @@ export interface UpdateEncounterInput {
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function createEncounter(ctx: ServiceContext, input: CreateEncounterInput) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.combatEncounter.create({
-      data: {
+  return ctx.queue.enqueue(() => {
+    const [created] = ctx.db
+      .insert(combatEncounters)
+      .values({
         name: input.name ?? undefined,
         isActive: input.isActive ?? undefined,
         sessionId: input.sessionId ?? undefined,
-      },
-    }),
-  );
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
+  });
 }
 
 /**
  * Retrieves an encounter by its ID.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function getEncounterById(ctx: ServiceContext, id: string) {
-  return ctx.prisma.combatEncounter.findUnique({ where: { id } });
+  return ctx.db.query.combatEncounters.findFirst({ where: eq(combatEncounters.id, id) });
 }
 
 /**
  * Lists all encounters for a specific session.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function listEncountersBySession(ctx: ServiceContext, sessionId: string) {
-  return ctx.prisma.combatEncounter.findMany({ where: { sessionId } });
+  return ctx.db.query.combatEncounters.findMany({ where: eq(combatEncounters.sessionId, sessionId) });
 }
 
 /**
@@ -68,17 +74,21 @@ export function updateEncounter(
   id: string,
   input: UpdateEncounterInput,
 ) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.combatEncounter.update({
-      where: { id },
-      data: {
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.isActive !== undefined && input.isActive !== null && { isActive: input.isActive }),
-        ...(input.currentRound !== undefined && input.currentRound !== null && { currentRound: input.currentRound }),
-        ...(input.currentTurn !== undefined && input.currentTurn !== null && { currentTurn: input.currentTurn }),
-      },
-    }),
-  );
+  return ctx.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.isActive !== undefined && input.isActive !== null) data.isActive = input.isActive;
+    if (input.currentRound !== undefined && input.currentRound !== null) data.currentRound = input.currentRound;
+    if (input.currentTurn !== undefined && input.currentTurn !== null) data.currentTurn = input.currentTurn;
+
+    const [updated] = ctx.db
+      .update(combatEncounters)
+      .set(data)
+      .where(eq(combatEncounters.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
@@ -86,7 +96,12 @@ export function updateEncounter(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteEncounter(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.combatEncounter.delete({ where: { id } }),
-  );
+  return ctx.queue.enqueue(() => {
+    const [deleted] = ctx.db
+      .delete(combatEncounters)
+      .where(eq(combatEncounters.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }

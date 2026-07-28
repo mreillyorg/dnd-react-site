@@ -29,7 +29,7 @@ const mockedValidateSession = vi.mocked(validateSession);
 
 function makeDeps(): CreateContextDeps {
   return {
-    prisma: {} as unknown as CreateContextDeps["prisma"],
+    db: {} as unknown as CreateContextDeps["db"],
     queue: { enqueue: vi.fn(), drain: vi.fn(), pendingCount: 0 } as unknown as OperationQueue,
   };
 }
@@ -48,14 +48,14 @@ describe("createContextFactory", () => {
     vi.clearAllMocks();
   });
 
-  it("returns context with prisma and queue from deps", async () => {
+  it("returns context with db and queue from deps", async () => {
     mockedGetSessionToken.mockReturnValue(null);
 
     const deps = makeDeps();
     const factory = createContextFactory(deps);
     const ctx = await factory(makeReq());
 
-    expect(ctx.prisma).toBe(deps.prisma);
+    expect(ctx.db).toBe(deps.db);
     expect(ctx.queue).toBe(deps.queue);
   });
 

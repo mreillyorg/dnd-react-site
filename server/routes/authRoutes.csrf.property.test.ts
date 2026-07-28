@@ -57,7 +57,7 @@ function createTestApp() {
   app.use(cookieParser());
 
   const deps = {
-    prisma: {} as never,
+    db: {} as never,
     queue: {} as never,
   };
 

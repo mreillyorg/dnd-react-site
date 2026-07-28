@@ -5,10 +5,7 @@
  *   1. Stop accepting new HTTP connections (httpServer.close())
  *   2. Drain the operation queue (all queued writes must complete)
  *   3. Stop Apollo Server
- *   4. Disconnect Prisma
- *
- * The property test (12.3) verifies that all queued writes drain before
- * prisma.$disconnect() is called.
+ *   4. Close the database connection
  */
 
 import type http from 'node:http';
@@ -25,7 +22,7 @@ export interface ShutdownDependencies {
   httpServer: http.Server;
   queue: OperationQueue;
   apolloServer: ApolloServer;
-  prismaDisconnect: () => Promise<void>;
+  closeDatabase: () => Promise<void>;
 }
 
 export interface ShutdownOptions {
@@ -42,7 +39,7 @@ export interface ShutdownOptions {
  * 1. Stops accepting new HTTP connections
  * 2. Drains the operation queue (completes all pending writes)
  * 3. Stops Apollo Server
- * 4. Disconnects Prisma
+ * 4. Closes the database connection
  *
  * @param signal - The signal name that triggered shutdown (for logging)
  * @param deps - The server components to shut down
@@ -53,7 +50,7 @@ export async function gracefulShutdown(
   deps: ShutdownDependencies,
   options: ShutdownOptions = {},
 ): Promise<void> {
-  const { httpServer, queue, apolloServer, prismaDisconnect } = deps;
+  const { httpServer, queue, apolloServer, closeDatabase } = deps;
   const { exit = true } = options;
 
   console.log(`[shutdown] Received ${signal}. Starting graceful shutdown...`);
@@ -67,8 +64,8 @@ export async function gracefulShutdown(
   // 3. Stop Apollo Server
   await apolloServer.stop();
 
-  // 4. Disconnect Prisma
-  await prismaDisconnect();
+  // 4. Close the database
+  await closeDatabase();
 
   console.log('[shutdown] Shutdown complete.');
 

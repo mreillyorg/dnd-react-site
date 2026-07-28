@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { characters } from "../../db/schema.ts";
 import {
   createCharacter,
   getCharacterById,
@@ -27,12 +29,11 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 /**
  * Verifies the character belongs to the current user.
- * Throws FORBIDDEN if ownership check fails, NOT_FOUND if character doesn't exist.
  */
 async function requireOwnership(ctx: GraphQLContext, characterId: string) {
   const user = requireAuth(ctx);
@@ -76,14 +77,14 @@ export const characterResolvers = {
         return listCharactersByUser(getDeps(ctx), args.userId);
       }
       if (args.campaignId) {
-        return ctx.prisma.character.findMany({
-          where: { campaignId: args.campaignId },
-          include: { itemAssignments: true },
+        return ctx.db.query.characters.findMany({
+          where: eq(characters.campaignId, args.campaignId),
+          with: { itemAssignments: true },
         });
       }
       // If no filter, return all characters
-      return ctx.prisma.character.findMany({
-        include: { itemAssignments: true },
+      return ctx.db.query.characters.findMany({
+        with: { itemAssignments: true },
       });
     },
   },

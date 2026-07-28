@@ -1,12 +1,15 @@
-import type { PrismaClient } from "@prisma/client";
+import { eq } from "drizzle-orm";
+
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
+import { sessions } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface ServiceContext {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -41,9 +44,10 @@ export function createSession(
 ) {
   const { dmId, sessionNumber, title, realWorldDate, inGameDate, duration, campaignId } = input;
 
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.session.create({
-      data: {
+  return ctx.queue.enqueue(() => {
+    const [created] = ctx.db
+      .insert(sessions)
+      .values({
         sessionNumber,
         title: title ?? undefined,
         realWorldDate,
@@ -51,25 +55,27 @@ export function createSession(
         duration: duration ?? undefined,
         campaignId,
         dmId,
-      },
-    }),
-  );
+      })
+      .returning()
+      .all();
+    return Promise.resolve(created);
+  });
 }
 
 /**
  * Retrieves a session by its ID.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function getSessionById(ctx: ServiceContext, id: string) {
-  return ctx.prisma.session.findUnique({ where: { id } });
+  return ctx.db.query.sessions.findFirst({ where: eq(sessions.id, id) });
 }
 
 /**
  * Lists all sessions for a specific campaign.
- * Reads go directly through Prisma (no queue needed).
+ * Reads go directly through Drizzle (no queue needed).
  */
 export function listSessionsByCampaign(ctx: ServiceContext, campaignId: string) {
-  return ctx.prisma.session.findMany({ where: { campaignId } });
+  return ctx.db.query.sessions.findMany({ where: eq(sessions.campaignId, campaignId) });
 }
 
 /**
@@ -81,18 +87,22 @@ export function updateSession(
   id: string,
   input: UpdateSessionInput,
 ) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.session.update({
-      where: { id },
-      data: {
-        ...(input.sessionNumber !== undefined && input.sessionNumber !== null && { sessionNumber: input.sessionNumber }),
-        ...(input.title !== undefined && { title: input.title }),
-        ...(input.realWorldDate !== undefined && input.realWorldDate !== null && { realWorldDate: input.realWorldDate }),
-        ...(input.inGameDate !== undefined && { inGameDate: input.inGameDate }),
-        ...(input.duration !== undefined && { duration: input.duration }),
-      },
-    }),
-  );
+  return ctx.queue.enqueue(() => {
+    const data: Record<string, unknown> = {};
+    if (input.sessionNumber !== undefined && input.sessionNumber !== null) data.sessionNumber = input.sessionNumber;
+    if (input.title !== undefined) data.title = input.title;
+    if (input.realWorldDate !== undefined && input.realWorldDate !== null) data.realWorldDate = input.realWorldDate;
+    if (input.inGameDate !== undefined) data.inGameDate = input.inGameDate;
+    if (input.duration !== undefined) data.duration = input.duration;
+
+    const [updated] = ctx.db
+      .update(sessions)
+      .set(data)
+      .where(eq(sessions.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(updated);
+  });
 }
 
 /**
@@ -100,7 +110,12 @@ export function updateSession(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteSession(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() =>
-    ctx.prisma.session.delete({ where: { id } }),
-  );
+  return ctx.queue.enqueue(() => {
+    const [deleted] = ctx.db
+      .delete(sessions)
+      .where(eq(sessions.id, id))
+      .returning()
+      .all();
+    return Promise.resolve(deleted);
+  });
 }

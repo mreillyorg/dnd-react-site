@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { combatants } from "../../db/schema.ts";
 import {
   createCombatant,
   updateCombatant,
@@ -26,7 +28,7 @@ function requireAuth(ctx: GraphQLContext) {
 }
 
 function getDeps(ctx: GraphQLContext) {
-  return { prisma: ctx.prisma, queue: ctx.queue };
+  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,8 +42,8 @@ export const combatantResolvers = {
       args: { id: string },
       ctx: GraphQLContext,
     ) => {
-      return ctx.prisma.combatant.findUnique({
-        where: { id: args.id },
+      return ctx.db.query.combatants.findFirst({
+        where: eq(combatants.id, args.id),
       });
     },
 

@@ -11,23 +11,24 @@ inclusion: always
 - **Package manager**: npm
 - **Unit testing**: Vitest + React Testing Library
 - **API**: GraphQL
-- **ORM**: Prisma (schema management, typed client, migrations)
+- **ORM**: Drizzle ORM (schema in TypeScript, typed queries, drizzle-kit migrations)
 - **Database (default)**: SQLite in Rollback Journal Mode
-- **Database (future investigation)**: MySQL (Prisma schema kept provider-compatible)
+- **Database (future investigation)**: MySQL (Drizzle schema portable across dialects)
 
 ## Backend Data Layer
 
 - **GraphQL** is the API layer for all data access. No REST endpoints for application data.
-- **Prisma ORM** manages the schema (`schema.prisma`), generates the typed client, and runs migrations.
-  - All database access goes through the Prisma Client; raw SQL is not used in application code.
-  - `prisma migrate deploy` is run at application startup to apply pending migrations.
-  - `prisma generate` is run as part of the build to keep the client in sync with the schema.
+- **Drizzle ORM** defines the schema in TypeScript (`server/db/schema.ts`), provides a fully typed query builder, and manages migrations via `drizzle-kit`.
+  - All database access goes through the Drizzle `db` instance; raw SQL is not used in application code.
+  - `drizzle-kit migrate` is run at application startup to apply pending migrations.
+  - Schema changes are authored in `server/db/schema.ts`, then `drizzle-kit generate` creates SQL migration files in the `drizzle/` directory.
 - **SQLite** (Rollback Journal Mode) is the default provider — zero infrastructure, runs locally.
   - `journal_mode=DELETE` (SQLite default). WAL mode is not used.
   - `PRAGMA foreign_keys = ON` and `PRAGMA synchronous = FULL` are applied on every connection.
   - Database path is set via `DATABASE_URL` environment variable only; never hard-coded.
+  - Uses `@libsql/client` as the SQLite driver (no native compilation required).
 - **Write queue**: Because SQLite has a single-writer constraint, all write operations are routed through a serialised in-process FIFO queue to prevent contention under concurrent GraphQL load. The queue is bypassed when MySQL is the active provider.
-- **MySQL** is identified as an optional future provider. The Prisma schema is authored to be compatible with both `sqlite` and `mysql` providers. Switching requires only a `DATABASE_URL` change and provider update in `schema.prisma`.
+- **MySQL** is identified as an optional future provider. The Drizzle schema can be ported to MySQL dialect. Switching requires a `DATABASE_URL` change and dialect update in `drizzle.config.ts`.
 
 ## Routing
 
@@ -72,6 +73,18 @@ npm run test:coverage
 
 # Lint
 npm run lint
+
+# Generate a new migration after schema changes
+npm run db:generate
+
+# Apply pending migrations
+npm run db:migrate
+
+# Push schema directly (dev/test, no migration file)
+npm run db:push
+
+# Open Drizzle Studio (DB browser)
+npm run db:studio
 ```
 
 ## Notes
@@ -79,7 +92,7 @@ npm run lint
 - Prefer TypeScript strict mode.
 - Use environment variables for API keys and external service URLs; never hard-code secrets.
 - Use daisyUI components as the foundation, then customize with Tailwind utilities as needed.
--Configure daisyUI themes in tailwind.config.js to support dark/light mode switching.
+- Configure daisyUI themes in tailwind.config.js to support dark/light mode switching.
 
 
 ## Unit Testing
@@ -139,5 +152,3 @@ export default {
   },
 }
 ```
-
-

@@ -1,6 +1,8 @@
 import { GraphQLError } from "graphql";
+import { eq, and } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
+import { items } from "../../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,8 +54,8 @@ export const itemResolvers = {
       args: { id: string },
       ctx: GraphQLContext,
     ) => {
-      return ctx.prisma.item.findUnique({
-        where: { id: args.id },
+      return ctx.db.query.items.findFirst({
+        where: eq(items.id, args.id),
       });
     },
 
@@ -62,12 +64,18 @@ export const itemResolvers = {
       args: { itemType?: string; rarity?: string; source?: string },
       ctx: GraphQLContext,
     ) => {
-      const where: Record<string, string> = {};
-      if (args.itemType) where.itemType = args.itemType;
-      if (args.rarity) where.rarity = args.rarity;
-      if (args.source) where.source = args.source;
+      const conditions = [];
+      if (args.itemType) conditions.push(eq(items.itemType, args.itemType));
+      if (args.rarity) conditions.push(eq(items.rarity, args.rarity));
+      if (args.source) conditions.push(eq(items.source, args.source));
 
-      return ctx.prisma.item.findMany({ where });
+      if (conditions.length > 0) {
+        return ctx.db.query.items.findMany({
+          where: conditions.length === 1 ? conditions[0] : and(...conditions),
+        });
+      }
+
+      return ctx.db.query.items.findMany();
     },
   },
 
@@ -78,21 +86,20 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       const user = requireAuth(ctx);
-      return ctx.queue.enqueue(() =>
-        ctx.prisma.item.create({
-          data: {
-            name: args.input.name,
-            description: args.input.description,
-            itemType: args.input.itemType,
-            rarity: args.input.rarity,
-            attunementRequired: args.input.attunementRequired ?? false,
-            weight: args.input.weight,
-            value: args.input.value,
-            source: args.input.source ?? "HOMEBREW",
-            createdById: user.id,
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const [created] = ctx.db.insert(items).values({
+          name: args.input.name,
+          description: args.input.description,
+          itemType: args.input.itemType,
+          rarity: args.input.rarity,
+          attunementRequired: args.input.attunementRequired ?? false,
+          weight: args.input.weight,
+          value: args.input.value,
+          source: args.input.source ?? "HOMEBREW",
+          createdById: user.id,
+        }).returning().all();
+        return Promise.resolve(created);
+      });
     },
 
     updateItem: async (
@@ -101,21 +108,20 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      return ctx.queue.enqueue(() =>
-        ctx.prisma.item.update({
-          where: { id: args.id },
-          data: {
-            ...(args.input.name !== undefined && { name: args.input.name }),
-            ...(args.input.description !== undefined && { description: args.input.description }),
-            ...(args.input.itemType !== undefined && { itemType: args.input.itemType }),
-            ...(args.input.rarity !== undefined && { rarity: args.input.rarity }),
-            ...(args.input.attunementRequired !== undefined && { attunementRequired: args.input.attunementRequired }),
-            ...(args.input.weight !== undefined && { weight: args.input.weight }),
-            ...(args.input.value !== undefined && { value: args.input.value }),
-            ...(args.input.source !== undefined && { source: args.input.source }),
-          },
-        }),
-      );
+      return ctx.queue.enqueue(() => {
+        const data: Record<string, unknown> = {};
+        if (args.input.name !== undefined) data.name = args.input.name;
+        if (args.input.description !== undefined) data.description = args.input.description;
+        if (args.input.itemType !== undefined) data.itemType = args.input.itemType;
+        if (args.input.rarity !== undefined) data.rarity = args.input.rarity;
+        if (args.input.attunementRequired !== undefined) data.attunementRequired = args.input.attunementRequired;
+        if (args.input.weight !== undefined) data.weight = args.input.weight;
+        if (args.input.value !== undefined) data.value = args.input.value;
+        if (args.input.source !== undefined) data.source = args.input.source;
+
+        const [updated] = ctx.db.update(items).set(data).where(eq(items.id, args.id)).returning().all();
+        return Promise.resolve(updated);
+      });
     },
 
     deleteItem: async (
@@ -124,11 +130,10 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      await ctx.queue.enqueue(() =>
-        ctx.prisma.item.delete({
-          where: { id: args.id },
-        }),
-      );
+      await ctx.queue.enqueue(() => {
+        ctx.db.delete(items).where(eq(items.id, args.id)).run();
+        return Promise.resolve();
+      });
       return true;
     },
   },

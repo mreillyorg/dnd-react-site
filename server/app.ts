@@ -1,7 +1,7 @@
 /**
  * Express + Apollo Server application.
  *
- * Wires together configuration, Prisma, the write queue, GraphQL schema,
+ * Wires together configuration, Drizzle ORM, the write queue, GraphQL schema,
  * error formatting, the /health endpoint, and graceful shutdown handlers.
  *
  * The `createApp()` function is exported separately from server start so
@@ -21,7 +21,7 @@ import cookieParser from 'cookie-parser';
 import { config } from './config.ts';
 import { createQueue } from './db/operationQueue.ts';
 import type { OperationQueue } from './db/operationQueue.ts';
-import { initializePrisma, prisma } from './db/prisma.ts';
+import { db, rawClient, initializeDatabase } from './db/drizzle.ts';
 import { formatGraphQLError } from './errors/formatGraphQLError.ts';
 import { createContextFactory } from './graphql/context.ts';
 import { schema } from './graphql/schema/index.ts';
@@ -34,13 +34,13 @@ import type { ShutdownDependencies } from './shutdown.ts';
 // ---------------------------------------------------------------------------
 
 /**
- * Runs `prisma migrate deploy` synchronously before accepting requests.
+ * Runs `drizzle-kit migrate` synchronously before accepting requests.
  * If migrations fail, the process halts with exit code 1.
  */
 function runMigrations(): void {
   try {
-    console.log('[app] Running prisma migrate deploy...');
-    execSync('npx prisma migrate deploy', {
+    console.log('[app] Running drizzle-kit migrate...');
+    execSync('npx drizzle-kit migrate', {
       stdio: 'inherit',
       env: { ...process.env, DATABASE_URL: config.databaseUrl },
     });
@@ -74,8 +74,8 @@ export async function createApp(): Promise<AppComponents> {
   // 1. Run migrations (fail fast)
   runMigrations();
 
-  // 2. Initialise Prisma (connects + applies SQLite PRAGMAs)
-  await initializePrisma();
+  // 2. Initialize database (applies PRAGMAs)
+  await initializeDatabase();
 
   // 3. Create the Operation Queue
   const queue = createQueue(config);
@@ -98,7 +98,7 @@ export async function createApp(): Promise<AppComponents> {
   await apolloServer.start();
 
   // 6. Mount GraphQL middleware at POST /graphql
-  const contextFactory = createContextFactory({ prisma, queue });
+  const contextFactory = createContextFactory({ db, queue });
 
   app.use(
     '/graphql',
@@ -109,20 +109,12 @@ export async function createApp(): Promise<AppComponents> {
   );
 
   // 6b. Mount OAuth auth routes (prefixed with /auth/ inside the router)
-  app.use(createAuthRouter({ prisma, queue }));
+  app.use(createAuthRouter({ db, queue }));
 
   // 7. Health endpoint
   app.get('/health', async (_req, res) => {
     try {
-      // Short timeout: race the query against a 3s deadline
-      // Use a simple Prisma query instead of raw SQL (not available in Prisma 7 new client)
-      const healthCheck = prisma.user.findFirst({ select: { id: true } }).then(() => true);
-      const timeout = new Promise<never>((_resolve, reject) => {
-        setTimeout(() => reject(new Error('Database health check timed out')), 3000);
-      });
-
-      await Promise.race([healthCheck, timeout]);
-
+      await rawClient.execute('SELECT 1');
       res.status(200).json({ status: 'ok', database: 'connected' });
     } catch {
       res.status(503).json({ status: 'degraded', database: 'unreachable' });
@@ -134,7 +126,10 @@ export async function createApp(): Promise<AppComponents> {
     httpServer,
     queue,
     apolloServer,
-    prismaDisconnect: () => prisma.$disconnect(),
+    closeDatabase: () => {
+      rawClient.close();
+      return Promise.resolve();
+    },
   };
 
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM', shutdownDeps));

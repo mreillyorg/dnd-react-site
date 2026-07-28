@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@prisma/client";
 import type { IncomingMessage } from "node:http";
 
+import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { getSessionToken } from "../services/sessionCookie.ts";
 import { validateSession } from "../services/oauthService.ts";
@@ -21,7 +21,7 @@ export interface AuthUser {
  * The GraphQL context object available to all resolvers.
  */
 export interface GraphQLContext {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
   currentUser: AuthUser | null;
   sessionToken: string | null;
@@ -39,7 +39,7 @@ interface RequestWithCookies extends IncomingMessage {
 // ---------------------------------------------------------------------------
 
 export interface CreateContextDeps {
-  prisma: PrismaClient;
+  db: DrizzleDb;
   queue: OperationQueue;
 }
 
@@ -48,12 +48,6 @@ export interface CreateContextDeps {
  *
  * Parses the session cookie from the request (cookie-parser must have run upstream),
  * validates the session in the database, and sets `currentUser` if valid.
- *
- * Usage:
- * ```ts
- * const contextFactory = createContextFactory({ prisma, queue });
- * // Pass contextFactory as the `context` option to Apollo Server
- * ```
  */
 export function createContextFactory(deps: CreateContextDeps) {
   return async ({ req }: { req: IncomingMessage }): Promise<GraphQLContext> => {
@@ -63,7 +57,7 @@ export function createContextFactory(deps: CreateContextDeps) {
       : null;
 
     return {
-      prisma: deps.prisma,
+      db: deps.db,
       queue: deps.queue,
       currentUser,
       sessionToken,
