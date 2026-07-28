@@ -1,10 +1,14 @@
-type AuthPayload {
-  token: String!
-  user: User!
+type OAuthURL {
+  url: String!
+  provider: String!
+}
+
+extend type Query {
+  me: User
+  initiateOAuth(provider: String!): OAuthURL!
+  linkedProviders: [String!]!
 }
 
 extend type Mutation {
-  register(email: String!, password: String!, name: String): AuthPayload!
-  login(email: String!, password: String!): AuthPayload!
-  changePassword(currentPassword: String!, newPassword: String!): Boolean!
+  logout: Boolean!
 }

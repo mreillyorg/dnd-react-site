@@ -26,6 +26,7 @@ describe('GraphQL schema assembly', () => {
       'Quest',
       'TimelineEntry',
       'SessionNote',
+      'OAuthURL',
     ];
 
     for (const typeName of expectedTypes) {
@@ -50,6 +51,8 @@ describe('GraphQL schema assembly', () => {
 
     const expectedQueryFields = [
       'me',
+      'initiateOAuth',
+      'linkedProviders',
       'user',
       'users',
       'character',
@@ -90,6 +93,7 @@ describe('GraphQL schema assembly', () => {
     const fields = mutationType.getFields();
 
     const expectedMutationFields = [
+      'logout',
       'createUser',
       'updateUser',
       'deleteUser',

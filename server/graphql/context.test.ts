@@ -1,21 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { IncomingMessage } from "node:http";
 
-import { createContextFactory, extractBearerToken } from "./context.ts";
+import { createContextFactory } from "./context.ts";
 import type { AuthUser, CreateContextDeps } from "./context.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 
 // ---------------------------------------------------------------------------
-// Mock AuthService
+// Mock sessionCookie and oauthService
 // ---------------------------------------------------------------------------
 
-vi.mock("../services/authService.ts", () => ({
-  verifyToken: vi.fn(),
+vi.mock("../services/sessionCookie.ts", () => ({
+  getSessionToken: vi.fn(),
 }));
 
-import { verifyToken } from "../services/authService.ts";
+vi.mock("../services/oauthService.ts", () => ({
+  validateSession: vi.fn(),
+}));
 
-const mockedVerifyToken = vi.mocked(verifyToken);
+import { getSessionToken } from "../services/sessionCookie.ts";
+import { validateSession } from "../services/oauthService.ts";
+
+const mockedGetSessionToken = vi.mocked(getSessionToken);
+const mockedValidateSession = vi.mocked(validateSession);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,56 +29,19 @@ const mockedVerifyToken = vi.mocked(verifyToken);
 
 function makeDeps(): CreateContextDeps {
   return {
-    prisma: {
-      user: {
-        findUnique: vi.fn(),
-      },
-    } as unknown as CreateContextDeps["prisma"],
+    prisma: {} as unknown as CreateContextDeps["prisma"],
     queue: { enqueue: vi.fn(), drain: vi.fn(), pendingCount: 0 } as unknown as OperationQueue,
   };
 }
 
-function makeReq(authHeader?: string): { req: IncomingMessage } {
-  const headers: Record<string, string | undefined> = {};
-  if (authHeader !== undefined) {
-    headers["authorization"] = authHeader;
-  }
-  return { req: { headers } as unknown as IncomingMessage };
+function makeReq(cookies?: Record<string, string>): { req: IncomingMessage } {
+  const req = { headers: {}, cookies } as unknown as IncomingMessage;
+  return { req };
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
-
-describe("extractBearerToken", () => {
-  it("returns null for undefined input", () => {
-    expect(extractBearerToken(undefined)).toBeNull();
-  });
-
-  it("returns null for null input", () => {
-    expect(extractBearerToken(null)).toBeNull();
-  });
-
-  it("returns null for empty string", () => {
-    expect(extractBearerToken("")).toBeNull();
-  });
-
-  it("returns null for non-Bearer scheme", () => {
-    expect(extractBearerToken("Basic abc123")).toBeNull();
-  });
-
-  it("returns null when Bearer token is whitespace only", () => {
-    expect(extractBearerToken("Bearer ")).toBeNull();
-  });
-
-  it("returns the token for valid Bearer header", () => {
-    expect(extractBearerToken("Bearer my-jwt-token")).toBe("my-jwt-token");
-  });
-
-  it("returns null when there are more than 2 parts", () => {
-    expect(extractBearerToken("Bearer token extra")).toBeNull();
-  });
-});
 
 describe("createContextFactory", () => {
   beforeEach(() => {
@@ -80,6 +49,8 @@ describe("createContextFactory", () => {
   });
 
   it("returns context with prisma and queue from deps", async () => {
+    mockedGetSessionToken.mockReturnValue(null);
+
     const deps = makeDeps();
     const factory = createContextFactory(deps);
     const ctx = await factory(makeReq());
@@ -88,137 +59,71 @@ describe("createContextFactory", () => {
     expect(ctx.queue).toBe(deps.queue);
   });
 
-  it("sets currentUser to null when no Authorization header is present", async () => {
+  it("sets currentUser to null when no session cookie is present", async () => {
+    mockedGetSessionToken.mockReturnValue(null);
+
     const factory = createContextFactory(makeDeps());
     const ctx = await factory(makeReq());
 
     expect(ctx.currentUser).toBeNull();
+    expect(mockedValidateSession).not.toHaveBeenCalled();
   });
 
-  it("sets currentUser to null when Authorization header is empty", async () => {
+  it("sets currentUser to null when session cookie is empty", async () => {
+    mockedGetSessionToken.mockReturnValue(null);
+
     const factory = createContextFactory(makeDeps());
-    const ctx = await factory(makeReq(""));
+    const ctx = await factory(makeReq({ session: "" }));
 
     expect(ctx.currentUser).toBeNull();
+    expect(mockedValidateSession).not.toHaveBeenCalled();
   });
 
-  it("sets currentUser to null when Authorization header is not Bearer scheme", async () => {
-    const factory = createContextFactory(makeDeps());
-    const ctx = await factory(makeReq("Basic abc123"));
-
-    expect(ctx.currentUser).toBeNull();
-  });
-
-  it("sets currentUser to null when Bearer token is missing", async () => {
-    const factory = createContextFactory(makeDeps());
-    const ctx = await factory(makeReq("Bearer "));
-
-    expect(ctx.currentUser).toBeNull();
-  });
-
-  it("sets currentUser correctly when token is valid and user exists", async () => {
-    const deps = makeDeps();
+  it("sets currentUser correctly when session token is valid", async () => {
     const expectedUser: AuthUser = { id: "user-123", email: "dm@example.com" };
 
-    mockedVerifyToken.mockReturnValue("user-123");
-    (deps.prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(expectedUser);
+    mockedGetSessionToken.mockReturnValue("valid-session-token");
+    mockedValidateSession.mockResolvedValue(expectedUser);
 
+    const deps = makeDeps();
     const factory = createContextFactory(deps);
-    const ctx = await factory(makeReq("Bearer valid-jwt-token"));
+    const ctx = await factory(makeReq({ session: "valid-session-token" }));
 
-    expect(mockedVerifyToken).toHaveBeenCalledWith("valid-jwt-token");
-    expect(deps.prisma.user.findUnique).toHaveBeenCalledWith({
-      where: { id: "user-123" },
-      select: { id: true, email: true },
-    });
+    expect(mockedGetSessionToken).toHaveBeenCalled();
+    expect(mockedValidateSession).toHaveBeenCalledWith(deps, "valid-session-token");
     expect(ctx.currentUser).toEqual(expectedUser);
   });
 
-  it("sets currentUser to null when token is invalid (verifyToken throws)", async () => {
-    const deps = makeDeps();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it("sets currentUser to null when session token is invalid (validateSession returns null)", async () => {
+    mockedGetSessionToken.mockReturnValue("expired-token");
+    mockedValidateSession.mockResolvedValue(null);
 
-    mockedVerifyToken.mockImplementation(() => {
-      throw new Error("Invalid or expired token");
-    });
+    const factory = createContextFactory(makeDeps());
+    const ctx = await factory(makeReq({ session: "expired-token" }));
 
-    const factory = createContextFactory(deps);
-    const ctx = await factory(makeReq("Bearer invalid-token"));
-
-    expect(ctx.currentUser).toBeNull();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[context] Token verification failed:",
-      expect.any(Error)
-    );
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("sets currentUser to null when user is not found in database", async () => {
-    const deps = makeDeps();
-
-    mockedVerifyToken.mockReturnValue("deleted-user-id");
-    (deps.prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-
-    const factory = createContextFactory(deps);
-    const ctx = await factory(makeReq("Bearer valid-but-deleted-user"));
-
-    expect(mockedVerifyToken).toHaveBeenCalledWith("valid-but-deleted-user");
+    expect(mockedValidateSession).toHaveBeenCalled();
     expect(ctx.currentUser).toBeNull();
   });
 
-  it("sets currentUser to null and logs error when database lookup fails", async () => {
-    const deps = makeDeps();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it("does not call validateSession when getSessionToken returns null", async () => {
+    mockedGetSessionToken.mockReturnValue(null);
 
-    mockedVerifyToken.mockReturnValue("user-123");
-    (deps.prisma.user.findUnique as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Database connection lost")
-    );
-
-    const factory = createContextFactory(deps);
-    const ctx = await factory(makeReq("Bearer valid-token"));
-
-    expect(ctx.currentUser).toBeNull();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[context] Token verification failed:",
-      expect.any(Error)
-    );
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("does not call verifyToken when no token is extracted", async () => {
     const factory = createContextFactory(makeDeps());
     await factory(makeReq());
 
-    expect(mockedVerifyToken).not.toHaveBeenCalled();
+    expect(mockedValidateSession).not.toHaveBeenCalled();
   });
 
-  it("handles malformed Authorization header without Bearer prefix", async () => {
-    const factory = createContextFactory(makeDeps());
-    const ctx = await factory(makeReq("Token some-value"));
+  it("passes deps to validateSession for database lookup", async () => {
+    const expectedUser: AuthUser = { id: "user-456", email: "player@example.com" };
 
-    expect(ctx.currentUser).toBeNull();
-    expect(mockedVerifyToken).not.toHaveBeenCalled();
-  });
+    mockedGetSessionToken.mockReturnValue("session-abc");
+    mockedValidateSession.mockResolvedValue(expectedUser);
 
-  it("handles array-valued authorization header (takes first value)", async () => {
     const deps = makeDeps();
-    mockedVerifyToken.mockReturnValue("user-arr");
-    (deps.prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
-      id: "user-arr",
-      email: "arr@example.com",
-    });
-
     const factory = createContextFactory(deps);
-    const headers: Record<string, string[]> = {
-      authorization: ["Bearer array-token", "Bearer second-token"],
-    };
-    const req = { headers } as unknown as IncomingMessage;
-    const ctx = await factory({ req });
+    await factory(makeReq({ session: "session-abc" }));
 
-    expect(mockedVerifyToken).toHaveBeenCalledWith("array-token");
-    expect(ctx.currentUser).toEqual({ id: "user-arr", email: "arr@example.com" });
+    expect(mockedValidateSession).toHaveBeenCalledWith(deps, "session-abc");
   });
 });

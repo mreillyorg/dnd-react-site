@@ -1,11 +1,8 @@
 import { GraphQLError } from "graphql";
 
 import type { GraphQLContext } from "../context.ts";
-import {
-  register,
-  login,
-  changePassword,
-} from "../../services/authService.ts";
+import { createAuthorizationURL, invalidateSession } from "../../services/oauthService.ts";
+import { SUPPORTED_PROVIDERS, type SupportedProvider } from "../../services/oauthProviders.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,108 +21,74 @@ function getDeps(ctx: GraphQLContext) {
   return { prisma: ctx.prisma, queue: ctx.queue };
 }
 
-/**
- * Maps service-layer errors to GraphQLErrors with appropriate codes.
- */
-function mapAuthError(error: unknown): never {
-  if (error instanceof GraphQLError) {
-    throw error;
-  }
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "issues" in error &&
-    Array.isArray((error as { issues: unknown[] }).issues)
-  ) {
-    // ZodError — validation failure
-    const issues = (error as { issues: { message: string }[] }).issues;
-    const message = issues.map((e) => e.message).join(", ");
-    throw new GraphQLError(message, {
-      extensions: { code: "BAD_USER_INPUT" },
-    });
-  }
-
-  if (error instanceof Error) {
-    const msg = error.message;
-
-    if (msg.includes("already exists")) {
-      throw new GraphQLError(msg, {
-        extensions: { code: "CONFLICT" },
-      });
-    }
-
-    if (msg.includes("Invalid email or password") || msg.includes("Current password is incorrect")) {
-      throw new GraphQLError(msg, {
-        extensions: { code: "UNAUTHENTICATED" },
-      });
-    }
-
-    if (msg.includes("User not found")) {
-      throw new GraphQLError(msg, {
-        extensions: { code: "NOT_FOUND" },
-      });
-    }
-
-    throw new GraphQLError(msg, {
-      extensions: { code: "INTERNAL_SERVER_ERROR" },
-    });
-  }
-
-  throw new GraphQLError("An unexpected error occurred", {
-    extensions: { code: "INTERNAL_SERVER_ERROR" },
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Resolver Map
 // ---------------------------------------------------------------------------
 
 export const authResolvers = {
-  Mutation: {
-    register: async (
+  Query: {
+    me: async (
       _parent: unknown,
-      args: { email: string; password: string; name?: string },
+      _args: unknown,
       ctx: GraphQLContext,
     ) => {
-      try {
-        return await register(getDeps(ctx), {
-          email: args.email,
-          password: args.password,
-          name: args.name,
-        });
-      } catch (error) {
-        mapAuthError(error);
+      if (!ctx.currentUser) {
+        return null;
       }
+      // Fetch the full user record from the database
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: ctx.currentUser.id },
+      });
+      return user;
     },
 
-    login: async (
+    initiateOAuth: (
       _parent: unknown,
-      args: { email: string; password: string },
-      ctx: GraphQLContext,
+      args: { provider: string },
+      _ctx: GraphQLContext,
     ) => {
-      try {
-        return await login(getDeps(ctx), {
-          email: args.email,
-          password: args.password,
-        });
-      } catch (error) {
-        mapAuthError(error);
+      const provider = args.provider.toLowerCase();
+
+      if (!SUPPORTED_PROVIDERS.includes(provider as SupportedProvider)) {
+        throw new GraphQLError(
+          `Unsupported OAuth provider: ${args.provider}`,
+          { extensions: { code: "BAD_USER_INPUT" } },
+        );
       }
+
+      const result = createAuthorizationURL(provider as SupportedProvider);
+      return { url: result.url, provider };
     },
 
-    changePassword: async (
+    linkedProviders: async (
       _parent: unknown,
-      args: { currentPassword: string; newPassword: string },
+      _args: unknown,
       ctx: GraphQLContext,
     ) => {
       const user = requireAuth(ctx);
-      try {
-        await changePassword(getDeps(ctx), user.id, args.currentPassword, args.newPassword);
-        return true;
-      } catch (error) {
-        mapAuthError(error);
+
+      const identities = await ctx.prisma.oAuthIdentity.findMany({
+        where: { userId: user.id },
+        select: { provider: true },
+      });
+
+      return identities.map((identity) => identity.provider);
+    },
+  },
+
+  Mutation: {
+    logout: async (
+      _parent: unknown,
+      _args: unknown,
+      ctx: GraphQLContext,
+    ) => {
+      requireAuth(ctx);
+
+      if (ctx.sessionToken) {
+        await invalidateSession(getDeps(ctx), ctx.sessionToken);
       }
+
+      return true;
     },
   },
 };

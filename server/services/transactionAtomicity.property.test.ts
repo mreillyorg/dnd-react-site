@@ -78,7 +78,6 @@ describe("Transaction Atomicity Property Tests", () => {
         fc.record({
           email: fc.emailAddress(),
           name: fc.string({ minLength: 1, maxLength: 50 }),
-          password: fc.string({ minLength: 8, maxLength: 30 }),
         }),
         async (userData) => {
           // Count rows before the transaction
@@ -93,7 +92,6 @@ describe("Transaction Atomicity Property Tests", () => {
               await tx.user.create({
                 data: {
                   email: userData.email,
-                  passwordHash: userData.password,
                   name: userData.name,
                   themeMode: "SYSTEM",
                 },
@@ -128,7 +126,6 @@ describe("Transaction Atomicity Property Tests", () => {
     await prisma.user.create({
       data: {
         email: seedEmail,
-        passwordHash: "hashed-password",
         name: "Seed User",
         themeMode: "SYSTEM",
       },
@@ -139,7 +136,6 @@ describe("Transaction Atomicity Property Tests", () => {
         // Generate arbitrary valid user data for the first create
         fc.record({
           name: fc.string({ minLength: 1, maxLength: 50 }),
-          password: fc.string({ minLength: 8, maxLength: 30 }),
         }),
         async (userData) => {
           // Count rows before the transaction
@@ -154,7 +150,6 @@ describe("Transaction Atomicity Property Tests", () => {
               await tx.user.create({
                 data: {
                   email: `unique-${Date.now()}-${Math.random()}@test.com`,
-                  passwordHash: userData.password,
                   name: userData.name,
                   themeMode: "SYSTEM",
                 },
@@ -164,7 +159,6 @@ describe("Transaction Atomicity Property Tests", () => {
               await tx.user.create({
                 data: {
                   email: seedEmail, // This will violate the unique constraint
-                  passwordHash: "another-hash",
                   name: "Duplicate",
                   themeMode: "SYSTEM",
                 },

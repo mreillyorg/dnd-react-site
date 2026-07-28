@@ -1,20 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from './LoginPage';
 
-const mockLogin = vi.fn();
+const mockInitiateOAuth = vi.fn();
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
-    login: mockLogin,
+    initiateOAuth: mockInitiateOAuth,
   }),
 }));
 
-function renderLoginPage() {
+function renderLoginPage(searchParams = '') {
+  const initialEntries = [`/login${searchParams}`];
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <LoginPage />
     </MemoryRouter>
   );
@@ -25,257 +26,144 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  describe('form rendering', () => {
-    it('renders email and password inputs', () => {
+  describe('provider buttons', () => {
+    it('renders all 6 OAuth provider buttons', () => {
       renderLoginPage();
 
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with discord/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with github/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with facebook/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with apple/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with microsoft/i })).toBeInTheDocument();
     });
 
-    it('renders a login button', () => {
-      renderLoginPage();
-
-      expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
-    });
-
-    it('renders a heading', () => {
-      renderLoginPage();
-
-      expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
-    });
-  });
-
-  describe('form submission', () => {
-    it('calls login with correct email and password', async () => {
-      mockLogin.mockResolvedValue(undefined);
+    it('calls initiateOAuth with "google" when Google button is clicked', async () => {
       const user = userEvent.setup();
       renderLoginPage();
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'MyPassword123');
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      await user.click(screen.getByRole('button', { name: /sign in with google/i }));
 
-      await waitFor(() => {
-        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'MyPassword123');
-      });
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('google');
     });
 
-    it('calls login exactly once per submission', async () => {
-      mockLogin.mockResolvedValue(undefined);
+    it('calls initiateOAuth with "discord" when Discord button is clicked', async () => {
       const user = userEvent.setup();
       renderLoginPage();
 
-      await user.type(screen.getByLabelText(/email/i), 'a@b.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass1234');
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      await user.click(screen.getByRole('button', { name: /sign in with discord/i }));
 
-      await waitFor(() => {
-        expect(mockLogin).toHaveBeenCalledTimes(1);
-      });
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('discord');
+    });
+
+    it('calls initiateOAuth with "github" when GitHub button is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('button', { name: /sign in with github/i }));
+
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('github');
+    });
+
+    it('calls initiateOAuth with "facebook" when Facebook button is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('button', { name: /sign in with facebook/i }));
+
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('facebook');
+    });
+
+    it('calls initiateOAuth with "apple" when Apple button is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('button', { name: /sign in with apple/i }));
+
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('apple');
+    });
+
+    it('calls initiateOAuth with "microsoft" when Microsoft button is clicked', async () => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('button', { name: /sign in with microsoft/i }));
+
+      expect(mockInitiateOAuth).toHaveBeenCalledWith('microsoft');
     });
   });
 
   describe('error display', () => {
-    it('shows error message when login fails', async () => {
-      mockLogin.mockRejectedValue(new Error('Invalid credentials'));
-      const user = userEvent.setup();
-      renderLoginPage();
+    it('displays error message for identity_conflict error code', () => {
+      renderLoginPage('?error=identity_conflict');
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'wrongpass');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
-      });
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(
+        screen.getByText('This account is already linked to a different user.')
+      ).toBeInTheDocument();
     });
 
-    it('shows generic message for non-Error throws', async () => {
-      mockLogin.mockRejectedValue('unexpected');
-      const user = userEvent.setup();
-      renderLoginPage();
+    it('displays error message for provider_timeout error code', () => {
+      renderLoginPage('?error=provider_timeout');
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'somepass');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText(/login failed/i)).toBeInTheDocument();
-      });
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'The authentication provider took too long to respond. Please try again.'
+        )
+      ).toBeInTheDocument();
     });
 
-    it('displays error in an alert with role="alert"', async () => {
-      mockLogin.mockRejectedValue(new Error('Something went wrong'));
-      const user = userEvent.setup();
-      renderLoginPage();
+    it('displays generic error message for unknown error codes', () => {
+      renderLoginPage('?error=some_unknown_code');
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-      });
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(
+        screen.getByText('An unknown error occurred. Please try again.')
+      ).toBeInTheDocument();
     });
 
-    it('clears error on new submission', async () => {
-      mockLogin.mockRejectedValueOnce(new Error('First error'));
-      mockLogin.mockResolvedValueOnce(undefined);
-      const user = userEvent.setup();
+    it('does not display an error when no error param is present', () => {
       renderLoginPage();
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'wrong');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText(/first error/i)).toBeInTheDocument();
-      });
-
-      // Submit again successfully
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
 
   describe('loading state', () => {
-    it('shows loading text during login', async () => {
-      // Make login hang by returning a never-resolving promise
-      mockLogin.mockImplementation(() => new Promise(() => {}));
+    it('shows loading spinner after a provider button is clicked', async () => {
       const user = userEvent.setup();
       renderLoginPage();
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass123');
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      await user.click(screen.getByRole('button', { name: /sign in with google/i }));
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /logging in/i })).toBeInTheDocument();
-      });
+      expect(document.querySelector('.loading-spinner')).toBeInTheDocument();
     });
 
-    it('disables the submit button during login', async () => {
-      mockLogin.mockImplementation(() => new Promise(() => {}));
+    it('disables all provider buttons after one is clicked', async () => {
       const user = userEvent.setup();
       renderLoginPage();
 
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass123');
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      await user.click(screen.getByRole('button', { name: /sign in with google/i }));
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /logging in/i })).toBeDisabled();
-      });
-    });
-
-    it('re-enables button after login completes', async () => {
-      mockLogin.mockResolvedValue(undefined);
-      const user = userEvent.setup();
-      renderLoginPage();
-
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass123');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        const button = screen.getByRole('button', { name: /login/i });
-        expect(button).not.toBeDisabled();
+      const buttons = screen.getAllByRole('button');
+      buttons.forEach((button) => {
+        expect(button).toBeDisabled();
       });
     });
   });
 
-  describe('navigation link', () => {
-    it('renders a link to the register page', () => {
+  describe('page content', () => {
+    it('renders a login heading', () => {
       renderLoginPage();
 
-      const link = screen.getByRole('link', { name: /register/i });
-      expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', '/register');
-    });
-  });
-
-  describe('form validation', () => {
-    it('email input has required attribute', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/email/i)).toBeRequired();
+      expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
     });
 
-    it('password input has required attribute', () => {
+    it('does not render a link to register page', () => {
       renderLoginPage();
 
-      expect(screen.getByLabelText(/password/i)).toBeRequired();
-    });
-
-    it('email input has type="email"', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/email/i)).toHaveAttribute('type', 'email');
-    });
-
-    it('password input has type="password"', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/password/i)).toHaveAttribute('type', 'password');
-    });
-  });
-
-  describe('accessibility', () => {
-    it('email input has proper label association', () => {
-      renderLoginPage();
-
-      const emailInput = screen.getByLabelText(/email/i);
-      expect(emailInput).toHaveAttribute('id', 'email');
-    });
-
-    it('password input has proper label association', () => {
-      renderLoginPage();
-
-      const passwordInput = screen.getByLabelText(/password/i);
-      expect(passwordInput).toHaveAttribute('id', 'password');
-    });
-
-    it('email input has autocomplete="email"', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/email/i)).toHaveAttribute('autocomplete', 'email');
-    });
-
-    it('password input has autocomplete="current-password"', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/password/i)).toHaveAttribute(
-        'autocomplete',
-        'current-password'
-      );
-    });
-
-    it('inputs have aria-required attribute', () => {
-      renderLoginPage();
-
-      expect(screen.getByLabelText(/email/i)).toHaveAttribute('aria-required', 'true');
-      expect(screen.getByLabelText(/password/i)).toHaveAttribute('aria-required', 'true');
-    });
-
-    it('submit button has aria-busy during loading', async () => {
-      mockLogin.mockImplementation(() => new Promise(() => {}));
-      const user = userEvent.setup();
-      renderLoginPage();
-
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'pass123');
-      await user.click(screen.getByRole('button', { name: /login/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /logging in/i })).toHaveAttribute(
-          'aria-busy',
-          'true'
-        );
-      });
+      expect(screen.queryByRole('link', { name: /register/i })).not.toBeInTheDocument();
     });
   });
 });

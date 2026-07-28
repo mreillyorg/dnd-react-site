@@ -16,6 +16,8 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 
+import cookieParser from 'cookie-parser';
+
 import { config } from './config.ts';
 import { createQueue } from './db/operationQueue.ts';
 import type { OperationQueue } from './db/operationQueue.ts';
@@ -23,6 +25,7 @@ import { initializePrisma, prisma } from './db/prisma.ts';
 import { formatGraphQLError } from './errors/formatGraphQLError.ts';
 import { createContextFactory } from './graphql/context.ts';
 import { schema } from './graphql/schema/index.ts';
+import { createAuthRouter } from './routes/authRoutes.ts';
 import { gracefulShutdown } from './shutdown.ts';
 import type { ShutdownDependencies } from './shutdown.ts';
 
@@ -81,6 +84,9 @@ export async function createApp(): Promise<AppComponents> {
   const app = express();
   const httpServer = http.createServer(app);
 
+  // 4b. Parse cookies for all routes (must come before auth routes and GraphQL)
+  app.use(cookieParser());
+
   // 5. Build Apollo Server
   const apolloServer = new ApolloServer({
     schema,
@@ -101,6 +107,9 @@ export async function createApp(): Promise<AppComponents> {
       context: async ({ req }) => contextFactory({ req }),
     }),
   );
+
+  // 6b. Mount OAuth auth routes (prefixed with /auth/ inside the router)
+  app.use(createAuthRouter({ prisma, queue }));
 
   // 7. Health endpoint
   app.get('/health', async (_req, res) => {

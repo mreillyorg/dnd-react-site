@@ -9,41 +9,30 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => void;
+  initiateOAuth: (provider: string) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'auth_token';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    if (storedToken) {
-      setToken(storedToken);
-      fetchCurrentUser(storedToken);
-    } else {
-      setIsLoading(false);
-    }
+    fetchCurrentUser();
   }, []);
 
-  async function fetchCurrentUser(authToken: string) {
+  async function fetchCurrentUser() {
     try {
       const response = await fetch('/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query Me {
@@ -60,102 +49,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, errors } = await response.json();
 
       if (errors || !data?.me) {
-        // Token is invalid or expired — clear it
-        localStorage.removeItem(TOKEN_KEY);
-        setToken(null);
         setUser(null);
       } else {
         setUser(data.me);
       }
     } catch {
-      // Network error or unexpected failure — clear token
-      localStorage.removeItem(TOKEN_KEY);
-      setToken(null);
       setUser(null);
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function login(email: string, password: string) {
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `
-          mutation Login($email: String!, $password: String!) {
-            login(email: $email, password: $password) {
-              token
-              user {
-                id
-                email
-                name
-              }
-            }
-          }
-        `,
-        variables: { email, password },
-      }),
-    });
-
-    const { data, errors } = await response.json();
-
-    if (errors) {
-      throw new Error(errors[0].message);
-    }
-
-    const { token: newToken, user: newUser } = data.login;
-
-    localStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
-    setUser(newUser);
-
-    navigate('/');
+  function initiateOAuth(provider: string) {
+    window.location.href = `/auth/initiate/${provider}`;
   }
 
-  async function register(email: string, password: string, name?: string) {
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `
-          mutation Register($email: String!, $password: String!, $name: String) {
-            register(email: $email, password: $password, name: $name) {
-              token
-              user {
-                id
-                email
-                name
-              }
+  async function logout() {
+    try {
+      await fetch('/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          query: `
+            mutation Logout {
+              logout
             }
-          }
-        `,
-        variables: { email, password, name: name ?? null },
-      }),
-    });
-
-    const { data, errors } = await response.json();
-
-    if (errors) {
-      throw new Error(errors[0].message);
+          `,
+        }),
+      });
+    } catch {
+      // Even if the mutation fails, clear local state
     }
 
-    const { token: newToken, user: newUser } = data.register;
-
-    localStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
-    setUser(newUser);
-
-    navigate('/');
-  }
-
-  function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
     setUser(null);
     navigate('/login');
   }
@@ -164,10 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
         isLoading,
-        login,
-        register,
+        initiateOAuth,
         logout,
       }}
     >

@@ -1,8 +1,7 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -18,7 +17,7 @@ function Navbar() {
         {user ? (
           <div className="flex items-center gap-2">
             <span className="text-sm">{user.name || user.email}</span>
-            <button className="btn btn-ghost btn-sm" onClick={logout}>
+            <button className="btn btn-ghost btn-sm" onClick={() => { void logout(); }}>
               Logout
             </button>
           </div>
@@ -26,9 +25,6 @@ function Navbar() {
           <div className="flex gap-2">
             <Link to="/login" className="btn btn-ghost btn-sm">
               Login
-            </Link>
-            <Link to="/register" className="btn btn-primary btn-sm">
-              Register
             </Link>
           </div>
         )}
@@ -56,7 +52,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route
           path="/"
           element={

@@ -13,20 +13,49 @@ datasource db {
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  themeMode    String   @default("SYSTEM") // LIGHT | DARK | SYSTEM
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  themeMode String   @default("SYSTEM") // LIGHT | DARK | SYSTEM
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  characters Character[]
-  campaigns  Campaign[]
-  sessions   Session[]
+  characters      Character[]
+  campaigns       Campaign[]
+  sessions        Session[]
+  oauthIdentities OAuthIdentity[]
+  authSessions    AuthSession[]
 
   @@index([email])
+}
+
+// ─── OAuth Identities ────────────────────────────────────────────────────────
+
+model OAuthIdentity {
+  id             String   @id @default(cuid())
+  provider       String // "google" | "discord" | "github" | "facebook" | "apple" | "microsoft"
+  providerUserId String
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+// ─── Auth Sessions ───────────────────────────────────────────────────────────
+
+model AuthSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
 }
 
 // ─── Characters ──────────────────────────────────────────────────────────────

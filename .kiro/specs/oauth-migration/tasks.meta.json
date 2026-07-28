@@ -1,0 +1,511 @@
+{
+  "pbtResults": {
+    "2.4 Write property tests for OAuth URL generation (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1785245651705
+    },
+    "2.6 Write property tests for session token lifecycle (Properties 8, 10, 11)": {
+      "status": "passed",
+      "lastRunTimestamp": 1785245692362
+    },
+    "2.5 Write property tests for user resolution logic (Properties 4, 5, 6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1785245707825
+    },
+    "3.3 Write property test for CSRF state validation (Property 12)": {
+      "status": "passed",
+      "lastRunTimestamp": 1785245847001
+    }
+  },
+  "executionHistory": {
+    "1.1 Install new dependencies and remove old ones": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244377704
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244389254
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244673021
+      }
+    ],
+    "1.2 Update Prisma schema with OAuthIdentity and AuthSession models": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244377780
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244679247
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244806213
+      }
+    ],
+    "1.3 Add OAuth environment variables to .env.example and config": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244377847
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244390014
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244673831
+      }
+    ],
+    "2.1 Create OAuth provider registry (`server/services/oauthProviders.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244377927
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244811328
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245028710
+      }
+    ],
+    "2.2 Create session cookie utilities (`server/services/sessionCookie.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244377985
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244812106
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245029503
+      }
+    ],
+    "2.3 Create OAuth service (`server/services/oauthService.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378046
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245035176
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245495966
+      }
+    ],
+    "2.4 Write property tests for OAuth URL generation (Property 1)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378106
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245501476
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245725813
+      }
+    ],
+    "2.5 Write property tests for user resolution logic (Properties 4, 5, 6)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378168
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245502347
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245726695
+      }
+    ],
+    "2.6 Write property tests for session token lifecycle (Properties 8, 10, 11)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378224
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245503030
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245727625
+      }
+    ],
+    "3.1 Create auth routes (`server/routes/authRoutes.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378305
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245503861
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245728483
+      }
+    ],
+    "3.2 Update Express app (`server/app.ts`) to mount auth routes and cookie-parser": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378371
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245733978
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245862898
+      }
+    ],
+    "3.3 Write property test for CSRF state validation (Property 12)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378429
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245734878
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245863684
+      }
+    ],
+    "4. Checkpoint - Ensure all server-side tests pass": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378486
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245885006
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246128728
+      }
+    ],
+    "5.1 Update GraphQL schema files": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378569
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245885784
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246129473
+      }
+    ],
+    "5.2 Rewrite auth resolvers (`server/graphql/resolvers/auth.resolver.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378626
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246135798
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246338266
+      }
+    ],
+    "5.3 Update GraphQL context factory (`server/graphql/context.ts`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378688
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246136547
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246339139
+      }
+    ],
+    "5.4 Write unit tests for auth resolvers": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378743
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246344960
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246389714
+      }
+    ],
+    "6. Checkpoint - Ensure all server tests pass": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378800
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246396188
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246528096
+      }
+    ],
+    "7.1 Rewrite AuthContext (`src/contexts/AuthContext.tsx`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378857
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246396976
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246528940
+      }
+    ],
+    "7.2 Rewrite LoginPage (`src/pages/LoginPage.tsx`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378920
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246535234
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246701374
+      }
+    ],
+    "7.3 Remove RegisterPage and update routing (`src/App.tsx`)": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244378982
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246536044
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246702169
+      }
+    ],
+    "7.4 Write unit tests for LoginPage and AuthContext": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244379046
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246709041
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246876240
+      }
+    ],
+    "8.1 Delete old auth service and update imports": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244379105
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246709831
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246876305
+      }
+    ],
+    "8.2 Update existing auth-related tests": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244379165
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246882293
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785247816896
+      }
+    ],
+    "8.3 Write integration tests for the full OAuth flow": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244379218
+      },
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785247823380
+      },
+      {
+        "executionId": "754b4ed4-2ede-410a-8f9b-b5266ffc70c5",
+        "chatSessionId": "sess_8e07ab56-721d-4473-8cad-2140d1256fc2",
+        "timestamp": 1785279419907
+      },
+      {
+        "executionId": "754b4ed4-2ede-410a-8f9b-b5266ffc70c5",
+        "chatSessionId": "sess_8e07ab56-721d-4473-8cad-2140d1256fc2",
+        "timestamp": 1785279606972
+      }
+    ],
+    "9. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244379309
+      },
+      {
+        "executionId": "badec911-f14c-491f-8931-91499d9e9ee5",
+        "chatSessionId": "sess_20c84290-0a6b-461f-87fb-137338a13fb3",
+        "timestamp": 1785279621436
+      },
+      {
+        "executionId": "badec911-f14c-491f-8931-91499d9e9ee5",
+        "chatSessionId": "sess_20c84290-0a6b-461f-87fb-137338a13fb3",
+        "timestamp": 1785279769263
+      }
+    ],
+    "1. Install dependencies and update Prisma schema": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785244806276
+      }
+    ],
+    "2. Implement OAuth provider registry and service": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245727684
+      }
+    ],
+    "3. Implement auth routes and update Express app": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785245863776
+      }
+    ],
+    "5. Update GraphQL layer for OAuth": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246389783
+      }
+    ],
+    "7. Update frontend auth layer": [
+      {
+        "executionId": "72e92b35-c6b6-4bab-817f-972690e9fb44",
+        "chatSessionId": "sess_9c7095a0-50a6-4ec7-ad56-90a34418b95f",
+        "timestamp": 1785246876355
+      }
+    ],
+    "8. Remove old auth service and clean up": [
+      {
+        "executionId": "754b4ed4-2ede-410a-8f9b-b5266ffc70c5",
+        "chatSessionId": "sess_8e07ab56-721d-4473-8cad-2140d1256fc2",
+        "timestamp": 1785279607044
+      }
+    ]
+  }
+}

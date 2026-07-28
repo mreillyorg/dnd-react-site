@@ -1,26 +1,40 @@
-import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  provider_timeout: "The authentication provider took too long to respond. Please try again.",
+  provider_error: "There was a problem communicating with the authentication provider.",
+  profile_fetch_failed: "Could not retrieve your profile. Please try again.",
+  identity_conflict: "This account is already linked to a different user.",
+  account_creation_failed: "Could not create your account. Please try again.",
+  email_required: "Your OAuth provider did not share an email address, which is required.",
+  access_denied: "You denied the authentication request.",
+  invalid_state: "The authentication request was invalid. Please try again.",
+};
+
+const PROVIDERS = [
+  { name: 'google', label: 'Google' },
+  { name: 'discord', label: 'Discord' },
+  { name: 'github', label: 'GitHub' },
+  { name: 'facebook', label: 'Facebook' },
+  { name: 'apple', label: 'Apple' },
+  { name: 'microsoft', label: 'Microsoft' },
+];
+
 export function LoginPage() {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const { initiateOAuth } = useAuth();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  const errorCode = searchParams.get('error');
+  const errorMessage = errorCode
+    ? ERROR_MESSAGES[errorCode] ?? "An unknown error occurred. Please try again."
+    : null;
 
-    try {
-      await login(email, password);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
-    }
+  function handleProviderClick(provider: string) {
+    setIsLoading(true);
+    initiateOAuth(provider);
   }
 
   return (
@@ -29,70 +43,36 @@ export function LoginPage() {
         <div className="card-body">
           <h2 className="card-title text-2xl justify-center mb-2">Login</h2>
 
-          <form onSubmit={handleSubmit}>
-            <fieldset className="fieldset">
-              <label className="label" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                className="input w-full"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                aria-required="true"
-              />
-            </fieldset>
-
-            <fieldset className="fieldset">
-              <label className="label" htmlFor="password">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                className="input w-full"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                aria-required="true"
-              />
-            </fieldset>
-
-            {error && (
-              <div className="alert alert-error mt-4" role="alert">
-                <span>{error}</span>
-              </div>
-            )}
-
-            <div className="mt-6">
-              <button
-                type="submit"
-                className="btn btn-primary w-full"
-                disabled={isLoading}
-                aria-busy={isLoading}
-              >
-                {isLoading && (
-                  <span className="loading loading-spinner loading-sm" />
-                )}
-                {isLoading ? 'Logging in...' : 'Login'}
-              </button>
-            </div>
-          </form>
-
-          <div className="divider">OR</div>
-
-          <p className="text-center text-sm">
-            Don't have an account?{' '}
-            <Link to="/register" className="link link-primary">
-              Register
-            </Link>
+          <p className="text-center text-sm text-base-content/70 mb-4">
+            Sign in with one of the following providers
           </p>
+
+          {errorMessage && (
+            <div className="alert alert-error mb-4" role="alert">
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="flex justify-center mb-4">
+              <span className="loading loading-spinner loading-md" />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {PROVIDERS.map(({ name, label }) => (
+              <button
+                key={name}
+                type="button"
+                className="btn btn-outline w-full"
+                onClick={() => handleProviderClick(name)}
+                disabled={isLoading}
+                aria-label={`Sign in with ${label}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

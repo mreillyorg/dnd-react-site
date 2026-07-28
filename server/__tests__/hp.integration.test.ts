@@ -4,15 +4,19 @@
  * Tests the full GraphQL mutation flow for damage, healing, temp HP,
  * and combatant management through the Express + Apollo Server stack
  * with an in-memory mock Prisma store.
+ *
+ * Authentication uses cookie-based sessions (AuthSession model) instead of JWT.
  */
 
 // @vitest-environment node
 
 import http from "node:http";
+import crypto from "node:crypto";
 
 import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from "@as-integrations/express5";
+import cookieParser from "cookie-parser";
 import express from "express";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -26,23 +30,20 @@ import { schema } from "../graphql/schema/index.ts";
 // Test Setup
 // ---------------------------------------------------------------------------
 
-const JWT_SECRET = "test-secret-key-for-hp-integration-tests";
-
 let app: express.Express;
 let apolloServer: ApolloServer;
 let store: {
   users: Record<string, any>;
   combatants: Record<string, any>;
   encounters: Record<string, any>;
+  authSessions: Record<string, any>;
 };
 
+let idCounter = 0;
+const nextId = () => `cuid_${++idCounter}`;
+
 beforeAll(async () => {
-  process.env.JWT_SECRET = JWT_SECRET;
-
-  store = { users: {}, combatants: {}, encounters: {} };
-
-  let idCounter = 0;
-  const nextId = () => `cuid_${++idCounter}`;
+  store = { users: {}, combatants: {}, encounters: {}, authSessions: {} };
 
   const mockPrisma = {
     $connect: () => Promise.resolve(),
@@ -55,7 +56,6 @@ beforeAll(async () => {
         const user = {
           id: nextId(),
           email: data.email,
-          passwordHash: data.passwordHash,
           name: data.name ?? null,
           themeMode: data.themeMode ?? "SYSTEM",
           createdAt: new Date(),
@@ -179,6 +179,40 @@ beforeAll(async () => {
         return encounter;
       },
     },
+    authSession: {
+      create: async ({ data }: any) => {
+        const session = {
+          id: nextId(),
+          token: data.token,
+          userId: data.userId,
+          expiresAt: data.expiresAt,
+          createdAt: new Date(),
+        };
+        store.authSessions[session.token] = session;
+        return session;
+      },
+      findUnique: async ({ where, include }: any) => {
+        const session = where.token
+          ? store.authSessions[where.token] || null
+          : Object.values(store.authSessions).find((s: any) => s.id === where.id) || null;
+        if (session && include?.user) {
+          const user = store.users[session.userId] || null;
+          return { ...session, user };
+        }
+        return session;
+      },
+      delete: async ({ where }: any) => {
+        const session = store.authSessions[where.id];
+        if (session) delete store.authSessions[session.token];
+        return session;
+      },
+      deleteMany: async ({ where }: any) => {
+        if (where?.token) {
+          delete store.authSessions[where.token];
+        }
+        return { count: 1 };
+      },
+    },
   } as any;
 
   const queue = createQueue({
@@ -201,6 +235,7 @@ beforeAll(async () => {
 
   const contextFactory = createContextFactory({ prisma: mockPrisma, queue });
 
+  expressApp.use(cookieParser());
   expressApp.use(
     "/graphql",
     express.json(),
@@ -220,20 +255,12 @@ beforeEach(() => {
   store.users = {};
   store.combatants = {};
   store.encounters = {};
+  store.authSessions = {};
 });
 
 // ---------------------------------------------------------------------------
 // GraphQL Queries & Mutations
 // ---------------------------------------------------------------------------
-
-const REGISTER_MUTATION = `
-  mutation Register($email: String!, $password: String!, $name: String) {
-    register(email: $email, password: $password, name: $name) {
-      token
-      user { id email name }
-    }
-  }
-`;
 
 const CREATE_ENCOUNTER_MUTATION = `
   mutation CreateEncounter($input: CreateCombatEncounterInput!) {
@@ -295,24 +322,36 @@ const GET_COMBATANTS_QUERY = `
 // Test Helpers
 // ---------------------------------------------------------------------------
 
-const TEST_USER = {
-  email: "hptest@example.com",
-  password: "TestPassword123",
-  name: "HP Tester",
-};
+/**
+ * Creates a user directly in the store and returns a session cookie string.
+ */
+function createAuthenticatedUser(email = "hptest@example.com", name = "HP Tester") {
+  const userId = nextId();
+  store.users[userId] = {
+    id: userId,
+    email,
+    name,
+    themeMode: "SYSTEM",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-async function registerAndGetToken() {
-  const res = await request(app).post("/graphql").send({
-    query: REGISTER_MUTATION,
-    variables: TEST_USER,
-  });
-  return res.body.data.register.token as string;
+  const token = crypto.randomBytes(32).toString("hex");
+  store.authSessions[token] = {
+    id: nextId(),
+    token,
+    userId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(),
+  };
+
+  return { userId, token, cookie: `session=${token}` };
 }
 
-async function createEncounter(token: string, name = "Test Encounter") {
+async function createEncounter(cookie: string, name = "Test Encounter") {
   const res = await request(app)
     .post("/graphql")
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", cookie)
     .send({
       query: CREATE_ENCOUNTER_MUTATION,
       variables: { input: { name } },
@@ -321,7 +360,7 @@ async function createEncounter(token: string, name = "Test Encounter") {
 }
 
 async function createCombatant(
-  token: string,
+  cookie: string,
   encounterId: string,
   overrides: Partial<{
     name: string;
@@ -347,7 +386,7 @@ async function createCombatant(
 
   const res = await request(app)
     .post("/graphql")
-    .set("Authorization", `Bearer ${token}`)
+    .set("Cookie", cookie)
     .send({
       query: CREATE_COMBATANT_MUTATION,
       variables: { input },
@@ -362,9 +401,9 @@ async function createCombatant(
 
 describe("Integration: Full damage flow", () => {
   it("applies damage and updates the combatant HP in the store", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token);
-    const combatant = await createCombatant(token, encounter.id, {
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie);
+    const combatant = await createCombatant(cookie, encounter.id, {
       maxHp: 50,
       currentHp: 50,
     });
@@ -372,7 +411,7 @@ describe("Integration: Full damage flow", () => {
     // Apply 20 damage
     const damageRes = await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: APPLY_DAMAGE_MUTATION,
         variables: { combatantId: combatant.id, damage: 20 },
@@ -401,9 +440,9 @@ describe("Integration: Full damage flow", () => {
 
 describe("Integration: Full healing flow", () => {
   it("applies healing and caps HP at maxHp", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token);
-    const combatant = await createCombatant(token, encounter.id, {
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie);
+    const combatant = await createCombatant(cookie, encounter.id, {
       maxHp: 50,
       currentHp: 30,
     });
@@ -411,7 +450,7 @@ describe("Integration: Full healing flow", () => {
     // Apply 10 healing
     const healRes = await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: APPLY_HEALING_MUTATION,
         variables: { combatantId: combatant.id, healing: 10 },
@@ -436,9 +475,9 @@ describe("Integration: Full healing flow", () => {
   });
 
   it("does not heal above maxHp", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token);
-    const combatant = await createCombatant(token, encounter.id, {
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie);
+    const combatant = await createCombatant(cookie, encounter.id, {
       maxHp: 50,
       currentHp: 45,
     });
@@ -446,7 +485,7 @@ describe("Integration: Full healing flow", () => {
     // Apply 20 healing (would exceed max)
     const healRes = await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: APPLY_HEALING_MUTATION,
         variables: { combatantId: combatant.id, healing: 20 },
@@ -458,9 +497,9 @@ describe("Integration: Full healing flow", () => {
 
 describe("Integration: Temp HP flow", () => {
   it("sets temp HP and temp absorbs damage before current HP", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token);
-    const combatant = await createCombatant(token, encounter.id, {
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie);
+    const combatant = await createCombatant(cookie, encounter.id, {
       maxHp: 50,
       currentHp: 50,
       tempHp: 0,
@@ -469,7 +508,7 @@ describe("Integration: Temp HP flow", () => {
     // Set temp HP to 10
     const tempRes = await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: SET_TEMP_HP_MUTATION,
         variables: { combatantId: combatant.id, tempHp: 10 },
@@ -482,7 +521,7 @@ describe("Integration: Temp HP flow", () => {
     // Apply 15 damage: 10 absorbed by temp, 5 from current HP
     const damageRes = await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: APPLY_DAMAGE_MUTATION,
         variables: { combatantId: combatant.id, damage: 15 },
@@ -499,15 +538,15 @@ describe("Integration: Temp HP flow", () => {
 
 describe("Integration: Multiple combatants", () => {
   it("damaging one combatant does not affect the other", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token);
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie);
 
-    const combatant1 = await createCombatant(token, encounter.id, {
+    const combatant1 = await createCombatant(cookie, encounter.id, {
       name: "Fighter",
       maxHp: 50,
       currentHp: 50,
     });
-    const combatant2 = await createCombatant(token, encounter.id, {
+    const combatant2 = await createCombatant(cookie, encounter.id, {
       name: "Wizard",
       maxHp: 30,
       currentHp: 30,
@@ -516,7 +555,7 @@ describe("Integration: Multiple combatants", () => {
     // Damage only combatant1
     await request(app)
       .post("/graphql")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", cookie)
       .send({
         query: APPLY_DAMAGE_MUTATION,
         variables: { combatantId: combatant1.id, damage: 10 },
@@ -544,14 +583,14 @@ describe("Integration: Multiple combatants", () => {
 
 describe("Integration: Encounter creation with combatants", () => {
   it("creates an encounter, adds multiple combatants, and queries them all back", async () => {
-    const token = await registerAndGetToken();
-    const encounter = await createEncounter(token, "Boss Fight");
+    const { cookie } = createAuthenticatedUser();
+    const encounter = await createEncounter(cookie, "Boss Fight");
 
     expect(encounter.name).toBe("Boss Fight");
     expect(encounter.isActive).toBe(false);
 
     // Add multiple combatants with different initiatives
-    const paladin = await createCombatant(token, encounter.id, {
+    const paladin = await createCombatant(cookie, encounter.id, {
       name: "Paladin",
       initiative: 18,
       maxHp: 60,
@@ -559,7 +598,7 @@ describe("Integration: Encounter creation with combatants", () => {
       armorClass: 18,
       combatantType: "PLAYER",
     });
-    const goblin = await createCombatant(token, encounter.id, {
+    const goblin = await createCombatant(cookie, encounter.id, {
       name: "Goblin",
       initiative: 12,
       maxHp: 7,
@@ -567,7 +606,7 @@ describe("Integration: Encounter creation with combatants", () => {
       armorClass: 13,
       combatantType: "MONSTER",
     });
-    const npc = await createCombatant(token, encounter.id, {
+    const npc = await createCombatant(cookie, encounter.id, {
       name: "Friendly NPC",
       initiative: 8,
       maxHp: 20,

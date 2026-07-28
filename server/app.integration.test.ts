@@ -5,9 +5,7 @@
  * endpoint and Apollo middleware as the real app, but skips migration
  * execution (handled by global test setup).
  *
- * Because Prisma 7 uses a stub PrismaClient in test environments, we use
- * GraphQL mutations (createUser, createCharacter) for the round-trip test
- * rather than direct Prisma calls.
+ * Authentication uses cookie-based sessions (AuthSession model) instead of JWT.
  *
  * Requirements: 7.6, 1.1
  */
@@ -15,12 +13,13 @@
 // @vitest-environment node
 
 import http from 'node:http';
+import crypto from 'node:crypto';
 
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { expressMiddleware } from '@as-integrations/express5';
+import cookieParser from 'cookie-parser';
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -85,29 +84,28 @@ describe('Integration: Health endpoint', () => {
 });
 
 // ---------------------------------------------------------------------------
-// GraphQL round-trip test
+// GraphQL round-trip test (cookie-based auth)
 // ---------------------------------------------------------------------------
 
 describe('Integration: GraphQL round-trip', () => {
   let app: express.Express;
   let apolloServer: ApolloServer;
 
+  // In-memory store for mock prisma
+  const store: {
+    users: Record<string, any>;
+    characters: Record<string, any>;
+    authSessions: Record<string, any>;
+  } = {
+    users: {},
+    characters: {},
+    authSessions: {},
+  };
+
+  let idCounter = 0;
+  const nextId = () => `cuid_${++idCounter}`;
+
   beforeAll(async () => {
-    // Ensure JWT_SECRET is available for token generation/verification
-    if (!process.env.JWT_SECRET) {
-      process.env.JWT_SECRET = 'test-secret-key-for-integration-tests-only';
-    }
-
-    // Create a mock prisma that supports the operations needed for the round-trip.
-    // This simulates a real database by storing state in memory.
-    const store: { users: Record<string, any>; characters: Record<string, any> } = {
-      users: {},
-      characters: {},
-    };
-
-    let idCounter = 0;
-    const nextId = () => `cuid_${++idCounter}`;
-
     const mockPrisma = {
       $connect: () => Promise.resolve(),
       $disconnect: () => Promise.resolve(),
@@ -175,6 +173,40 @@ describe('Integration: GraphQL round-trip', () => {
         },
         deleteMany: async () => ({ count: 0 }),
       },
+      authSession: {
+        create: async ({ data }: any) => {
+          const session = {
+            id: nextId(),
+            token: data.token,
+            userId: data.userId,
+            expiresAt: data.expiresAt,
+            createdAt: new Date(),
+          };
+          store.authSessions[session.token] = session;
+          return session;
+        },
+        findUnique: async ({ where, include }: any) => {
+          const session = where.token
+            ? store.authSessions[where.token] || null
+            : Object.values(store.authSessions).find((s: any) => s.id === where.id) || null;
+          if (session && include?.user) {
+            const user = store.users[session.userId] || null;
+            return { ...session, user };
+          }
+          return session;
+        },
+        delete: async ({ where }: any) => {
+          const session = store.authSessions[where.id];
+          if (session) delete store.authSessions[session.token];
+          return session;
+        },
+        deleteMany: async ({ where }: any) => {
+          if (where?.token) {
+            delete store.authSessions[where.token];
+          }
+          return { count: 1 };
+        },
+      },
     } as any;
 
     const queue = createQueue({ databaseProvider: 'sqlite', dbQueueMaxDepth: 100, dbQueueWarnMs: 500 });
@@ -193,6 +225,7 @@ describe('Integration: GraphQL round-trip', () => {
 
     const contextFactory = createContextFactory({ prisma: mockPrisma, queue });
 
+    expressApp.use(cookieParser());
     expressApp.use(
       '/graphql',
       express.json(),
@@ -208,45 +241,37 @@ describe('Integration: GraphQL round-trip', () => {
     await apolloServer.stop();
   });
 
+  /**
+   * Helper: creates a user directly in the store and returns a session cookie string.
+   */
+  function createAuthenticatedUser(email: string, name: string) {
+    const userId = nextId();
+    store.users[userId] = {
+      id: userId,
+      email,
+      name,
+      themeMode: 'SYSTEM',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const token = crypto.randomBytes(32).toString('hex');
+    store.authSessions[token] = {
+      id: nextId(),
+      token,
+      userId,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
+    };
+
+    return { userId, token, cookie: `session=${token}` };
+  }
+
   it('createCharacter mutation followed by character query returns persisted data', async () => {
-    // Step 1: Create a user via the createUser mutation (public, no auth needed)
-    const createUserMutation = `
-      mutation CreateUser($input: CreateUserInput!) {
-        createUser(input: $input) {
-          id
-          email
-          name
-        }
-      }
-    `;
+    // Step 1: Create a user with a session cookie directly in the store
+    const { userId, cookie } = createAuthenticatedUser('gandalf@middleearth.com', 'Gandalf the Grey');
 
-    const createUserRes = await request(app)
-      .post('/graphql')
-      .send({
-        query: createUserMutation,
-        variables: {
-          input: {
-            email: 'gandalf@middleearth.com',
-            password: 'youshallnotpass',
-            name: 'Gandalf the Grey',
-          },
-        },
-      });
-
-    expect(createUserRes.status).toBe(200);
-    expect(createUserRes.body.errors).toBeUndefined();
-    const createdUser = createUserRes.body.data.createUser;
-    expect(createdUser.id).toBeDefined();
-    expect(createdUser.email).toBe('gandalf@middleearth.com');
-
-    // Build a real JWT auth token for subsequent requests
-    const authToken = jwt.sign(
-      { userId: createdUser.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' },
-    );
-
-    // Step 2: Execute createCharacter mutation (requires auth)
+    // Step 2: Execute createCharacter mutation (requires auth via session cookie)
     const createCharacterMutation = `
       mutation CreateCharacter($input: CreateCharacterInput!) {
         createCharacter(input: $input) {
@@ -275,7 +300,7 @@ describe('Integration: GraphQL round-trip', () => {
 
     const createCharRes = await request(app)
       .post('/graphql')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Cookie', cookie)
       .send({
         query: createCharacterMutation,
         variables: { input: characterInput },
@@ -292,7 +317,7 @@ describe('Integration: GraphQL round-trip', () => {
     expect(createdCharacter.currentHp).toBe(45);
     expect(createdCharacter.armorClass).toBe(12);
     expect(createdCharacter.level).toBe(5);
-    expect(createdCharacter.userId).toBe(createdUser.id);
+    expect(createdCharacter.userId).toBe(userId);
     expect(createdCharacter.id).toBeDefined();
 
     // Step 3: Query the character back to verify persistence
@@ -314,7 +339,7 @@ describe('Integration: GraphQL round-trip', () => {
 
     const queryRes = await request(app)
       .post('/graphql')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Cookie', cookie)
       .send({
         query: queryCharacter,
         variables: { id: createdCharacter.id },
@@ -332,6 +357,6 @@ describe('Integration: GraphQL round-trip', () => {
     expect(queriedCharacter.currentHp).toBe(45);
     expect(queriedCharacter.armorClass).toBe(12);
     expect(queriedCharacter.level).toBe(5);
-    expect(queriedCharacter.userId).toBe(createdUser.id);
+    expect(queriedCharacter.userId).toBe(userId);
   });
 });
