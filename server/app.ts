@@ -115,7 +115,8 @@ export async function createApp(): Promise<AppComponents> {
   app.get('/health', async (_req, res) => {
     try {
       // Short timeout: race the query against a 3s deadline
-      const healthCheck = prisma.$queryRaw`SELECT 1` as Promise<unknown>;
+      // Use a simple Prisma query instead of raw SQL (not available in Prisma 7 new client)
+      const healthCheck = prisma.user.findFirst({ select: { id: true } }).then(() => true);
       const timeout = new Promise<never>((_resolve, reject) => {
         setTimeout(() => reject(new Error('Database health check timed out')), 3000);
       });

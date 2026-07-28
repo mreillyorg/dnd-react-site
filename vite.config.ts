@@ -5,6 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [tailwindcss(), react()],
+  server: {
+    proxy: {
+      '/graphql': 'http://localhost:4000',
+      '/auth': 'http://localhost:4000',
+      '/health': 'http://localhost:4000',
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
