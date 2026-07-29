@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
 import { combatants } from "../../db/schema.ts";
-import { applyDamage, applyHealing, setTempHp } from "../../../src/services/hpService.ts";
+import { applyDamage, applyHealing, setTempHp } from "../../services/hpService.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -56,14 +56,14 @@ export const hpResolvers = {
         args.damage,
       );
 
-      return ctx.queue.enqueue(() => {
-        const [updated] = ctx.db
+      return ctx.queue.enqueue(async () => {
+        const [updated] = await ctx.db
           .update(combatants)
           .set({ currentHp: result.newCurrentHp, tempHp: result.newTempHp })
           .where(eq(combatants.id, args.combatantId))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
 
@@ -87,14 +87,14 @@ export const hpResolvers = {
         args.healing,
       );
 
-      return ctx.queue.enqueue(() => {
-        const [updated] = ctx.db
+      return ctx.queue.enqueue(async () => {
+        const [updated] = await ctx.db
           .update(combatants)
           .set({ currentHp: result.currentHp })
           .where(eq(combatants.id, args.combatantId))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
 
@@ -118,14 +118,14 @@ export const hpResolvers = {
         args.tempHp,
       );
 
-      return ctx.queue.enqueue(() => {
-        const [updated] = ctx.db
+      return ctx.queue.enqueue(async () => {
+        const [updated] = await ctx.db
           .update(combatants)
           .set({ tempHp: result.tempHp })
           .where(eq(combatants.id, args.combatantId))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
 
@@ -145,14 +145,14 @@ export const hpResolvers = {
       const combatant = await findCombatantOrThrow(ctx, args.combatantId);
       const newCurrentHp = Math.min(combatant.currentHp, args.maxHp);
 
-      return ctx.queue.enqueue(() => {
-        const [updated] = ctx.db
+      return ctx.queue.enqueue(async () => {
+        const [updated] = await ctx.db
           .update(combatants)
           .set({ maxHp: args.maxHp, currentHp: newCurrentHp })
           .where(eq(combatants.id, args.combatantId))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
 
@@ -172,14 +172,14 @@ export const hpResolvers = {
       const combatant = await findCombatantOrThrow(ctx, args.combatantId);
       const newCurrentHp = Math.min(Math.max(0, args.currentHp), combatant.maxHp);
 
-      return ctx.queue.enqueue(() => {
-        const [updated] = ctx.db
+      return ctx.queue.enqueue(async () => {
+        const [updated] = await ctx.db
           .update(combatants)
           .set({ currentHp: newCurrentHp })
           .where(eq(combatants.id, args.combatantId))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
   },

@@ -35,8 +35,8 @@ export interface UpdateEncounterInput {
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function createEncounter(ctx: ServiceContext, input: CreateEncounterInput) {
-  return ctx.queue.enqueue(() => {
-    const [created] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [created] = await ctx.db
       .insert(combatEncounters)
       .values({
         name: input.name ?? undefined,
@@ -45,7 +45,7 @@ export function createEncounter(ctx: ServiceContext, input: CreateEncounterInput
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -74,20 +74,20 @@ export function updateEncounter(
   id: string,
   input: UpdateEncounterInput,
 ) {
-  return ctx.queue.enqueue(() => {
+  return ctx.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.isActive !== undefined && input.isActive !== null) data.isActive = input.isActive;
     if (input.currentRound !== undefined && input.currentRound !== null) data.currentRound = input.currentRound;
     if (input.currentTurn !== undefined && input.currentTurn !== null) data.currentTurn = input.currentTurn;
 
-    const [updated] = ctx.db
+    const [updated] = await ctx.db
       .update(combatEncounters)
       .set(data)
       .where(eq(combatEncounters.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 
@@ -96,12 +96,12 @@ export function updateEncounter(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteEncounter(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() => {
-    const [deleted] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [deleted] = await ctx.db
       .delete(combatEncounters)
       .where(eq(combatEncounters.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }

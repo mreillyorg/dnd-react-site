@@ -27,7 +27,7 @@ function wrapper({ children }: { children: ReactNode }) {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = mockFetch;
+    vi.stubGlobal('fetch', mockFetch);
   });
 
   afterEach(() => {

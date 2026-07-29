@@ -31,8 +31,8 @@ export async function createUser(
   deps: ServiceDeps,
   input: CreateUserInput,
 ) {
-  return deps.queue.enqueue(() => {
-    const [created] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [created] = await deps.db
       .insert(users)
       .values({
         email: input.email,
@@ -41,7 +41,7 @@ export async function createUser(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 

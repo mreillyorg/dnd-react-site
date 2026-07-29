@@ -86,8 +86,8 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       const user = requireAuth(ctx);
-      return ctx.queue.enqueue(() => {
-        const [created] = ctx.db.insert(items).values({
+      return ctx.queue.enqueue(async () => {
+        const [created] = await ctx.db.insert(items).values({
           name: args.input.name,
           description: args.input.description,
           itemType: args.input.itemType,
@@ -98,7 +98,7 @@ export const itemResolvers = {
           source: args.input.source ?? "HOMEBREW",
           createdById: user.id,
         }).returning().all();
-        return Promise.resolve(created);
+        return created;
       });
     },
 
@@ -108,7 +108,7 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      return ctx.queue.enqueue(() => {
+      return ctx.queue.enqueue(async () => {
         const data: Record<string, unknown> = {};
         if (args.input.name !== undefined) data.name = args.input.name;
         if (args.input.description !== undefined) data.description = args.input.description;
@@ -119,8 +119,8 @@ export const itemResolvers = {
         if (args.input.value !== undefined) data.value = args.input.value;
         if (args.input.source !== undefined) data.source = args.input.source;
 
-        const [updated] = ctx.db.update(items).set(data).where(eq(items.id, args.id)).returning().all();
-        return Promise.resolve(updated);
+        const [updated] = await ctx.db.update(items).set(data).where(eq(items.id, args.id)).returning().all();
+        return updated;
       });
     },
 
@@ -130,9 +130,8 @@ export const itemResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-      await ctx.queue.enqueue(() => {
-        ctx.db.delete(items).where(eq(items.id, args.id)).run();
-        return Promise.resolve();
+      await ctx.queue.enqueue(async () => {
+        await ctx.db.delete(items).where(eq(items.id, args.id)).run();
       });
       return true;
     },

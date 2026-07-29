@@ -40,13 +40,6 @@ export interface AuthUser {
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Providers that require a PKCE code verifier for auth URL generation. */
-const PKCE_PROVIDERS: ReadonlySet<string> = new Set([
-  "google",
-  "discord",
-  "microsoft",
-]);
-
 const SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ---------------------------------------------------------------------------
@@ -308,13 +301,12 @@ export async function resolveOrCreateUser(
 
   if (existingUser) {
     // Link the new OAuth identity to the existing user
-    await deps.queue.enqueue(() => {
-      deps.db.insert(oauthIdentities).values({
+    await deps.queue.enqueue(async () => {
+      await deps.db.insert(oauthIdentities).values({
         provider: profile.provider,
         providerUserId: profile.providerUserId,
         userId: existingUser.id,
       }).run();
-      return Promise.resolve();
     });
     return {
       id: existingUser.id,
@@ -324,16 +316,15 @@ export async function resolveOrCreateUser(
   }
 
   // Create a new user + OAuthIdentity atomically via the queue
-  // better-sqlite3 transactions are synchronous, so we use db.transaction()
-  const newUser = await deps.queue.enqueue(() => {
-    const result = deps.db.transaction((tx) => {
-      const [user] = tx.insert(users).values({
+  const newUser = await deps.queue.enqueue(async () => {
+    const result = await deps.db.transaction(async (tx) => {
+      const [user] = await tx.insert(users).values({
         email: profile.email,
         name: profile.name,
         themeMode: "SYSTEM",
       }).returning().all();
 
-      tx.insert(oauthIdentities).values({
+      await tx.insert(oauthIdentities).values({
         provider: profile.provider,
         providerUserId: profile.providerUserId,
         userId: user.id,
@@ -341,8 +332,8 @@ export async function resolveOrCreateUser(
 
       return user;
     });
-    return Promise.resolve(result);
-  });
+    return result;
+  }) as { id: string; email: string; name: string | null };
 
   return {
     id: newUser.id,
@@ -367,13 +358,12 @@ export async function createSession(
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_EXPIRY_MS);
 
-  await deps.queue.enqueue(() => {
-    deps.db.insert(authSessions).values({
+  await deps.queue.enqueue(async () => {
+    await deps.db.insert(authSessions).values({
       token,
       userId,
       expiresAt,
     }).run();
-    return Promise.resolve();
   });
 
   return token;
@@ -400,9 +390,8 @@ export async function validateSession(
   // Check if expired
   if (session.expiresAt <= new Date()) {
     // Clean up the expired session (best effort)
-    deps.queue.enqueue(() => {
-      deps.db.delete(authSessions).where(eq(authSessions.id, session.id)).run();
-      return Promise.resolve();
+    deps.queue.enqueue(async () => {
+      await deps.db.delete(authSessions).where(eq(authSessions.id, session.id)).run();
     }).catch(() => {
       // Swallow cleanup errors
     });
@@ -423,8 +412,7 @@ export async function invalidateSession(
   deps: ServiceDeps,
   token: string,
 ): Promise<void> {
-  await deps.queue.enqueue(() => {
-    deps.db.delete(authSessions).where(eq(authSessions.token, token)).run();
-    return Promise.resolve();
+  await deps.queue.enqueue(async () => {
+    await deps.db.delete(authSessions).where(eq(authSessions.token, token)).run();
   });
 }

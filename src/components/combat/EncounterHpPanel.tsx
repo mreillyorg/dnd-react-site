@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { graphqlRequest } from '../../lib/graphqlClient';
-import { CombatantCard, CombatantType } from './CombatantCard';
+import { CombatantCard, type CombatantType } from './CombatantCard';
 
 export interface EncounterHpPanelProps {
   encounterId: string;

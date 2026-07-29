@@ -74,8 +74,8 @@ export async function createStatBlock(
   input: CreateStatBlockInput,
   createdById?: string,
 ) {
-  return deps.queue.enqueue(() => {
-    const [created] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [created] = await deps.db
       .insert(monsters)
       .values({
         name: input.name,
@@ -103,7 +103,7 @@ export async function createStatBlock(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -134,7 +134,7 @@ export async function updateStatBlock(
   id: string,
   input: UpdateStatBlockInput,
 ) {
-  return deps.queue.enqueue(() => {
+  return deps.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.size !== undefined) data.size = input.size;
@@ -158,13 +158,13 @@ export async function updateStatBlock(
     if (input.legendaryActions !== undefined) data.legendaryActions = input.legendaryActions;
     if (input.dndbeyondLink !== undefined) data.dndbeyondLink = input.dndbeyondLink;
 
-    const [updated] = deps.db
+    const [updated] = await deps.db
       .update(monsters)
       .set(data)
       .where(eq(monsters.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 
@@ -173,12 +173,12 @@ export async function updateStatBlock(
  * Single-model write routed through the operation queue.
  */
 export async function deleteStatBlock(deps: ServiceDeps, id: string) {
-  return deps.queue.enqueue(() => {
-    const [deleted] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [deleted] = await deps.db
       .delete(monsters)
       .where(eq(monsters.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }

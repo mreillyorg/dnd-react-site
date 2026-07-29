@@ -65,18 +65,18 @@ export const userResolvers = {
     ) => {
       requireAuth(ctx);
       const deps = getDeps(ctx);
-      return deps.queue.enqueue(() => {
+      return deps.queue.enqueue(async () => {
         const data: Record<string, unknown> = {};
         if (args.input.name !== undefined) data.name = args.input.name;
         if (args.input.themeMode !== undefined) data.themeMode = args.input.themeMode;
 
-        const [updated] = deps.db
+        const [updated] = await deps.db
           .update(users)
           .set(data)
           .where(eq(users.id, args.id))
           .returning()
           .all();
-        return Promise.resolve(updated);
+        return updated;
       });
     },
 
@@ -87,9 +87,8 @@ export const userResolvers = {
     ) => {
       requireAuth(ctx);
       const deps = getDeps(ctx);
-      await deps.queue.enqueue(() => {
-        deps.db.delete(users).where(eq(users.id, args.id)).run();
-        return Promise.resolve();
+      await deps.queue.enqueue(async () => {
+        await deps.db.delete(users).where(eq(users.id, args.id)).run();
       });
       return true;
     },

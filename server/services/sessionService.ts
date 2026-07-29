@@ -44,8 +44,8 @@ export function createSession(
 ) {
   const { dmId, sessionNumber, title, realWorldDate, inGameDate, duration, campaignId } = input;
 
-  return ctx.queue.enqueue(() => {
-    const [created] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [created] = await ctx.db
       .insert(sessions)
       .values({
         sessionNumber,
@@ -58,7 +58,7 @@ export function createSession(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -87,7 +87,7 @@ export function updateSession(
   id: string,
   input: UpdateSessionInput,
 ) {
-  return ctx.queue.enqueue(() => {
+  return ctx.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.sessionNumber !== undefined && input.sessionNumber !== null) data.sessionNumber = input.sessionNumber;
     if (input.title !== undefined) data.title = input.title;
@@ -95,13 +95,13 @@ export function updateSession(
     if (input.inGameDate !== undefined) data.inGameDate = input.inGameDate;
     if (input.duration !== undefined) data.duration = input.duration;
 
-    const [updated] = ctx.db
+    const [updated] = await ctx.db
       .update(sessions)
       .set(data)
       .where(eq(sessions.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 
@@ -110,12 +110,12 @@ export function updateSession(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteSession(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() => {
-    const [deleted] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [deleted] = await ctx.db
       .delete(sessions)
       .where(eq(sessions.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }

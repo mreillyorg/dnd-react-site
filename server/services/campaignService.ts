@@ -41,8 +41,8 @@ export function createCampaign(
 ) {
   const { ownerId, name, description, setting, status } = input;
 
-  return ctx.queue.enqueue(() => {
-    const [created] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [created] = await ctx.db
       .insert(campaigns)
       .values({
         name,
@@ -53,7 +53,7 @@ export function createCampaign(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -86,20 +86,20 @@ export function updateCampaign(
   id: string,
   input: UpdateCampaignInput,
 ) {
-  return ctx.queue.enqueue(() => {
+  return ctx.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.name !== undefined && input.name !== null) data.name = input.name;
     if (input.description !== undefined) data.description = input.description;
     if (input.setting !== undefined) data.setting = input.setting;
     if (input.status !== undefined && input.status !== null) data.status = input.status;
 
-    const [updated] = ctx.db
+    const [updated] = await ctx.db
       .update(campaigns)
       .set(data)
       .where(eq(campaigns.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 
@@ -108,12 +108,12 @@ export function updateCampaign(
  * Write goes through the queue for SQLite single-writer safety.
  */
 export function deleteCampaign(ctx: ServiceContext, id: string) {
-  return ctx.queue.enqueue(() => {
-    const [deleted] = ctx.db
+  return ctx.queue.enqueue(async () => {
+    const [deleted] = await ctx.db
       .delete(campaigns)
       .where(eq(campaigns.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }

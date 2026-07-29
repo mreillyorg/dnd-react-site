@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const mockUseAuth = vi.fn();
@@ -8,6 +8,18 @@ const mockUseAuth = vi.fn();
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
+
+function LoginPageStub() {
+  const location = useLocation();
+  return (
+    <div>
+      <span>Login Page</span>
+      {location.state?.from?.pathname && (
+        <span data-testid="redirect-from">{location.state.from.pathname}</span>
+      )}
+    </div>
+  );
+}
 
 function renderProtectedRoute(initialRoute = '/protected') {
   return render(
@@ -24,20 +36,6 @@ function renderProtectedRoute(initialRoute = '/protected') {
         <Route path="/login" element={<LoginPageStub />} />
       </Routes>
     </MemoryRouter>
-  );
-}
-
-function LoginPageStub() {
-  // Access location state to verify route preservation
-  const { useLocation } = require('react-router-dom');
-  const location = useLocation();
-  return (
-    <div>
-      <span>Login Page</span>
-      {location.state?.from?.pathname && (
-        <span data-testid="redirect-from">{location.state.from.pathname}</span>
-      )}
-    </div>
   );
 }
 

@@ -47,8 +47,8 @@ export async function createCombatant(
   deps: ServiceDeps,
   input: CreateCombatantInput,
 ) {
-  return deps.queue.enqueue(() => {
-    const [created] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [created] = await deps.db
       .insert(combatants)
       .values({
         name: input.name,
@@ -64,7 +64,7 @@ export async function createCombatant(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -77,7 +77,7 @@ export async function updateCombatant(
   id: string,
   input: UpdateCombatantInput,
 ) {
-  return deps.queue.enqueue(() => {
+  return deps.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.initiative !== undefined) data.initiative = input.initiative;
@@ -86,13 +86,13 @@ export async function updateCombatant(
     if (input.tempHp !== undefined) data.tempHp = input.tempHp;
     if (input.armorClass !== undefined) data.armorClass = input.armorClass;
 
-    const [updated] = deps.db
+    const [updated] = await deps.db
       .update(combatants)
       .set(data)
       .where(eq(combatants.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 
@@ -101,13 +101,13 @@ export async function updateCombatant(
  * Single-model write routed through the operation queue.
  */
 export async function deleteCombatant(deps: ServiceDeps, id: string) {
-  return deps.queue.enqueue(() => {
-    const [deleted] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [deleted] = await deps.db
       .delete(combatants)
       .where(eq(combatants.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }
 

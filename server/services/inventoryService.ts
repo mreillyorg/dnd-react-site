@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
-import { itemAssignments, items } from "../db/schema.ts";
+import { itemAssignments } from "../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,8 +41,8 @@ export async function addItemToInventory(
   deps: ServiceDeps,
   input: AddItemToInventoryInput,
 ) {
-  return deps.queue.enqueue(() => {
-    const [created] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [created] = await deps.db
       .insert(itemAssignments)
       .values({
         itemId: input.itemId,
@@ -54,7 +54,7 @@ export async function addItemToInventory(
       })
       .returning()
       .all();
-    return Promise.resolve(created);
+    return created;
   });
 }
 
@@ -66,13 +66,13 @@ export async function removeItemFromInventory(
   deps: ServiceDeps,
   id: string,
 ) {
-  return deps.queue.enqueue(() => {
-    const [deleted] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [deleted] = await deps.db
       .delete(itemAssignments)
       .where(eq(itemAssignments.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }
 
@@ -85,20 +85,20 @@ export async function updateItemSlot(
   id: string,
   input: UpdateItemSlotInput,
 ) {
-  return deps.queue.enqueue(() => {
+  return deps.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.quantity !== undefined) data.quantity = input.quantity;
     if (input.equipped !== undefined) data.equipped = input.equipped;
     if (input.attuned !== undefined) data.attuned = input.attuned;
     if (input.identified !== undefined) data.identified = input.identified;
 
-    const [updated] = deps.db
+    const [updated] = await deps.db
       .update(itemAssignments)
       .set(data)
       .where(eq(itemAssignments.id, id))
       .returning()
       .all();
-    return Promise.resolve(updated);
+    return updated;
   });
 }
 

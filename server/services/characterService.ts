@@ -62,8 +62,8 @@ export async function createCharacter(
   userId: string,
   input: CreateCharacterInput,
 ) {
-  return deps.queue.enqueue(() => {
-    const [created] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [created] = await deps.db
       .insert(characters)
       .values({
         name: input.name,
@@ -87,7 +87,7 @@ export async function createCharacter(
       .all();
 
     // Return with empty itemAssignments (matches Prisma's include behavior)
-    return Promise.resolve({ ...created, itemAssignments: [] });
+    return { ...created, itemAssignments: [] };
   });
 }
 
@@ -121,7 +121,7 @@ export async function updateCharacter(
   id: string,
   input: UpdateCharacterInput,
 ) {
-  return deps.queue.enqueue(() => {
+  return deps.queue.enqueue(async () => {
     const data: Record<string, unknown> = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.level !== undefined) data.level = input.level;
@@ -139,7 +139,7 @@ export async function updateCharacter(
     if (input.armorClass !== undefined) data.armorClass = input.armorClass;
     if (input.campaignId !== undefined) data.campaignId = input.campaignId;
 
-    const [updated] = deps.db
+    const [updated] = await deps.db
       .update(characters)
       .set(data)
       .where(eq(characters.id, id))
@@ -147,13 +147,13 @@ export async function updateCharacter(
       .all();
 
     // Fetch item assignments for the response
-    const assignments = deps.db
+    const assignments = await deps.db
       .select()
       .from(itemAssignments)
       .where(eq(itemAssignments.characterId, id))
       .all();
 
-    return Promise.resolve({ ...updated, itemAssignments: assignments });
+    return { ...updated, itemAssignments: assignments };
   });
 }
 
@@ -161,12 +161,12 @@ export async function updateCharacter(
  * Deletes a character by ID. The write goes through the operation queue.
  */
 export async function deleteCharacter(deps: ServiceDeps, id: string) {
-  return deps.queue.enqueue(() => {
-    const [deleted] = deps.db
+  return deps.queue.enqueue(async () => {
+    const [deleted] = await deps.db
       .delete(characters)
       .where(eq(characters.id, id))
       .returning()
       .all();
-    return Promise.resolve(deleted);
+    return deleted;
   });
 }

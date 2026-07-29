@@ -9,11 +9,8 @@
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "outDir": "./dist/server",
-    "rootDir": "./server",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
 
     /* Strict */
     "strict": true,

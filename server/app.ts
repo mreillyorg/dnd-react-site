@@ -8,7 +8,6 @@
  * that integration tests can import the Express app without binding to a port.
  */
 
-import { execSync } from 'node:child_process';
 import http from 'node:http';
 
 import { ApolloServer } from '@apollo/server';
@@ -17,6 +16,8 @@ import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 
 import cookieParser from 'cookie-parser';
+
+import { migrate } from 'drizzle-orm/libsql/migrator';
 
 import { config } from './config.ts';
 import { createQueue } from './db/operationQueue.ts';
@@ -34,16 +35,13 @@ import type { ShutdownDependencies } from './shutdown.ts';
 // ---------------------------------------------------------------------------
 
 /**
- * Runs `drizzle-kit migrate` synchronously before accepting requests.
+ * Applies pending drizzle-orm migrations from the ./drizzle directory.
  * If migrations fail, the process halts with exit code 1.
  */
-function runMigrations(): void {
+async function runMigrations(): Promise<void> {
   try {
-    console.log('[app] Running drizzle-kit migrate...');
-    execSync('npx drizzle-kit migrate', {
-      stdio: 'inherit',
-      env: { ...process.env, DATABASE_URL: config.databaseUrl },
-    });
+    console.log('[app] Running database migrations...');
+    await migrate(db, { migrationsFolder: './drizzle' });
     console.log('[app] Migrations applied successfully.');
   } catch (error) {
     console.error('[app] Migration failed — halting startup.', error);
@@ -72,7 +70,7 @@ export interface AppComponents {
  */
 export async function createApp(): Promise<AppComponents> {
   // 1. Run migrations (fail fast)
-  runMigrations();
+  await runMigrations();
 
   // 2. Initialize database (applies PRAGMAs)
   await initializeDatabase();
