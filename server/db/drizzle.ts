@@ -1,58 +1,45 @@
 /**
  * Drizzle ORM database connection singleton.
  *
- * Uses @libsql/client as the underlying SQLite driver (no native compilation needed).
- * Applies PRAGMA foreign_keys = ON and PRAGMA synchronous = FULL on connection
- * when DATABASE_URL points to a SQLite file.
+ * Uses mysql2 as the underlying MySQL driver.
+ * Connection URL is read from the DATABASE_URL environment variable.
  */
 
-import { createClient, type Client } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
 
 import * as schema from "./schema.ts";
-
-// ---------------------------------------------------------------------------
-// URL resolution
-// ---------------------------------------------------------------------------
-
-/**
- * Resolves the libSQL connection URL from the DATABASE_URL env var.
- * Prisma-style "file:./dev.db" → "file:dev.db" for libsql client.
- */
-function resolveLibSQLUrl(databaseUrl: string): string {
-  if (databaseUrl.startsWith("file:./")) {
-    return `file:${databaseUrl.slice(7)}`;
-  }
-  return databaseUrl;
-}
 
 // ---------------------------------------------------------------------------
 // Singleton
 // ---------------------------------------------------------------------------
 
-const databaseUrl = process.env["DATABASE_URL"] ?? "file:./dev.db";
+const databaseUrl = process.env["DATABASE_URL"] ?? "mysql://root:password@localhost:3306/dnd_site";
 
-const libsqlClient: Client = createClient({ url: resolveLibSQLUrl(databaseUrl) });
+const pool = mysql.createPool(databaseUrl);
 
 /**
  * The Drizzle ORM database instance. All queries go through this.
  */
-export const db = drizzle(libsqlClient, { schema });
+export const db = drizzle(pool, { schema, mode: "default" });
 
 /**
- * The underlying libSQL client instance.
+ * The underlying mysql2 connection pool.
  * Exposed for graceful shutdown and health checks.
  */
-export const rawClient = libsqlClient;
+export const rawPool = pool;
 
 /**
- * Initializes the database connection with SQLite PRAGMAs.
- * Must be called once at startup.
+ * Initializes the database connection.
+ * For MySQL, no special PRAGMAs are needed — this verifies connectivity.
  */
 export async function initializeDatabase(): Promise<void> {
-  if (databaseUrl.startsWith("file:")) {
-    await libsqlClient.execute("PRAGMA foreign_keys = ON");
-    await libsqlClient.execute("PRAGMA synchronous = FULL");
+  const connection = await pool.getConnection();
+  try {
+    await connection.ping();
+    console.log("[db] MySQL connection verified.");
+  } finally {
+    connection.release();
   }
 }
 

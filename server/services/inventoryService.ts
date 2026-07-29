@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { itemAssignments } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,19 +43,23 @@ export async function addItemToInventory(
   input: AddItemToInventoryInput,
 ) {
   return deps.queue.enqueue(async () => {
-    const [created] = await deps.db
+    const id = createId();
+    await deps.db
       .insert(itemAssignments)
       .values({
+        id,
         itemId: input.itemId,
         characterId: input.characterId,
         quantity: input.quantity ?? 1,
         equipped: input.equipped ?? false,
         attuned: input.attuned ?? false,
         identified: input.identified ?? true,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await deps.db.query.itemAssignments.findFirst({
+      where: eq(itemAssignments.id, id),
+    });
+    return created!;
   });
 }
 
@@ -67,12 +72,13 @@ export async function removeItemFromInventory(
   id: string,
 ) {
   return deps.queue.enqueue(async () => {
-    const [deleted] = await deps.db
-      .delete(itemAssignments)
-      .where(eq(itemAssignments.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await deps.db.query.itemAssignments.findFirst({
+      where: eq(itemAssignments.id, id),
+    });
+
+    await deps.db.delete(itemAssignments).where(eq(itemAssignments.id, id));
+
+    return existing!;
   });
 }
 
@@ -92,13 +98,15 @@ export async function updateItemSlot(
     if (input.attuned !== undefined) data.attuned = input.attuned;
     if (input.identified !== undefined) data.identified = input.identified;
 
-    const [updated] = await deps.db
+    await deps.db
       .update(itemAssignments)
       .set(data)
-      .where(eq(itemAssignments.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(itemAssignments.id, id));
+
+    const updated = await deps.db.query.itemAssignments.findFirst({
+      where: eq(itemAssignments.id, id),
+    });
+    return updated!;
   });
 }
 

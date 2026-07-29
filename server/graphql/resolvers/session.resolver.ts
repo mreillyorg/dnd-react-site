@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import type { GraphQLContext, AuthUser } from "../context.ts";
 import { sessionNotes } from "../../db/schema.ts";
+import { createId } from "../../db/cuid.ts";
 import * as sessionService from "../../services/sessionService.ts";
 
 // ---------------------------------------------------------------------------
@@ -80,13 +81,16 @@ export const sessionResolvers = {
       requireAuth(ctx);
       const { title, content, isSummary, sessionId } = args.input;
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(sessionNotes).values({
+        const id = createId();
+        await ctx.db.insert(sessionNotes).values({
+          id,
           title: title ?? undefined,
           content,
           isSummary: isSummary ?? undefined,
           sessionId,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.sessionNotes.findFirst({ where: eq(sessionNotes.id, id) });
+        return created!;
       });
     },
 
@@ -99,15 +103,16 @@ export const sessionResolvers = {
         if (content !== undefined && content !== null) data.content = content;
         if (isSummary !== undefined && isSummary !== null) data.isSummary = isSummary;
 
-        const [updated] = await ctx.db.update(sessionNotes).set(data).where(eq(sessionNotes.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(sessionNotes).set(data).where(eq(sessionNotes.id, args.id));
+        const updated = await ctx.db.query.sessionNotes.findFirst({ where: eq(sessionNotes.id, args.id) });
+        return updated!;
       });
     },
 
     deleteSessionNote: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(sessionNotes).where(eq(sessionNotes.id, args.id)).run();
+        await ctx.db.delete(sessionNotes).where(eq(sessionNotes.id, args.id));
       });
       return true;
     },

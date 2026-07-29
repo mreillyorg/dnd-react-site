@@ -9,6 +9,7 @@ import { eq, and } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { users, oauthIdentities, authSessions } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 import {
   getProvider,
   PROVIDER_SCOPES,
@@ -306,7 +307,7 @@ export async function resolveOrCreateUser(
         provider: profile.provider,
         providerUserId: profile.providerUserId,
         userId: existingUser.id,
-      }).run();
+      });
     });
     return {
       id: existingUser.id,
@@ -318,19 +319,24 @@ export async function resolveOrCreateUser(
   // Create a new user + OAuthIdentity atomically via the queue
   const newUser = await deps.queue.enqueue(async () => {
     const result = await deps.db.transaction(async (tx) => {
-      const [user] = await tx.insert(users).values({
+      const userId = createId();
+      await tx.insert(users).values({
+        id: userId,
         email: profile.email,
         name: profile.name,
         themeMode: "SYSTEM",
-      }).returning().all();
+      });
 
       await tx.insert(oauthIdentities).values({
         provider: profile.provider,
         providerUserId: profile.providerUserId,
-        userId: user.id,
-      }).run();
+        userId,
+      });
 
-      return user;
+      const user = await tx.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+      return user!;
     });
     return result;
   }) as { id: string; email: string; name: string | null };
@@ -363,7 +369,7 @@ export async function createSession(
       token,
       userId,
       expiresAt,
-    }).run();
+    });
   });
 
   return token;
@@ -391,7 +397,7 @@ export async function validateSession(
   if (session.expiresAt <= new Date()) {
     // Clean up the expired session (best effort)
     deps.queue.enqueue(async () => {
-      await deps.db.delete(authSessions).where(eq(authSessions.id, session.id)).run();
+      await deps.db.delete(authSessions).where(eq(authSessions.id, session.id));
     }).catch(() => {
       // Swallow cleanup errors
     });
@@ -413,6 +419,6 @@ export async function invalidateSession(
   token: string,
 ): Promise<void> {
   await deps.queue.enqueue(async () => {
-    await deps.db.delete(authSessions).where(eq(authSessions.token, token)).run();
+    await deps.db.delete(authSessions).where(eq(authSessions.token, token));
   });
 }

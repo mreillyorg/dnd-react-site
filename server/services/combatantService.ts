@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { combatants } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,9 +49,11 @@ export async function createCombatant(
   input: CreateCombatantInput,
 ) {
   return deps.queue.enqueue(async () => {
-    const [created] = await deps.db
+    const id = createId();
+    await deps.db
       .insert(combatants)
       .values({
+        id,
         name: input.name,
         initiative: input.initiative,
         maxHp: input.maxHp,
@@ -61,10 +64,12 @@ export async function createCombatant(
         characterId: input.characterId,
         monsterId: input.monsterId,
         encounterId: input.encounterId,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await deps.db.query.combatants.findFirst({
+      where: eq(combatants.id, id),
+    });
+    return created!;
   });
 }
 
@@ -86,13 +91,15 @@ export async function updateCombatant(
     if (input.tempHp !== undefined) data.tempHp = input.tempHp;
     if (input.armorClass !== undefined) data.armorClass = input.armorClass;
 
-    const [updated] = await deps.db
+    await deps.db
       .update(combatants)
       .set(data)
-      .where(eq(combatants.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(combatants.id, id));
+
+    const updated = await deps.db.query.combatants.findFirst({
+      where: eq(combatants.id, id),
+    });
+    return updated!;
   });
 }
 
@@ -102,12 +109,13 @@ export async function updateCombatant(
  */
 export async function deleteCombatant(deps: ServiceDeps, id: string) {
   return deps.queue.enqueue(async () => {
-    const [deleted] = await deps.db
-      .delete(combatants)
-      .where(eq(combatants.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await deps.db.query.combatants.findFirst({
+      where: eq(combatants.id, id),
+    });
+
+    await deps.db.delete(combatants).where(eq(combatants.id, id));
+
+    return existing!;
   });
 }
 

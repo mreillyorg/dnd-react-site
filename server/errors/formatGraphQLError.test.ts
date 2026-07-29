@@ -83,9 +83,9 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages containing SQLITE_CONSTRAINT', () => {
+    it('strips messages containing ER_DUP_ENTRY', () => {
       const input: GraphQLFormattedError = {
-        message: 'SQLITE_CONSTRAINT: UNIQUE constraint failed: User.email',
+        message: "ER_DUP_ENTRY: Duplicate entry 'test@email.com' for key 'User.email'",
         extensions: { code: 'CONFLICT' },
       };
 
@@ -94,9 +94,20 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages containing "constraint failed"', () => {
+    it('strips messages containing "Duplicate entry"', () => {
       const input: GraphQLFormattedError = {
-        message: 'FOREIGN KEY constraint failed on table Character',
+        message: "Duplicate entry 'test@email.com' for key 'User_email_unique'",
+        extensions: { code: 'CONFLICT' },
+      };
+
+      const result = formatGraphQLError(input, new Error());
+
+      expect(result.message).toBe('An internal error occurred');
+    });
+
+    it('strips messages containing "foreign key constraint fails"', () => {
+      const input: GraphQLFormattedError = {
+        message: 'Cannot add or update a child row: a foreign key constraint fails',
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       };
 
@@ -105,9 +116,9 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages containing "no such table"', () => {
+    it('strips messages containing "Table doesn\'t exist"', () => {
       const input: GraphQLFormattedError = {
-        message: 'SqliteError: no such table: User',
+        message: "Table 'dnd_site.User' doesn't exist",
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       };
 
@@ -116,9 +127,9 @@ describe('formatGraphQLError', () => {
       expect(result.message).toBe('An internal error occurred');
     });
 
-    it('strips messages containing "database is locked"', () => {
+    it('strips messages containing ER_LOCK_DEADLOCK', () => {
       const input: GraphQLFormattedError = {
-        message: 'SqliteError: database is locked',
+        message: 'ER_LOCK_DEADLOCK: Deadlock found when trying to get lock',
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       };
 
@@ -153,7 +164,7 @@ describe('formatGraphQLError', () => {
   describe('combined behavior', () => {
     it('both sanitizes message and ensures code in one pass', () => {
       const input: GraphQLFormattedError = {
-        message: 'UNIQUE constraint failed: User.email',
+        message: "Duplicate entry 'user@test.com' for key 'User_email_unique'",
       };
 
       const result = formatGraphQLError(input, new Error());

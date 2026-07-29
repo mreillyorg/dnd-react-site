@@ -12,7 +12,7 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
-const databaseProvider = process.env.DATABASE_PROVIDER ?? 'sqlite';
+const databaseProvider = process.env.DATABASE_PROVIDER ?? 'mysql';
 
 const dbQueueMaxDepth = Number(process.env.DB_QUEUE_MAX_DEPTH ?? '100');
 const dbQueueWarnMs = Number(process.env.DB_QUEUE_WARN_MS ?? '500');

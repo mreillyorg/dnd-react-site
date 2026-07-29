@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { combatEncounters } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,20 +33,24 @@ export interface UpdateEncounterInput {
 
 /**
  * Creates a new combat encounter.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function createEncounter(ctx: ServiceContext, input: CreateEncounterInput) {
   return ctx.queue.enqueue(async () => {
-    const [created] = await ctx.db
+    const id = createId();
+    await ctx.db
       .insert(combatEncounters)
       .values({
+        id,
         name: input.name ?? undefined,
         isActive: input.isActive ?? undefined,
         sessionId: input.sessionId ?? undefined,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await ctx.db.query.combatEncounters.findFirst({
+      where: eq(combatEncounters.id, id),
+    });
+    return created!;
   });
 }
 
@@ -67,7 +72,7 @@ export function listEncountersBySession(ctx: ServiceContext, sessionId: string) 
 
 /**
  * Updates an existing encounter.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function updateEncounter(
   ctx: ServiceContext,
@@ -81,27 +86,30 @@ export function updateEncounter(
     if (input.currentRound !== undefined && input.currentRound !== null) data.currentRound = input.currentRound;
     if (input.currentTurn !== undefined && input.currentTurn !== null) data.currentTurn = input.currentTurn;
 
-    const [updated] = await ctx.db
+    await ctx.db
       .update(combatEncounters)
       .set(data)
-      .where(eq(combatEncounters.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(combatEncounters.id, id));
+
+    const updated = await ctx.db.query.combatEncounters.findFirst({
+      where: eq(combatEncounters.id, id),
+    });
+    return updated!;
   });
 }
 
 /**
  * Deletes an encounter by its ID.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function deleteEncounter(ctx: ServiceContext, id: string) {
   return ctx.queue.enqueue(async () => {
-    const [deleted] = await ctx.db
-      .delete(combatEncounters)
-      .where(eq(combatEncounters.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await ctx.db.query.combatEncounters.findFirst({
+      where: eq(combatEncounters.id, id),
+    });
+
+    await ctx.db.delete(combatEncounters).where(eq(combatEncounters.id, id));
+
+    return existing!;
   });
 }

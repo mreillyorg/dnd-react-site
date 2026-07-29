@@ -19,10 +19,13 @@ const SANITIZED_MESSAGE = 'An internal error occurred';
  */
 const INTERNAL_PATTERNS: RegExp[] = [
   /\b(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i,  // SQL keywords
-  /SQLITE_CONSTRAINT/i,                         // SQLite constraint error codes
-  /\bconstraint failed\b/i,                     // SQLite constraint messages
-  /\bno such table\b/i,                         // SQLite schema errors
-  /\bdatabase is locked\b/i,                    // SQLite lock errors
+  /ER_DUP_ENTRY/i,                              // MySQL duplicate key error
+  /Duplicate entry/i,                           // MySQL duplicate entry message
+  /foreign key constraint fails/i,              // MySQL FK constraint
+  /ER_NO_SUCH_TABLE/i,                          // MySQL missing table
+  /Table .* doesn't exist/i,                    // MySQL table not found
+  /ER_LOCK_DEADLOCK/i,                          // MySQL deadlock
+  /ER_LOCK_WAIT_TIMEOUT/i,                      // MySQL lock timeout
 ];
 
 /**

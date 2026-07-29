@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { campaigns } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,7 +34,7 @@ export interface UpdateCampaignInput {
 
 /**
  * Creates a new campaign. The ownerId is provided by the resolver (from currentUser).
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function createCampaign(
   ctx: ServiceContext,
@@ -42,18 +43,22 @@ export function createCampaign(
   const { ownerId, name, description, setting, status } = input;
 
   return ctx.queue.enqueue(async () => {
-    const [created] = await ctx.db
+    const id = createId();
+    await ctx.db
       .insert(campaigns)
       .values({
+        id,
         name,
         description: description ?? undefined,
         setting: setting ?? undefined,
         status: status ?? undefined,
         ownerId,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await ctx.db.query.campaigns.findFirst({
+      where: eq(campaigns.id, id),
+    });
+    return created!;
   });
 }
 
@@ -79,7 +84,7 @@ export function listCampaignsByOwner(ctx: ServiceContext, ownerId: string) {
 
 /**
  * Updates an existing campaign.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function updateCampaign(
   ctx: ServiceContext,
@@ -93,27 +98,30 @@ export function updateCampaign(
     if (input.setting !== undefined) data.setting = input.setting;
     if (input.status !== undefined && input.status !== null) data.status = input.status;
 
-    const [updated] = await ctx.db
+    await ctx.db
       .update(campaigns)
       .set(data)
-      .where(eq(campaigns.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(campaigns.id, id));
+
+    const updated = await ctx.db.query.campaigns.findFirst({
+      where: eq(campaigns.id, id),
+    });
+    return updated!;
   });
 }
 
 /**
  * Deletes a campaign by its ID.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function deleteCampaign(ctx: ServiceContext, id: string) {
   return ctx.queue.enqueue(async () => {
-    const [deleted] = await ctx.db
-      .delete(campaigns)
-      .where(eq(campaigns.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await ctx.db.query.campaigns.findFirst({
+      where: eq(campaigns.id, id),
+    });
+
+    await ctx.db.delete(campaigns).where(eq(campaigns.id, id));
+
+    return existing!;
   });
 }

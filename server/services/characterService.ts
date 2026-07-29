@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { characters, itemAssignments } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -63,9 +64,11 @@ export async function createCharacter(
   input: CreateCharacterInput,
 ) {
   return deps.queue.enqueue(async () => {
-    const [created] = await deps.db
+    const id = createId();
+    await deps.db
       .insert(characters)
       .values({
+        id,
         name: input.name,
         level: input.level ?? 1,
         class: input.class,
@@ -82,12 +85,13 @@ export async function createCharacter(
         armorClass: input.armorClass,
         userId,
         campaignId: input.campaignId,
-      })
-      .returning()
-      .all();
+      });
 
-    // Return with empty itemAssignments (matches Prisma's include behavior)
-    return { ...created, itemAssignments: [] };
+    const created = await deps.db.query.characters.findFirst({
+      where: eq(characters.id, id),
+    });
+
+    return { ...created!, itemAssignments: [] };
   });
 }
 
@@ -139,21 +143,21 @@ export async function updateCharacter(
     if (input.armorClass !== undefined) data.armorClass = input.armorClass;
     if (input.campaignId !== undefined) data.campaignId = input.campaignId;
 
-    const [updated] = await deps.db
+    await deps.db
       .update(characters)
       .set(data)
-      .where(eq(characters.id, id))
-      .returning()
-      .all();
+      .where(eq(characters.id, id));
+
+    const updated = await deps.db.query.characters.findFirst({
+      where: eq(characters.id, id),
+    });
 
     // Fetch item assignments for the response
-    const assignments = await deps.db
-      .select()
-      .from(itemAssignments)
-      .where(eq(itemAssignments.characterId, id))
-      .all();
+    const assignments = await deps.db.query.itemAssignments.findMany({
+      where: eq(itemAssignments.characterId, id),
+    });
 
-    return { ...updated, itemAssignments: assignments };
+    return { ...updated!, itemAssignments: assignments };
   });
 }
 
@@ -162,11 +166,12 @@ export async function updateCharacter(
  */
 export async function deleteCharacter(deps: ServiceDeps, id: string) {
   return deps.queue.enqueue(async () => {
-    const [deleted] = await deps.db
-      .delete(characters)
-      .where(eq(characters.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await deps.db.query.characters.findFirst({
+      where: eq(characters.id, id),
+    });
+
+    await deps.db.delete(characters).where(eq(characters.id, id));
+
+    return existing!;
   });
 }

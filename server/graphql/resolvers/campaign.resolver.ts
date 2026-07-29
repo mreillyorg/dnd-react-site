@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 
 import type { GraphQLContext, AuthUser } from "../context.ts";
 import { npcs, locations, quests, timelineEntries } from "../../db/schema.ts";
+import { createId } from "../../db/cuid.ts";
 import * as campaignService from "../../services/campaignService.ts";
 
 // ---------------------------------------------------------------------------
@@ -113,7 +114,9 @@ export const campaignResolvers = {
       requireAuth(ctx);
       const { name, description, race, class: npcClass, level, role, locationId, campaignId } = args.input;
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(npcs).values({
+        const id = createId();
+        await ctx.db.insert(npcs).values({
+          id,
           name,
           description: description ?? undefined,
           race: race ?? undefined,
@@ -122,8 +125,9 @@ export const campaignResolvers = {
           role: role ?? undefined,
           locationId: locationId ?? undefined,
           campaignId,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.npcs.findFirst({ where: eq(npcs.id, id) });
+        return created!;
       });
     },
 
@@ -140,15 +144,16 @@ export const campaignResolvers = {
         if (role !== undefined) data.role = role;
         if (locationId !== undefined) data.locationId = locationId;
 
-        const [updated] = await ctx.db.update(npcs).set(data).where(eq(npcs.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(npcs).set(data).where(eq(npcs.id, args.id));
+        const updated = await ctx.db.query.npcs.findFirst({ where: eq(npcs.id, args.id) });
+        return updated!;
       });
     },
 
     deleteNPC: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(npcs).where(eq(npcs.id, args.id)).run();
+        await ctx.db.delete(npcs).where(eq(npcs.id, args.id));
       });
       return true;
     },
@@ -159,14 +164,17 @@ export const campaignResolvers = {
       requireAuth(ctx);
       const { name, description, region, parentId, campaignId } = args.input;
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(locations).values({
+        const id = createId();
+        await ctx.db.insert(locations).values({
+          id,
           name,
           description: description ?? undefined,
           region: region ?? undefined,
           parentId: parentId ?? undefined,
           campaignId,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.locations.findFirst({ where: eq(locations.id, id) });
+        return created!;
       });
     },
 
@@ -180,15 +188,16 @@ export const campaignResolvers = {
         if (region !== undefined) data.region = region;
         if (parentId !== undefined) data.parentId = parentId;
 
-        const [updated] = await ctx.db.update(locations).set(data).where(eq(locations.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(locations).set(data).where(eq(locations.id, args.id));
+        const updated = await ctx.db.query.locations.findFirst({ where: eq(locations.id, args.id) });
+        return updated!;
       });
     },
 
     deleteLocation: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(locations).where(eq(locations.id, args.id)).run();
+        await ctx.db.delete(locations).where(eq(locations.id, args.id));
       });
       return true;
     },
@@ -199,14 +208,17 @@ export const campaignResolvers = {
       requireAuth(ctx);
       const { name, description, status, rewards, campaignId } = args.input;
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(quests).values({
+        const id = createId();
+        await ctx.db.insert(quests).values({
+          id,
           name,
           description: description ?? undefined,
           status: status ?? undefined,
           rewards: rewards ?? undefined,
           campaignId,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.quests.findFirst({ where: eq(quests.id, id) });
+        return created!;
       });
     },
 
@@ -220,15 +232,16 @@ export const campaignResolvers = {
         if (status !== undefined && status !== null) data.status = status;
         if (rewards !== undefined) data.rewards = rewards;
 
-        const [updated] = await ctx.db.update(quests).set(data).where(eq(quests.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(quests).set(data).where(eq(quests.id, args.id));
+        const updated = await ctx.db.query.quests.findFirst({ where: eq(quests.id, args.id) });
+        return updated!;
       });
     },
 
     deleteQuest: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(quests).where(eq(quests.id, args.id)).run();
+        await ctx.db.delete(quests).where(eq(quests.id, args.id));
       });
       return true;
     },
@@ -239,13 +252,16 @@ export const campaignResolvers = {
       requireAuth(ctx);
       const { title, description, inGameDate, campaignId } = args.input;
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(timelineEntries).values({
+        const id = createId();
+        await ctx.db.insert(timelineEntries).values({
+          id,
           title: title ?? undefined,
           description,
           inGameDate,
           campaignId,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.timelineEntries.findFirst({ where: eq(timelineEntries.id, id) });
+        return created!;
       });
     },
 
@@ -258,15 +274,16 @@ export const campaignResolvers = {
         if (description !== undefined && description !== null) data.description = description;
         if (inGameDate !== undefined && inGameDate !== null) data.inGameDate = inGameDate;
 
-        const [updated] = await ctx.db.update(timelineEntries).set(data).where(eq(timelineEntries.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(timelineEntries).set(data).where(eq(timelineEntries.id, args.id));
+        const updated = await ctx.db.query.timelineEntries.findFirst({ where: eq(timelineEntries.id, args.id) });
+        return updated!;
       });
     },
 
     deleteTimelineEntry: async (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(timelineEntries).where(eq(timelineEntries.id, args.id)).run();
+        await ctx.db.delete(timelineEntries).where(eq(timelineEntries.id, args.id));
       });
       return true;
     },

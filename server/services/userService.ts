@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { users } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,16 +33,20 @@ export async function createUser(
   input: CreateUserInput,
 ) {
   return deps.queue.enqueue(async () => {
-    const [created] = await deps.db
+    const id = createId();
+    await deps.db
       .insert(users)
       .values({
+        id,
         email: input.email,
         name: input.name,
         themeMode: input.themeMode ?? "SYSTEM",
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await deps.db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
+    return created!;
   });
 }
 

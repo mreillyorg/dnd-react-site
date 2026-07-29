@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
 import { items } from "../../db/schema.ts";
+import { createId } from "../../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -87,7 +88,9 @@ export const itemResolvers = {
     ) => {
       const user = requireAuth(ctx);
       return ctx.queue.enqueue(async () => {
-        const [created] = await ctx.db.insert(items).values({
+        const id = createId();
+        await ctx.db.insert(items).values({
+          id,
           name: args.input.name,
           description: args.input.description,
           itemType: args.input.itemType,
@@ -97,8 +100,9 @@ export const itemResolvers = {
           value: args.input.value,
           source: args.input.source ?? "HOMEBREW",
           createdById: user.id,
-        }).returning().all();
-        return created;
+        });
+        const created = await ctx.db.query.items.findFirst({ where: eq(items.id, id) });
+        return created!;
       });
     },
 
@@ -119,8 +123,9 @@ export const itemResolvers = {
         if (args.input.value !== undefined) data.value = args.input.value;
         if (args.input.source !== undefined) data.source = args.input.source;
 
-        const [updated] = await ctx.db.update(items).set(data).where(eq(items.id, args.id)).returning().all();
-        return updated;
+        await ctx.db.update(items).set(data).where(eq(items.id, args.id));
+        const updated = await ctx.db.query.items.findFirst({ where: eq(items.id, args.id) });
+        return updated!;
       });
     },
 
@@ -131,7 +136,7 @@ export const itemResolvers = {
     ) => {
       requireAuth(ctx);
       await ctx.queue.enqueue(async () => {
-        await ctx.db.delete(items).where(eq(items.id, args.id)).run();
+        await ctx.db.delete(items).where(eq(items.id, args.id));
       });
       return true;
     },

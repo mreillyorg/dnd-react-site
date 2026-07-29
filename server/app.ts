@@ -17,12 +17,12 @@ import express from 'express';
 
 import cookieParser from 'cookie-parser';
 
-import { migrate } from 'drizzle-orm/libsql/migrator';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
 
 import { config } from './config.ts';
 import { createQueue } from './db/operationQueue.ts';
 import type { OperationQueue } from './db/operationQueue.ts';
-import { db, rawClient, initializeDatabase } from './db/drizzle.ts';
+import { db, rawPool, initializeDatabase } from './db/drizzle.ts';
 import { formatGraphQLError } from './errors/formatGraphQLError.ts';
 import { createContextFactory } from './graphql/context.ts';
 import { schema } from './graphql/schema/index.ts';
@@ -112,7 +112,12 @@ export async function createApp(): Promise<AppComponents> {
   // 7. Health endpoint
   app.get('/health', async (_req, res) => {
     try {
-      await rawClient.execute('SELECT 1');
+      const connection = await rawPool.getConnection();
+      try {
+        await connection.ping();
+      } finally {
+        connection.release();
+      }
       res.status(200).json({ status: 'ok', database: 'connected' });
     } catch {
       res.status(503).json({ status: 'degraded', database: 'unreachable' });
@@ -124,10 +129,7 @@ export async function createApp(): Promise<AppComponents> {
     httpServer,
     queue,
     apolloServer,
-    closeDatabase: () => {
-      rawClient.close();
-      return Promise.resolve();
-    },
+    closeDatabase: () => rawPool.end(),
   };
 
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM', shutdownDeps));

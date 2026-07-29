@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { monsters } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,9 +76,11 @@ export async function createStatBlock(
   createdById?: string,
 ) {
   return deps.queue.enqueue(async () => {
-    const [created] = await deps.db
+    const id = createId();
+    await deps.db
       .insert(monsters)
       .values({
+        id,
         name: input.name,
         size: input.size,
         type: input.type,
@@ -100,10 +103,12 @@ export async function createStatBlock(
         legendaryActions: input.legendaryActions,
         dndbeyondLink: input.dndbeyondLink,
         createdById,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await deps.db.query.monsters.findFirst({
+      where: eq(monsters.id, id),
+    });
+    return created!;
   });
 }
 
@@ -158,13 +163,15 @@ export async function updateStatBlock(
     if (input.legendaryActions !== undefined) data.legendaryActions = input.legendaryActions;
     if (input.dndbeyondLink !== undefined) data.dndbeyondLink = input.dndbeyondLink;
 
-    const [updated] = await deps.db
+    await deps.db
       .update(monsters)
       .set(data)
-      .where(eq(monsters.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(monsters.id, id));
+
+    const updated = await deps.db.query.monsters.findFirst({
+      where: eq(monsters.id, id),
+    });
+    return updated!;
   });
 }
 
@@ -174,11 +181,12 @@ export async function updateStatBlock(
  */
 export async function deleteStatBlock(deps: ServiceDeps, id: string) {
   return deps.queue.enqueue(async () => {
-    const [deleted] = await deps.db
-      .delete(monsters)
-      .where(eq(monsters.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await deps.db.query.monsters.findFirst({
+      where: eq(monsters.id, id),
+    });
+
+    await deps.db.delete(monsters).where(eq(monsters.id, id));
+
+    return existing!;
   });
 }

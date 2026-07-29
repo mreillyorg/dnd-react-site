@@ -26,22 +26,28 @@ export class AppError extends Error {
 }
 
 /**
- * SQLite error code patterns mapped to domain codes.
- * SQLite uses SQLITE_CONSTRAINT_* codes for constraint violations.
+ * MySQL error code patterns mapped to domain codes.
+ * MySQL uses ER_* error codes for constraint violations.
  */
-const SQLITE_ERROR_MAP: Array<{ pattern: RegExp; code: DomainErrorCode; message: string }> = [
-  { pattern: /UNIQUE constraint failed/i, code: 'CONFLICT', message: 'Unique constraint violation' },
-  { pattern: /FOREIGN KEY constraint failed/i, code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
-  { pattern: /NOT NULL constraint failed/i, code: 'VALIDATION_ERROR', message: 'Required field is missing' },
-  { pattern: /CHECK constraint failed/i, code: 'VALIDATION_ERROR', message: 'Data validation error' },
-  { pattern: /no such table/i, code: 'DATABASE_UNAVAILABLE', message: 'Database schema error' },
-  { pattern: /database is locked/i, code: 'DATABASE_UNAVAILABLE', message: 'Database is temporarily unavailable' },
+const MYSQL_ERROR_MAP: Array<{ pattern: RegExp; code: DomainErrorCode; message: string }> = [
+  { pattern: /Duplicate entry/i, code: 'CONFLICT', message: 'Unique constraint violation' },
+  { pattern: /ER_DUP_ENTRY/i, code: 'CONFLICT', message: 'Unique constraint violation' },
+  { pattern: /foreign key constraint fails/i, code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
+  { pattern: /ER_NO_REFERENCED_ROW/i, code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
+  { pattern: /ER_ROW_IS_REFERENCED/i, code: 'FOREIGN_KEY_VIOLATION', message: 'Foreign key constraint failed' },
+  { pattern: /Column .* cannot be null/i, code: 'VALIDATION_ERROR', message: 'Required field is missing' },
+  { pattern: /ER_BAD_NULL_ERROR/i, code: 'VALIDATION_ERROR', message: 'Required field is missing' },
+  { pattern: /ER_CHECK_CONSTRAINT_VIOLATED/i, code: 'VALIDATION_ERROR', message: 'Data validation error' },
+  { pattern: /Table .* doesn't exist/i, code: 'DATABASE_UNAVAILABLE', message: 'Database schema error' },
+  { pattern: /ER_NO_SUCH_TABLE/i, code: 'DATABASE_UNAVAILABLE', message: 'Database schema error' },
+  { pattern: /ER_LOCK_DEADLOCK/i, code: 'DATABASE_UNAVAILABLE', message: 'Database is temporarily unavailable' },
+  { pattern: /ER_LOCK_WAIT_TIMEOUT/i, code: 'DATABASE_UNAVAILABLE', message: 'Database is temporarily unavailable' },
 ];
 
 /**
  * Maps any error thrown by database operations into a structured AppError.
  *
- * - SQLite constraint errors: mapped to specific domain codes
+ * - MySQL constraint errors: mapped to specific domain codes
  * - Connection/schema errors: mapped to DATABASE_UNAVAILABLE
  * - Other errors: sanitised as INTERNAL_SERVER_ERROR
  */
@@ -53,8 +59,8 @@ export function mapDatabaseError(error: unknown): AppError {
   if (error instanceof Error) {
     const message = error.message;
 
-    // Check against known SQLite error patterns
-    for (const { pattern, code, message: domainMessage } of SQLITE_ERROR_MAP) {
+    // Check against known MySQL error patterns
+    for (const { pattern, code, message: domainMessage } of MYSQL_ERROR_MAP) {
       if (pattern.test(message)) {
         return new AppError(code, domainMessage);
       }

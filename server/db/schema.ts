@@ -1,24 +1,23 @@
 /**
  * Drizzle ORM schema — defines all database tables, relations, and indexes.
- * Translated from the original Prisma schema. Uses SQLite column types with
- * MySQL-compatible naming conventions for future provider portability.
+ * Uses MySQL column types via drizzle-orm/mysql-core.
  */
 
-import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { mysqlTable, varchar, text, int, double, boolean, timestamp, index, uniqueIndex } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 import { createId } from "./cuid.ts";
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
-export const users = sqliteTable(
+export const users = mysqlTable(
   "User",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    email: text("email").notNull().unique(),
-    name: text("name"),
-    themeMode: text("themeMode").notNull().default("SYSTEM"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    name: varchar("name", { length: 255 }),
+    themeMode: varchar("themeMode", { length: 20 }).notNull().default("SYSTEM"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("User_email_idx").on(table.email),
@@ -35,14 +34,14 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 // ─── OAuth Identities ────────────────────────────────────────────────────────
 
-export const oauthIdentities = sqliteTable(
+export const oauthIdentities = mysqlTable(
   "OAuthIdentity",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    provider: text("provider").notNull(),
-    providerUserId: text("providerUserId").notNull(),
-    userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    provider: varchar("provider", { length: 50 }).notNull(),
+    providerUserId: varchar("providerUserId", { length: 255 }).notNull(),
+    userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("OAuthIdentity_provider_providerUserId_key").on(table.provider, table.providerUserId),
@@ -56,14 +55,14 @@ export const oauthIdentitiesRelations = relations(oauthIdentities, ({ one }) => 
 
 // ─── Auth Sessions ───────────────────────────────────────────────────────────
 
-export const authSessions = sqliteTable(
+export const authSessions = mysqlTable(
   "AuthSession",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    token: text("token").notNull().unique(),
-    userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-    expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    token: varchar("token", { length: 512 }).notNull().unique(),
+    userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (table) => [
     index("AuthSession_token_idx").on(table.token),
@@ -77,28 +76,28 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
 
 // ─── Characters ──────────────────────────────────────────────────────────────
 
-export const characters = sqliteTable(
+export const characters = mysqlTable(
   "Character",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
-    level: integer("level").notNull().default(1),
-    class: text("class").notNull(),
-    race: text("race").notNull(),
-    strength: integer("strength").notNull().default(10),
-    dexterity: integer("dexterity").notNull().default(10),
-    constitution: integer("constitution").notNull().default(10),
-    intelligence: integer("intelligence").notNull().default(10),
-    wisdom: integer("wisdom").notNull().default(10),
-    charisma: integer("charisma").notNull().default(10),
-    maxHp: integer("maxHp").notNull(),
-    currentHp: integer("currentHp").notNull(),
-    tempHp: integer("tempHp").notNull().default(0),
-    armorClass: integer("armorClass").notNull(),
-    userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-    campaignId: text("campaignId").references(() => campaigns.id, { onDelete: "set null" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
+    level: int("level").notNull().default(1),
+    class: varchar("class", { length: 100 }).notNull(),
+    race: varchar("race", { length: 100 }).notNull(),
+    strength: int("strength").notNull().default(10),
+    dexterity: int("dexterity").notNull().default(10),
+    constitution: int("constitution").notNull().default(10),
+    intelligence: int("intelligence").notNull().default(10),
+    wisdom: int("wisdom").notNull().default(10),
+    charisma: int("charisma").notNull().default(10),
+    maxHp: int("maxHp").notNull(),
+    currentHp: int("currentHp").notNull(),
+    tempHp: int("tempHp").notNull().default(0),
+    armorClass: int("armorClass").notNull(),
+    userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    campaignId: varchar("campaignId", { length: 36 }).references(() => campaigns.id, { onDelete: "set null" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Character_userId_idx").on(table.userId),
@@ -114,17 +113,17 @@ export const charactersRelations = relations(characters, ({ one, many }) => ({
 
 // ─── Campaigns ───────────────────────────────────────────────────────────────
 
-export const campaigns = sqliteTable(
+export const campaigns = mysqlTable(
   "Campaign",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    setting: text("setting"),
-    status: text("status").notNull().default("PLANNING"),
-    ownerId: text("ownerId").notNull().references(() => users.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    setting: varchar("setting", { length: 255 }),
+    status: varchar("status", { length: 20 }).notNull().default("PLANNING"),
+    ownerId: varchar("ownerId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Campaign_ownerId_idx").on(table.ownerId),
@@ -143,17 +142,17 @@ export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
 
 // ─── Combat & Initiative ─────────────────────────────────────────────────────
 
-export const combatEncounters = sqliteTable(
+export const combatEncounters = mysqlTable(
   "CombatEncounter",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name"),
-    isActive: integer("isActive", { mode: "boolean" }).notNull().default(true),
-    currentRound: integer("currentRound").notNull().default(1),
-    currentTurn: integer("currentTurn").notNull().default(0),
-    sessionId: text("sessionId").references(() => sessions.id, { onDelete: "set null" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }),
+    isActive: boolean("isActive").notNull().default(true),
+    currentRound: int("currentRound").notNull().default(1),
+    currentTurn: int("currentTurn").notNull().default(0),
+    sessionId: varchar("sessionId", { length: 36 }).references(() => sessions.id, { onDelete: "set null" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("CombatEncounter_sessionId_idx").on(table.sessionId),
@@ -165,22 +164,22 @@ export const combatEncountersRelations = relations(combatEncounters, ({ one, man
   combatants: many(combatants),
 }));
 
-export const combatants = sqliteTable(
+export const combatants = mysqlTable(
   "Combatant",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
-    initiative: integer("initiative").notNull(),
-    maxHp: integer("maxHp").notNull(),
-    currentHp: integer("currentHp").notNull(),
-    tempHp: integer("tempHp").notNull().default(0),
-    armorClass: integer("armorClass").notNull(),
-    combatantType: text("combatantType").notNull(),
-    characterId: text("characterId"),
-    monsterId: text("monsterId").references(() => monsters.id),
-    encounterId: text("encounterId").notNull().references(() => combatEncounters.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
+    initiative: int("initiative").notNull(),
+    maxHp: int("maxHp").notNull(),
+    currentHp: int("currentHp").notNull(),
+    tempHp: int("tempHp").notNull().default(0),
+    armorClass: int("armorClass").notNull(),
+    combatantType: varchar("combatantType", { length: 20 }).notNull(),
+    characterId: varchar("characterId", { length: 36 }),
+    monsterId: varchar("monsterId", { length: 36 }).references(() => monsters.id),
+    encounterId: varchar("encounterId", { length: 36 }).notNull().references(() => combatEncounters.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Combatant_encounterId_idx").on(table.encounterId),
@@ -194,19 +193,19 @@ export const combatantsRelations = relations(combatants, ({ one }) => ({
 
 // ─── Sessions ────────────────────────────────────────────────────────────────
 
-export const sessions = sqliteTable(
+export const sessions = mysqlTable(
   "Session",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    sessionNumber: integer("sessionNumber").notNull(),
-    title: text("title"),
-    realWorldDate: integer("realWorldDate", { mode: "timestamp" }).notNull(),
-    inGameDate: text("inGameDate"),
-    duration: real("duration"),
-    campaignId: text("campaignId").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
-    dmId: text("dmId").notNull().references(() => users.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    sessionNumber: int("sessionNumber").notNull(),
+    title: varchar("title", { length: 255 }),
+    realWorldDate: timestamp("realWorldDate").notNull(),
+    inGameDate: varchar("inGameDate", { length: 100 }),
+    duration: double("duration"),
+    campaignId: varchar("campaignId", { length: 36 }).notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+    dmId: varchar("dmId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Session_campaignId_idx").on(table.campaignId),
@@ -221,16 +220,16 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   encounters: many(combatEncounters),
 }));
 
-export const sessionNotes = sqliteTable(
+export const sessionNotes = mysqlTable(
   "SessionNote",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    title: text("title"),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    title: varchar("title", { length: 255 }),
     content: text("content").notNull(),
-    isSummary: integer("isSummary", { mode: "boolean" }).notNull().default(false),
-    sessionId: text("sessionId").notNull().references(() => sessions.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    isSummary: boolean("isSummary").notNull().default(false),
+    sessionId: varchar("sessionId", { length: 36 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("SessionNote_sessionId_idx").on(table.sessionId),
@@ -243,20 +242,20 @@ export const sessionNotesRelations = relations(sessionNotes, ({ one }) => ({
 
 // ─── NPCs ────────────────────────────────────────────────────────────────────
 
-export const npcs = sqliteTable(
+export const npcs = mysqlTable(
   "NPC",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    race: text("race"),
-    class: text("class"),
-    level: integer("level"),
-    role: text("role"),
-    locationId: text("locationId").references(() => locations.id, { onDelete: "set null" }),
-    campaignId: text("campaignId").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    race: varchar("race", { length: 100 }),
+    class: varchar("class", { length: 100 }),
+    level: int("level"),
+    role: varchar("role", { length: 100 }),
+    locationId: varchar("locationId", { length: 36 }).references(() => locations.id, { onDelete: "set null" }),
+    campaignId: varchar("campaignId", { length: 36 }).notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("NPC_campaignId_idx").on(table.campaignId),
@@ -271,17 +270,17 @@ export const npcsRelations = relations(npcs, ({ one }) => ({
 
 // ─── Locations ───────────────────────────────────────────────────────────────
 
-export const locations = sqliteTable(
+export const locations = mysqlTable(
   "Location",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    region: text("region"),
-    parentId: text("parentId"),
-    campaignId: text("campaignId").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    region: varchar("region", { length: 255 }),
+    parentId: varchar("parentId", { length: 36 }),
+    campaignId: varchar("campaignId", { length: 36 }).notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Location_campaignId_idx").on(table.campaignId),
@@ -298,17 +297,17 @@ export const locationsRelations = relations(locations, ({ one, many }) => ({
 
 // ─── Quests ──────────────────────────────────────────────────────────────────
 
-export const quests = sqliteTable(
+export const quests = mysqlTable(
   "Quest",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
-    status: text("status").notNull().default("NOT_STARTED"),
+    status: varchar("status", { length: 20 }).notNull().default("NOT_STARTED"),
     rewards: text("rewards"),
-    campaignId: text("campaignId").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    campaignId: varchar("campaignId", { length: 36 }).notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Quest_campaignId_idx").on(table.campaignId),
@@ -321,16 +320,16 @@ export const questsRelations = relations(quests, ({ one }) => ({
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
 
-export const timelineEntries = sqliteTable(
+export const timelineEntries = mysqlTable(
   "TimelineEntry",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    title: text("title"),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    title: varchar("title", { length: 255 }),
     description: text("description").notNull(),
-    inGameDate: text("inGameDate").notNull(),
-    campaignId: text("campaignId").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    inGameDate: varchar("inGameDate", { length: 100 }).notNull(),
+    campaignId: varchar("campaignId", { length: 36 }).notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("TimelineEntry_campaignId_idx").on(table.campaignId),
@@ -343,34 +342,34 @@ export const timelineEntriesRelations = relations(timelineEntries, ({ one }) => 
 
 // ─── Monsters (Stat Blocks) ──────────────────────────────────────────────────
 
-export const monsters = sqliteTable(
+export const monsters = mysqlTable(
   "Monster",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
-    size: text("size").notNull(),
-    type: text("type").notNull(),
-    alignment: text("alignment"),
-    armorClass: integer("armorClass").notNull(),
-    hitPoints: integer("hitPoints").notNull(),
-    hitDice: text("hitDice").notNull(),
-    speed: text("speed").notNull(),
-    strength: integer("strength").notNull(),
-    dexterity: integer("dexterity").notNull(),
-    constitution: integer("constitution").notNull(),
-    intelligence: integer("intelligence").notNull(),
-    wisdom: integer("wisdom").notNull(),
-    charisma: integer("charisma").notNull(),
-    challengeRating: real("challengeRating").notNull(),
-    source: text("source").notNull().default("HOMEBREW"),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
+    size: varchar("size", { length: 20 }).notNull(),
+    type: varchar("type", { length: 50 }).notNull(),
+    alignment: varchar("alignment", { length: 50 }),
+    armorClass: int("armorClass").notNull(),
+    hitPoints: int("hitPoints").notNull(),
+    hitDice: varchar("hitDice", { length: 50 }).notNull(),
+    speed: varchar("speed", { length: 255 }).notNull(),
+    strength: int("strength").notNull(),
+    dexterity: int("dexterity").notNull(),
+    constitution: int("constitution").notNull(),
+    intelligence: int("intelligence").notNull(),
+    wisdom: int("wisdom").notNull(),
+    charisma: int("charisma").notNull(),
+    challengeRating: double("challengeRating").notNull(),
+    source: varchar("source", { length: 50 }).notNull().default("HOMEBREW"),
     abilities: text("abilities").notNull(),
     actions: text("actions").notNull(),
     reactions: text("reactions"),
     legendaryActions: text("legendaryActions"),
-    dndbeyondLink: text("dndbeyondLink"),
-    createdById: text("createdById"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    dndbeyondLink: varchar("dndbeyondLink", { length: 512 }),
+    createdById: varchar("createdById", { length: 36 }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Monster_type_idx").on(table.type),
@@ -384,21 +383,21 @@ export const monstersRelations = relations(monsters, ({ many }) => ({
 
 // ─── Items ───────────────────────────────────────────────────────────────────
 
-export const items = sqliteTable(
+export const items = mysqlTable(
   "Item",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    name: text("name").notNull(),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    name: varchar("name", { length: 255 }).notNull(),
     description: text("description").notNull(),
-    itemType: text("itemType").notNull(),
-    rarity: text("rarity").notNull(),
-    attunementRequired: integer("attunementRequired", { mode: "boolean" }).notNull().default(false),
-    weight: real("weight"),
-    value: integer("value"),
-    source: text("source").notNull().default("HOMEBREW"),
-    createdById: text("createdById"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    itemType: varchar("itemType", { length: 50 }).notNull(),
+    rarity: varchar("rarity", { length: 20 }).notNull(),
+    attunementRequired: boolean("attunementRequired").notNull().default(false),
+    weight: double("weight"),
+    value: int("value"),
+    source: varchar("source", { length: 50 }).notNull().default("HOMEBREW"),
+    createdById: varchar("createdById", { length: 36 }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("Item_itemType_idx").on(table.itemType),
@@ -412,18 +411,18 @@ export const itemsRelations = relations(items, ({ many }) => ({
 
 // ─── Item Assignments (Inventory Slots) ──────────────────────────────────────
 
-export const itemAssignments = sqliteTable(
+export const itemAssignments = mysqlTable(
   "ItemAssignment",
   {
-    id: text("id").primaryKey().$defaultFn(createId),
-    quantity: integer("quantity").notNull().default(1),
-    equipped: integer("equipped", { mode: "boolean" }).notNull().default(false),
-    attuned: integer("attuned", { mode: "boolean" }).notNull().default(false),
-    identified: integer("identified", { mode: "boolean" }).notNull().default(true),
-    itemId: text("itemId").notNull().references(() => items.id, { onDelete: "cascade" }),
-    characterId: text("characterId").notNull().references(() => characters.id, { onDelete: "cascade" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    quantity: int("quantity").notNull().default(1),
+    equipped: boolean("equipped").notNull().default(false),
+    attuned: boolean("attuned").notNull().default(false),
+    identified: boolean("identified").notNull().default(true),
+    itemId: varchar("itemId", { length: 36 }).notNull().references(() => items.id, { onDelete: "cascade" }),
+    characterId: varchar("characterId", { length: 36 }).notNull().references(() => characters.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
     index("ItemAssignment_characterId_idx").on(table.characterId),

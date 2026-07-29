@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
 import { sessions } from "../db/schema.ts";
+import { createId } from "../db/cuid.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,7 +37,7 @@ export interface UpdateSessionInput {
 
 /**
  * Creates a new session. The dmId is provided by the resolver (from currentUser).
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function createSession(
   ctx: ServiceContext,
@@ -45,9 +46,11 @@ export function createSession(
   const { dmId, sessionNumber, title, realWorldDate, inGameDate, duration, campaignId } = input;
 
   return ctx.queue.enqueue(async () => {
-    const [created] = await ctx.db
+    const id = createId();
+    await ctx.db
       .insert(sessions)
       .values({
+        id,
         sessionNumber,
         title: title ?? undefined,
         realWorldDate,
@@ -55,10 +58,12 @@ export function createSession(
         duration: duration ?? undefined,
         campaignId,
         dmId,
-      })
-      .returning()
-      .all();
-    return created;
+      });
+
+    const created = await ctx.db.query.sessions.findFirst({
+      where: eq(sessions.id, id),
+    });
+    return created!;
   });
 }
 
@@ -80,7 +85,7 @@ export function listSessionsByCampaign(ctx: ServiceContext, campaignId: string) 
 
 /**
  * Updates an existing session.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function updateSession(
   ctx: ServiceContext,
@@ -95,27 +100,30 @@ export function updateSession(
     if (input.inGameDate !== undefined) data.inGameDate = input.inGameDate;
     if (input.duration !== undefined) data.duration = input.duration;
 
-    const [updated] = await ctx.db
+    await ctx.db
       .update(sessions)
       .set(data)
-      .where(eq(sessions.id, id))
-      .returning()
-      .all();
-    return updated;
+      .where(eq(sessions.id, id));
+
+    const updated = await ctx.db.query.sessions.findFirst({
+      where: eq(sessions.id, id),
+    });
+    return updated!;
   });
 }
 
 /**
  * Deletes a session by its ID.
- * Write goes through the queue for SQLite single-writer safety.
+ * Write goes through the queue for concurrency safety.
  */
 export function deleteSession(ctx: ServiceContext, id: string) {
   return ctx.queue.enqueue(async () => {
-    const [deleted] = await ctx.db
-      .delete(sessions)
-      .where(eq(sessions.id, id))
-      .returning()
-      .all();
-    return deleted;
+    const existing = await ctx.db.query.sessions.findFirst({
+      where: eq(sessions.id, id),
+    });
+
+    await ctx.db.delete(sessions).where(eq(sessions.id, id));
+
+    return existing!;
   });
 }

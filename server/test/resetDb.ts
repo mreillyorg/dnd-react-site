@@ -1,49 +1,47 @@
 import { beforeEach } from "vitest";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
 
 import * as schema from "../db/schema.ts";
 
 /**
  * Per-test-file setup hook that truncates all tables before each test
- * when running with the test SQLite database.
+ * when running with the test MySQL database.
  *
  * This ensures test isolation: each test starts with an empty database.
  * The global setup (server/test/setup.ts) handles schema creation;
  * this file handles row-level cleanup.
- *
- * The reset only activates when DATABASE_URL points to the test database.
  */
 
 const databaseUrl = process.env["DATABASE_URL"];
 
-if (databaseUrl && databaseUrl.includes(".test-vitest.db")) {
-  const client = createClient({ url: databaseUrl });
-  const db = drizzle(client, { schema });
+if (databaseUrl) {
+  const pool = mysql.createPool(databaseUrl);
+  const db = drizzle(pool, { schema, mode: "default" });
 
   beforeEach(async () => {
     // Disable FK checks for truncation
-    await client.execute("PRAGMA foreign_keys = OFF");
+    await pool.execute("SET FOREIGN_KEY_CHECKS = 0");
 
     // Truncate all tables in reverse-dependency order
-    db.delete(schema.itemAssignments).run();
-    db.delete(schema.combatants).run();
-    db.delete(schema.sessionNotes).run();
-    db.delete(schema.combatEncounters).run();
-    db.delete(schema.npcs).run();
-    db.delete(schema.locations).run();
-    db.delete(schema.quests).run();
-    db.delete(schema.timelineEntries).run();
-    db.delete(schema.sessions).run();
-    db.delete(schema.characters).run();
-    db.delete(schema.campaigns).run();
-    db.delete(schema.monsters).run();
-    db.delete(schema.items).run();
-    db.delete(schema.authSessions).run();
-    db.delete(schema.oauthIdentities).run();
-    db.delete(schema.users).run();
+    await db.delete(schema.itemAssignments);
+    await db.delete(schema.combatants);
+    await db.delete(schema.sessionNotes);
+    await db.delete(schema.combatEncounters);
+    await db.delete(schema.npcs);
+    await db.delete(schema.locations);
+    await db.delete(schema.quests);
+    await db.delete(schema.timelineEntries);
+    await db.delete(schema.sessions);
+    await db.delete(schema.characters);
+    await db.delete(schema.campaigns);
+    await db.delete(schema.monsters);
+    await db.delete(schema.items);
+    await db.delete(schema.authSessions);
+    await db.delete(schema.oauthIdentities);
+    await db.delete(schema.users);
 
     // Re-enable FK checks
-    await client.execute("PRAGMA foreign_keys = ON");
+    await pool.execute("SET FOREIGN_KEY_CHECKS = 1");
   });
 }

@@ -57,13 +57,15 @@ export const hpResolvers = {
       );
 
       return ctx.queue.enqueue(async () => {
-        const [updated] = await ctx.db
+        await ctx.db
           .update(combatants)
           .set({ currentHp: result.newCurrentHp, tempHp: result.newTempHp })
-          .where(eq(combatants.id, args.combatantId))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(combatants.id, args.combatantId));
+
+        const updated = await ctx.db.query.combatants.findFirst({
+          where: eq(combatants.id, args.combatantId),
+        });
+        return updated!;
       });
     },
 
@@ -88,13 +90,15 @@ export const hpResolvers = {
       );
 
       return ctx.queue.enqueue(async () => {
-        const [updated] = await ctx.db
+        await ctx.db
           .update(combatants)
           .set({ currentHp: result.currentHp })
-          .where(eq(combatants.id, args.combatantId))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(combatants.id, args.combatantId));
+
+        const updated = await ctx.db.query.combatants.findFirst({
+          where: eq(combatants.id, args.combatantId),
+        });
+        return updated!;
       });
     },
 
@@ -119,13 +123,15 @@ export const hpResolvers = {
       );
 
       return ctx.queue.enqueue(async () => {
-        const [updated] = await ctx.db
+        await ctx.db
           .update(combatants)
           .set({ tempHp: result.tempHp })
-          .where(eq(combatants.id, args.combatantId))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(combatants.id, args.combatantId));
+
+        const updated = await ctx.db.query.combatants.findFirst({
+          where: eq(combatants.id, args.combatantId),
+        });
+        return updated!;
       });
     },
 
@@ -146,13 +152,15 @@ export const hpResolvers = {
       const newCurrentHp = Math.min(combatant.currentHp, args.maxHp);
 
       return ctx.queue.enqueue(async () => {
-        const [updated] = await ctx.db
+        await ctx.db
           .update(combatants)
           .set({ maxHp: args.maxHp, currentHp: newCurrentHp })
-          .where(eq(combatants.id, args.combatantId))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(combatants.id, args.combatantId));
+
+        const updated = await ctx.db.query.combatants.findFirst({
+          where: eq(combatants.id, args.combatantId),
+        });
+        return updated!;
       });
     },
 
@@ -173,13 +181,15 @@ export const hpResolvers = {
       const newCurrentHp = Math.min(Math.max(0, args.currentHp), combatant.maxHp);
 
       return ctx.queue.enqueue(async () => {
-        const [updated] = await ctx.db
+        await ctx.db
           .update(combatants)
           .set({ currentHp: newCurrentHp })
-          .where(eq(combatants.id, args.combatantId))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(combatants.id, args.combatantId));
+
+        const updated = await ctx.db.query.combatants.findFirst({
+          where: eq(combatants.id, args.combatantId),
+        });
+        return updated!;
       });
     },
   },

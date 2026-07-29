@@ -70,13 +70,15 @@ export const userResolvers = {
         if (args.input.name !== undefined) data.name = args.input.name;
         if (args.input.themeMode !== undefined) data.themeMode = args.input.themeMode;
 
-        const [updated] = await deps.db
+        await deps.db
           .update(users)
           .set(data)
-          .where(eq(users.id, args.id))
-          .returning()
-          .all();
-        return updated;
+          .where(eq(users.id, args.id));
+
+        const updated = await deps.db.query.users.findFirst({
+          where: eq(users.id, args.id),
+        });
+        return updated!;
       });
     },
 
@@ -88,7 +90,7 @@ export const userResolvers = {
       requireAuth(ctx);
       const deps = getDeps(ctx);
       await deps.queue.enqueue(async () => {
-        await deps.db.delete(users).where(eq(users.id, args.id)).run();
+        await deps.db.delete(users).where(eq(users.id, args.id));
       });
       return true;
     },
