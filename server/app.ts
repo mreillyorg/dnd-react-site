@@ -9,6 +9,8 @@
  */
 
 import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -124,7 +126,18 @@ export async function createApp(): Promise<AppComponents> {
     }
   });
 
-  // 8. Graceful shutdown handlers
+  // 8. Serve the Vite-built frontend in production
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const distPath = path.resolve(__dirname, '..', 'dist');
+
+  app.use(express.static(distPath));
+
+  // SPA fallback — any unmatched GET returns index.html for client-side routing
+  app.get('/{*splat}', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+
+  // 9. Graceful shutdown handlers
   const shutdownDeps: ShutdownDependencies = {
     httpServer,
     queue,
