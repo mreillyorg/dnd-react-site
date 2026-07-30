@@ -3,7 +3,7 @@
  * Uses MySQL column types via drizzle-orm/mysql-core.
  */
 
-import { mysqlTable, varchar, text, int, double, boolean, timestamp, index, uniqueIndex } from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, text, int, double, boolean, timestamp, index } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 import { createId } from "./cuid.ts";
 
