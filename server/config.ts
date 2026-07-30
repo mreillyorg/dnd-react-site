@@ -23,9 +23,9 @@ const graphqlIntrospection =
     ? graphqlIntrospectionRaw === 'true'
     : isDev;
 
-// OAuth configuration
-const oauthRedirectBaseUrl =
-  process.env.OAUTH_REDIRECT_BASE_URL ?? 'http://localhost:5173';
+// Better Auth configuration
+const betterAuthSecret = process.env.BETTER_AUTH_SECRET ?? '';
+const betterAuthUrl = process.env.BETTER_AUTH_URL ?? 'http://localhost:5173';
 const cookieSecure = nodeEnv === 'production';
 
 // OAuth provider credentials
@@ -49,7 +49,8 @@ export interface AppConfig {
   readonly dbQueueMaxDepth: number;
   readonly dbQueueWarnMs: number;
   readonly graphqlIntrospection: boolean;
-  readonly oauthRedirectBaseUrl: string;
+  readonly betterAuthSecret: string;
+  readonly betterAuthUrl: string;
   readonly cookieSecure: boolean;
   readonly googleClientId: string;
   readonly googleClientSecret: string;
@@ -72,7 +73,8 @@ export const config: AppConfig = Object.freeze({
   dbQueueMaxDepth,
   dbQueueWarnMs,
   graphqlIntrospection,
-  oauthRedirectBaseUrl,
+  betterAuthSecret,
+  betterAuthUrl,
   cookieSecure,
   googleClientId,
   googleClientSecret,

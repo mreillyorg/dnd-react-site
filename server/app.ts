@@ -16,6 +16,7 @@ import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
+import { toNodeHandler } from 'better-auth/node';
 
 import cookieParser from 'cookie-parser';
 
@@ -28,7 +29,7 @@ import { db, rawPool, initializeDatabase } from './db/drizzle.ts';
 import { formatGraphQLError } from './errors/formatGraphQLError.ts';
 import { createContextFactory } from './graphql/context.ts';
 import { schema } from './graphql/schema/index.ts';
-import { createAuthRouter } from './routes/authRoutes.ts';
+import { auth } from './auth.ts';
 import { gracefulShutdown } from './shutdown.ts';
 import type { ShutdownDependencies } from './shutdown.ts';
 
@@ -84,7 +85,10 @@ export async function createApp(): Promise<AppComponents> {
   const app = express();
   const httpServer = http.createServer(app);
 
-  // 4b. Parse cookies for all routes (must come before auth routes and GraphQL)
+  // 4b. Mount Better Auth handler (must come before express.json())
+  app.all('/api/auth/*splat', toNodeHandler(auth));
+
+  // 4c. Parse cookies for GraphQL session resolution
   app.use(cookieParser());
 
   // 5. Build Apollo Server
@@ -107,9 +111,6 @@ export async function createApp(): Promise<AppComponents> {
       context: async ({ req }) => contextFactory({ req }),
     }),
   );
-
-  // 6b. Mount OAuth auth routes (prefixed with /auth/ inside the router)
-  app.use(createAuthRouter({ db, queue }));
 
   // 7. Health endpoint
   app.get('/health', async (_req, res) => {

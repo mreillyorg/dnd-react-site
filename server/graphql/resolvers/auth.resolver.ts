@@ -2,9 +2,7 @@ import { GraphQLError } from "graphql";
 import { eq } from "drizzle-orm";
 
 import type { GraphQLContext } from "../context.ts";
-import { users, oauthIdentities } from "../../db/schema.ts";
-import { createAuthorizationURL, invalidateSession } from "../../services/oauthService.ts";
-import { SUPPORTED_PROVIDERS, type SupportedProvider } from "../../services/oauthProviders.ts";
+import { users, accounts } from "../../db/schema.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -17,10 +15,6 @@ function requireAuth(ctx: GraphQLContext) {
     });
   }
   return ctx.currentUser;
-}
-
-function getDeps(ctx: GraphQLContext) {
-  return { db: ctx.db, queue: ctx.queue };
 }
 
 // ---------------------------------------------------------------------------
@@ -42,24 +36,6 @@ export const authResolvers = {
       });
     },
 
-    initiateOAuth: (
-      _parent: unknown,
-      args: { provider: string },
-      _ctx: GraphQLContext,
-    ) => {
-      const provider = args.provider.toLowerCase();
-
-      if (!SUPPORTED_PROVIDERS.includes(provider as SupportedProvider)) {
-        throw new GraphQLError(
-          `Unsupported OAuth provider: ${args.provider}`,
-          { extensions: { code: "BAD_USER_INPUT" } },
-        );
-      }
-
-      const result = createAuthorizationURL(provider as SupportedProvider);
-      return { url: result.url, provider };
-    },
-
     linkedProviders: async (
       _parent: unknown,
       _args: unknown,
@@ -67,12 +43,13 @@ export const authResolvers = {
     ) => {
       const user = requireAuth(ctx);
 
-      const identities = await ctx.db.query.oauthIdentities.findMany({
-        where: eq(oauthIdentities.userId, user.id),
-        columns: { provider: true },
+      // better-auth stores linked accounts in the "accounts" table
+      const userAccounts = await ctx.db.query.accounts.findMany({
+        where: eq(accounts.userId, user.id),
+        columns: { providerId: true },
       });
 
-      return identities.map((identity) => identity.provider);
+      return userAccounts.map((account) => account.providerId);
     },
   },
 
@@ -83,11 +60,8 @@ export const authResolvers = {
       ctx: GraphQLContext,
     ) => {
       requireAuth(ctx);
-
-      if (ctx.sessionToken) {
-        await invalidateSession(getDeps(ctx), ctx.sessionToken);
-      }
-
+      // Client-side should call POST /api/auth/sign-out to invalidate
+      // the session via better-auth. This resolver confirms intent.
       return true;
     },
   },

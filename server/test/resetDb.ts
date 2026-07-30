@@ -38,7 +38,8 @@ if (databaseUrl) {
     await db.delete(schema.monsters);
     await db.delete(schema.items);
     await db.delete(schema.authSessions);
-    await db.delete(schema.oauthIdentities);
+    await db.delete(schema.accounts);
+    await db.delete(schema.verifications);
     await db.delete(schema.users);
 
     // Re-enable FK checks

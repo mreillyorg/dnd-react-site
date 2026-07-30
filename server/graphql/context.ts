@@ -1,9 +1,10 @@
 import type { IncomingMessage } from "node:http";
 
+import { fromNodeHeaders } from "better-auth/node";
+
 import type { DrizzleDb } from "../db/drizzle.ts";
 import type { OperationQueue } from "../db/operationQueue.ts";
-import { getSessionToken } from "../services/sessionCookie.ts";
-import { validateSession } from "../services/oauthService.ts";
+import { auth } from "../auth.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,14 +25,6 @@ export interface GraphQLContext {
   db: DrizzleDb;
   queue: OperationQueue;
   currentUser: AuthUser | null;
-  sessionToken: string | null;
-}
-
-/**
- * Extends IncomingMessage with the `cookies` property attached by cookie-parser.
- */
-interface RequestWithCookies extends IncomingMessage {
-  cookies?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -46,21 +39,32 @@ export interface CreateContextDeps {
 /**
  * Creates a GraphQL context builder for use with Apollo Server.
  *
- * Parses the session cookie from the request (cookie-parser must have run upstream),
- * validates the session in the database, and sets `currentUser` if valid.
+ * Uses better-auth's `getSession` API to resolve the current user
+ * from request headers (session cookie).
  */
 export function createContextFactory(deps: CreateContextDeps) {
   return async ({ req }: { req: IncomingMessage }): Promise<GraphQLContext> => {
-    const sessionToken = getSessionToken(req as RequestWithCookies as import("express").Request);
-    const currentUser = sessionToken
-      ? await validateSession(deps, sessionToken)
-      : null;
+    let currentUser: AuthUser | null = null;
+
+    try {
+      const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers),
+      });
+
+      if (session?.user) {
+        currentUser = {
+          id: session.user.id,
+          email: session.user.email,
+        };
+      }
+    } catch {
+      // Session validation failed — treat as unauthenticated
+    }
 
     return {
       db: deps.db,
       queue: deps.queue,
       currentUser,
-      sessionToken,
     };
   };
 }

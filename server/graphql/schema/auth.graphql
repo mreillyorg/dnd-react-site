@@ -1,11 +1,5 @@
-type OAuthURL {
-  url: String!
-  provider: String!
-}
-
 extend type Query {
   me: User
-  initiateOAuth(provider: String!): OAuthURL!
   linkedProviders: [String!]!
 }
 

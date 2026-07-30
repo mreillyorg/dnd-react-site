@@ -15,6 +15,8 @@ export const users = mysqlTable(
     id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
     email: varchar("email", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 255 }),
+    emailVerified: boolean("emailVerified").notNull().default(false),
+    image: varchar("image", { length: 512 }),
     themeMode: varchar("themeMode", { length: 20 }).notNull().default("SYSTEM"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
@@ -28,51 +30,75 @@ export const usersRelations = relations(users, ({ many }) => ({
   characters: many(characters),
   campaigns: many(campaigns),
   sessions: many(sessions),
-  oauthIdentities: many(oauthIdentities),
+  accounts: many(accounts),
   authSessions: many(authSessions),
 }));
 
-// ─── OAuth Identities ────────────────────────────────────────────────────────
+// ─── Accounts (Better Auth OAuth) ────────────────────────────────────────────
 
-export const oauthIdentities = mysqlTable(
-  "OAuthIdentity",
+export const accounts = mysqlTable(
+  "account",
   {
     id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
-    provider: varchar("provider", { length: 50 }).notNull(),
-    providerUserId: varchar("providerUserId", { length: 255 }).notNull(),
+    accountId: varchar("accountId", { length: 255 }).notNull(),
+    providerId: varchar("providerId", { length: 255 }).notNull(),
     userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+    accessToken: text("accessToken"),
+    refreshToken: text("refreshToken"),
+    idToken: text("idToken"),
+    accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
+    refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+    scope: varchar("scope", { length: 512 }),
+    password: varchar("password", { length: 255 }),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
-    uniqueIndex("OAuthIdentity_provider_providerUserId_key").on(table.provider, table.providerUserId),
-    index("OAuthIdentity_userId_idx").on(table.userId),
+    index("account_userId_idx").on(table.userId),
   ],
 );
 
-export const oauthIdentitiesRelations = relations(oauthIdentities, ({ one }) => ({
-  user: one(users, { fields: [oauthIdentities.userId], references: [users.id] }),
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
 
-// ─── Auth Sessions ───────────────────────────────────────────────────────────
+// ─── Auth Sessions (Better Auth) ─────────────────────────────────────────────
 
 export const authSessions = mysqlTable(
-  "AuthSession",
+  "authSession",
   {
     id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
-    token: varchar("token", { length: 512 }).notNull().unique(),
-    userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expiresAt").notNull(),
+    token: varchar("token", { length: 512 }).notNull().unique(),
+    ipAddress: varchar("ipAddress", { length: 64 }),
+    userAgent: text("userAgent"),
+    userId: varchar("userId", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   },
   (table) => [
-    index("AuthSession_token_idx").on(table.token),
-    index("AuthSession_userId_idx").on(table.userId),
+    index("authSession_token_idx").on(table.token),
+    index("authSession_userId_idx").on(table.userId),
   ],
 );
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
   user: one(users, { fields: [authSessions.userId], references: [users.id] }),
 }));
+
+// ─── Verifications (Better Auth) ─────────────────────────────────────────────
+
+export const verifications = mysqlTable(
+  "verification",
+  {
+    id: varchar("id", { length: 36 }).primaryKey().$defaultFn(createId),
+    identifier: varchar("identifier", { length: 255 }).notNull(),
+    value: varchar("value", { length: 512 }).notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
+  },
+);
 
 // ─── Characters ──────────────────────────────────────────────────────────────
 
